@@ -1,0 +1,2 @@
+# Ignore documentation context files anywhere in the repo
+.documentation-context.md
