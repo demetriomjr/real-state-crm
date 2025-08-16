@@ -6,7 +6,7 @@ Objetivo
 Pilares (curto)
 - Modelo unificado de Pessoa com estados (Novo → Em contato → Agendado → Arquivado).
 - Perfil “Cliente” derivado por colateral (primeiro Pedido em Simulação).
-- Integrações essenciais: WhatsApp Cloud API e Google Calendar.
+- Integrações (P1): WhatsApp Cloud API e Google Calendar.
 - Stack: React + MUI (Free), Node.js/Express, TypeScript, PostgreSQL + Prisma, Redis, Axios.
 
 Documentação
