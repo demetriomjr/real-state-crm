@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: real-state-crm-postgres
+    environment:
+      POSTGRES_DB: real_state_crm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/Infrastructure/Database/Migrations:/docker-entrypoint-initdb.d
+    networks:
+      - real-state-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: real-state-crm-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/real_state_crm
+    depends_on:
+      - postgres
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - real-state-network
+    command: npm run start:dev
+
+volumes:
+  postgres_data:
+
+networks:
+  real-state-network:
+    driver: bridge

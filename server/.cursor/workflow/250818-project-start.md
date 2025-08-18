@@ -46,3 +46,15 @@
 
     - company_name : string
     - subscription : int
+
+14 - Create Context for User at `Application/Controllers/` as follow:
+    - Create a new controller for User.
+    - Create a new repository for User.
+    - Create a new validator for User.
+    - Create a new user_create_dto.
+    - Create a new user_update_dto.
+
+    - Under user Controller, create all stated routes.
+    - Under user Validator, create validation rules for it's properties.
+    - Under user Repository, create all stated CRUD methods.
+    - Under user's DTOs, create all necessary properties.
