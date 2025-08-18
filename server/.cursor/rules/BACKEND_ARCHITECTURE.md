@@ -43,8 +43,10 @@
     - PUT /{resource}/{id},
     - DELETE /{resource}/{id}.
 - Request/Response structs(DTOs) must be defined in the Application layer at `Application/DTOs/`.
+    - Always create a Response DTO for each entity to conseal determinated data.
+    - Response DTOs must always conseal tentant_id.
 - Controller must be primely created with all attributes annotation(NestJS) correctly.
-- 
+- All "FindAll" routes must be filtered by tenant_id.
 
 ## Infrastructure Layer
 - Each Entity will have a repository for database rules.
@@ -75,6 +77,11 @@
 - Value Objects must be used for attributes that have specific rules or behaviors.
 - Aggregates must be defined for entities that are treated as a single unit.
     - Saved some cases where aggregates can also be independent routes in the Application layer.
+
+# Logging
+- All logs must be done using NestJS Logger.
+- Any error must be logged with the corresponding stack trace.
+- Do not throw errors, use NestJS Logger to log them.
 
 # Documentation
 - Each Route(resource) should have a corresponding documentation file.

@@ -5,10 +5,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var UserValidator_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserValidator = void 0;
 const common_1 = require("@nestjs/common");
-let UserValidator = class UserValidator {
+let UserValidator = UserValidator_1 = class UserValidator {
+    constructor() {
+        this.logger = new common_1.Logger(UserValidator_1.name);
+    }
     async validateCreate(createUserDto) {
         const errors = [];
         if (!createUserDto.fullName || createUserDto.fullName.trim().length === 0) {
@@ -56,6 +60,7 @@ let UserValidator = class UserValidator {
             errors.push('tenant_id must be a valid UUID');
         }
         if (errors.length > 0) {
+            this.logger.error(`Validation failed for user creation: ${JSON.stringify(errors)}`);
             throw new common_1.BadRequestException({
                 message: 'Validation failed',
                 errors,
@@ -117,6 +122,7 @@ let UserValidator = class UserValidator {
             }
         }
         if (errors.length > 0) {
+            this.logger.error(`Validation failed for user update: ${JSON.stringify(errors)}`);
             throw new common_1.BadRequestException({
                 message: 'Validation failed',
                 errors,
@@ -129,7 +135,7 @@ let UserValidator = class UserValidator {
     }
 };
 exports.UserValidator = UserValidator;
-exports.UserValidator = UserValidator = __decorate([
+exports.UserValidator = UserValidator = UserValidator_1 = __decorate([
     (0, common_1.Injectable)()
 ], UserValidator);
 //# sourceMappingURL=user.validator.js.map

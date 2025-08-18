@@ -1,6 +1,6 @@
-import { CreateUserDto } from '../DTOs/user-create.dto';
-import { UpdateUserDto } from '../DTOs/user-update.dto';
+import { CreateUserDto, UpdateUserDto } from '@/Application/DTOs';
 export declare class UserValidator {
+    private readonly logger;
     validateCreate(createUserDto: CreateUserDto): Promise<void>;
     validateUpdate(updateUserDto: UpdateUserDto): Promise<void>;
     private isValidUUID;

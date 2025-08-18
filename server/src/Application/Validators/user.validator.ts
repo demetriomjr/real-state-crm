@@ -1,9 +1,10 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { CreateUserDto } from '../DTOs/user-create.dto';
-import { UpdateUserDto } from '../DTOs/user-update.dto';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { CreateUserDto, UpdateUserDto } from '@/Application/DTOs';
 
 @Injectable()
 export class UserValidator {
+  private readonly logger = new Logger(UserValidator.name);
+
   async validateCreate(createUserDto: CreateUserDto): Promise<void> {
     const errors: string[] = [];
 
@@ -53,6 +54,7 @@ export class UserValidator {
     }
 
     if (errors.length > 0) {
+      this.logger.error(`Validation failed for user creation: ${JSON.stringify(errors)}`);
       throw new BadRequestException({
         message: 'Validation failed',
         errors,
@@ -117,6 +119,7 @@ export class UserValidator {
     }
 
     if (errors.length > 0) {
+      this.logger.error(`Validation failed for user update: ${JSON.stringify(errors)}`);
       throw new BadRequestException({
         message: 'Validation failed',
         errors,
