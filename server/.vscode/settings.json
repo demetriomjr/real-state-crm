@@ -1,0 +1,59 @@
+{
+  // Disable all Markdown validation
+  "markdown.validate.enabled": false,
+  "markdown.validate.duplicateLinkDefinitions.enabled": false,
+  "markdown.validate.fragmentLinks.enabled": false,
+  "markdown.validate.fileLinks.enabled": false,
+  "markdown.validate.ignoredLinks": ["*"],
+  "markdown.validate.referenceLinks.enabled": false,
+  "markdown.validate.unnamedReferences.enabled": false,
+  "markdown.validate.fileLinks.markdownFragmentLinks": "never",
+  
+  // Disable Markdown linting
+  "markdownlint.config": {
+    "default": false,
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD024": false,
+    "MD025": false,
+    "MD026": false,
+    "MD029": false,
+    "MD030": false,
+    "MD031": false,
+    "MD032": false,
+    "MD036": false,
+    "MD040": false,
+    "MD046": false
+  },
+  
+  // Disable spell checking in Markdown
+  "cSpell.enableFiletypes": [],
+  "cSpell.disableFiletypes": ["markdown"],
+  
+  // Disable other potential warning sources
+  "problems.decorations.enabled": false,
+  "editor.quickSuggestions": {
+    "other": false,
+    "comments": false,
+    "strings": false
+  },
+  
+  // Disable semantic highlighting for Markdown
+  "editor.semanticHighlighting.enabled": false,
+  
+  // Disable IntelliSense for Markdown
+  "markdown.suggest.paths.enabled": false,
+  "markdown.suggest.mdPaths.enabled": false,
+  
+  // Disable all diagnostics for Markdown files
+  "markdown.diagnostics.enabled": false,
+  
+  // Disable link validation
+  "markdown.validate.ignoredLinks": ["*"],
+  "markdown.validate.fileLinks.enabled": false,
+  "markdown.validate.fragmentLinks.enabled": false,
+  "markdown.validate.referenceLinks.enabled": false,
+  "markdown.validate.unnamedReferences.enabled": false,
+  "markdown.validate.duplicateLinkDefinitions.enabled": false
+}
