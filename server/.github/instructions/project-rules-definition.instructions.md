@@ -8,6 +8,8 @@
         - Validators
     - Infrastructure
         - Databases
+            - Migrations
+            - Seeders
         - Repositories
     - Middlewares
     [Server files]
@@ -60,6 +62,8 @@
     - Context will define auditing rules upon Entity creation, update, and deletion.
     - ID as UUID will be generated at creation.
     - All generic database rules explicit to ORM will be applied here.
+- All meanings of configuring and setting must be done using Prisma.
+- Migration and Seeding patterns must be defined and followed.
 
 ## Domain Layer
 - Entities must be defined with all attributes and their types.
