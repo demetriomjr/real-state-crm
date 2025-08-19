@@ -13,6 +13,8 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const database_module_1 = require("./Infrastructure/Database/database.module");
 const user_module_1 = require("./Application/Modules/user.module");
+const authorization_module_1 = require("./Application/Modules/authorization.module");
+const business_module_1 = require("./Application/Modules/business.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -25,6 +27,8 @@ exports.AppModule = AppModule = __decorate([
             }),
             database_module_1.DatabaseModule,
             user_module_1.UserModule,
+            authorization_module_1.AuthorizationModule,
+            business_module_1.BusinessModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

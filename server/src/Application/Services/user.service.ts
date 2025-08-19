@@ -104,6 +104,11 @@ export class UserService {
     return users.map(user => this.mapToResponseDto(user));
   }
 
+  async findByUsername(username: string): Promise<User | null> {
+    this.logger.log(`Fetching user by username: ${username}`);
+    return await this.userRepository.findByUsername(username);
+  }
+
   private mapToResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,

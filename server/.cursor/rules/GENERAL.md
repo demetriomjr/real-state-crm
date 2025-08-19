@@ -53,3 +53,7 @@
         <last return statement>
     }
     ```
+# Workflow
+- Please confirm with the user to run a workflow file, if it's name is set at (WORKFLOW_LOG.md)
+    - This file is fed manually by the developer.
+    - The workflow file is a markdown that contains the names of all approved workflows executed by the developer.

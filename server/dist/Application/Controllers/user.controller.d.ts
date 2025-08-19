@@ -5,14 +5,9 @@ export declare class UserController {
     private readonly userService;
     private readonly userValidator;
     constructor(userService: UserService, userValidator: UserValidator);
-    findAll(page?: number, limit?: number): Promise<{
-        users: UserResponseDto[];
-        total: number;
-        page: number;
-        limit: number;
-    }>;
+    findAll(page: number, limit: number, req: any): Promise<UserResponseDto[]>;
     findOne(id: string): Promise<UserResponseDto>;
     create(createUserDto: CreateUserDto): Promise<UserResponseDto>;
-    update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto>;
-    remove(id: string): Promise<void>;
+    update(id: string, updateUserDto: UpdateUserDto, req: any): Promise<UserResponseDto>;
+    remove(id: string, req: any): Promise<void>;
 }

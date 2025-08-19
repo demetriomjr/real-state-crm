@@ -8,14 +8,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const app_service_1 = require("./app.service");
+const path_1 = require("path");
 let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
+    }
+    getHomePage(res) {
+        res.sendFile((0, path_1.join)(__dirname, '..', 'public', 'index.html'));
     }
     getHello() {
         return this.appService.getHello();
@@ -27,6 +34,14 @@ let AppController = class AppController {
 exports.AppController = AppController;
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiExcludeEndpoint)(),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getHomePage", null);
+__decorate([
+    (0, common_1.Get)('api'),
     (0, swagger_1.ApiOperation)({ summary: 'Get API welcome message' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns welcome message' }),
     __metadata("design:type", Function),
@@ -34,7 +49,7 @@ __decorate([
     __metadata("design:returntype", String)
 ], AppController.prototype, "getHello", null);
 __decorate([
-    (0, common_1.Get)('health'),
+    (0, common_1.Get)('api/health'),
     (0, swagger_1.ApiOperation)({ summary: 'Get API health status' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns health status and timestamp' }),
     __metadata("design:type", Function),

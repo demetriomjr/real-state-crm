@@ -1,5 +1,6 @@
 # Project Architecture
 - Clean Architecture folder design
+-srv
     - Domain
         - Entities
         - Interfaces
@@ -8,10 +9,10 @@
         - Validators
     - Infrastructure
         - Databases
-            - Migrations
-            - Seeders
         - Repositories
     - Middlewares
+- tests
+    - unit
     [Server files]
 
 # Project Stack
@@ -28,6 +29,9 @@
 - npm CLI
 - GIT
 - Environment Variables File (.env)
+- Logger
+- Jest (Testing Framework)
+- Majestic (Testing Framework UI)
 
 # Architectural Rules
 ## Application Layer
@@ -79,6 +83,8 @@
     - Saved some cases where aggregates can also be independent routes in the Application layer.
 
 # Logging
+- Use Logger in every catch block.
+- Use Logger at Repositories and Services.
 - All logs must be done using NestJS Logger.
 - Any error must be logged with the corresponding stack trace.
 - Do not throw errors, use NestJS Logger to log them.

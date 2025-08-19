@@ -1,4 +1,5 @@
 import { UserRepository } from '@/Infrastructure/Repositories/user.repository';
+import { User } from '@/Domain/Users/User';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from '@/Application/DTOs';
 export declare class UserService {
     private readonly userRepository;
@@ -15,5 +16,6 @@ export declare class UserService {
     update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto>;
     remove(id: string): Promise<void>;
     findByTenant(tenant_id: string): Promise<UserResponseDto[]>;
+    findByUsername(username: string): Promise<User | null>;
     private mapToResponseDto;
 }

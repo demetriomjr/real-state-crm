@@ -1,0 +1,123 @@
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
+import { UserService } from './user.service';
+import { AuthorizationResponseDto, AuthorizationRequestDto, JwtPayload } from '@/Application/DTOs/Authorization';
+
+@Injectable()
+export class AuthorizationService {
+  private readonly logger = new Logger(AuthorizationService.name);
+  private readonly expiredTokensCache: Set<string> = new Set();
+  private readonly maxCacheSize = 100;
+
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async validateUser(username: string, password: string): Promise<any> {
+    try {
+      const user = await this.userService.findByUsername(username);
+      if (!user) {
+        return null;
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return null;
+      }
+
+      return user;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async createToken(user: any): Promise<AuthorizationResponseDto> {
+    this.logger.log(`Creating token for user: ${user.username}`);
+    const payload: JwtPayload = {
+      tenant_id: user.tenant_id,
+      username: user.username,
+    };
+
+    const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '30m');
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes
+
+    const token = this.jwtService.sign(payload, {
+      expiresIn,
+      secret: this.configService.get<string>('JWT_SECRET'),
+    });
+
+    return {
+      token,
+      expires_at: expiresAt,
+    };
+  }
+
+  async validateToken(token: string): Promise<JwtPayload> {
+    // Check if token is in expired cache
+    if (this.expiredTokensCache.has(token)) {
+      this.logger.warn('Attempted to use invalidated token');
+      throw new UnauthorizedException('Token has been invalidated');
+    }
+
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      }) as JwtPayload;
+
+      // Verify user still exists by username and tenant_id
+      const user = await this.userService.findByUsername(payload.username);
+      if (!user || user.tenant_id !== payload.tenant_id) {
+        this.logger.warn(`Token validation failed: User ${payload.username} not found or tenant mismatch`);
+        throw new UnauthorizedException('User not found');
+      }
+
+      this.logger.log(`Token validated for user: ${payload.username}`);
+      return payload;
+    } catch (error) {
+      this.logger.error(`Token validation failed: ${error.message}`);
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+
+  async refreshToken(token: string): Promise<AuthorizationResponseDto> {
+    this.logger.log('Refreshing token');
+    const payload = await this.validateToken(token);
+    
+    // Get fresh user data
+    const user = await this.userService.findByUsername(payload.username);
+    if (!user || user.tenant_id !== payload.tenant_id) {
+      this.logger.warn(`Token refresh failed: User ${payload.username} not found or tenant mismatch`);
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Invalidate old token
+    this.invalidateToken(token);
+
+    // Create new token
+    this.logger.log(`Token refreshed for user: ${payload.username}`);
+    return this.createToken(user);
+  }
+
+  invalidateToken(token: string): void {
+    this.logger.log('Invalidating token');
+    // Add token to expired cache
+    this.expiredTokensCache.add(token);
+
+    // Remove oldest tokens if cache is full
+    if (this.expiredTokensCache.size > this.maxCacheSize) {
+      const tokensArray = Array.from(this.expiredTokensCache);
+      const oldestToken = tokensArray[0];
+      this.expiredTokensCache.delete(oldestToken);
+      this.logger.log('Token cache cleanup performed');
+    }
+  }
+
+  isDevelopmentEnvironment(): boolean {
+    return this.configService.get<string>('NODE_ENV') === 'development';
+  }
+}

@@ -90,6 +90,10 @@ let UserService = UserService_1 = class UserService {
         const users = await this.userRepository.findByTenant(tenant_id);
         return users.map(user => this.mapToResponseDto(user));
     }
+    async findByUsername(username) {
+        this.logger.log(`Fetching user by username: ${username}`);
+        return await this.userRepository.findByUsername(username);
+    }
     mapToResponseDto(user) {
         return {
             id: user.id,
