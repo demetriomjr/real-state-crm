@@ -20,6 +20,8 @@ let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
         const request = context.switchToHttp().getRequest();
         const jwtUser = user;
         request['tenantId'] = jwtUser.tenant_id;
+        request['userId'] = jwtUser.user_id;
+        request['userLevel'] = jwtUser.user_level;
         request['user'] = jwtUser;
         return user;
     }

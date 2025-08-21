@@ -2,7 +2,8 @@ import { Injectable, NotFoundException, ConflictException, Logger, BadRequestExc
 import { BusinessRepository } from '@/Infrastructure/Repositories/business.repository';
 import { UserRepository } from '@/Infrastructure/Repositories/user.repository';
 import { Business } from '@/Domain/Business/Business';
-import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto, BusinessCreateResponseDto } from '@/Application/DTOs';
+import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from '@/Application/DTOs';
+import { AuthorizationResponseDto } from '@/Application/DTOs/Authorization/authorization-response.dto';
 import { AuthorizationService } from './authorization.service';
 import * as bcrypt from 'bcryptjs';
 
@@ -20,8 +21,15 @@ export class BusinessService {
     return this.businessRepository['prisma'];
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ businesses: BusinessResponseDto[]; total: number; page: number; limit: number }> {
+  async findAll(page: number = 1, limit: number = 10, userLevel?: number): Promise<{ businesses: BusinessResponseDto[]; total: number; page: number; limit: number }> {
     this.logger.log(`Fetching businesses with pagination: page=${page}, limit=${limit}`);
+    
+    // Check if user has developer access (level 10)
+    if (userLevel !== undefined && userLevel < 10) {
+      this.logger.warn(`User with level ${userLevel} attempted to access findAll - access denied`);
+      throw new BadRequestException('Access denied. Developer level (10) required to view all businesses.');
+    }
+    
     const result = await this.businessRepository.findAll(page, limit);
     return {
       businesses: result.businesses.map(business => this.mapToResponseDto(business)),
@@ -41,7 +49,7 @@ export class BusinessService {
     return this.mapToResponseDto(business);
   }
 
-  async create(createBusinessDto: BusinessCreateDto): Promise<BusinessCreateResponseDto> {
+  async create(createBusinessDto: BusinessCreateDto): Promise<AuthorizationResponseDto> {
     this.logger.log(`Creating new business: ${createBusinessDto.company_name}`);
     
     // Check if master user username already exists
@@ -54,30 +62,25 @@ export class BusinessService {
     // Start transaction
     const result = await this.prisma.$transaction(async (prisma) => {
       try {
-        // Create business
-        const businessData = {
-          company_name: createBusinessDto.company_name,
-          subscription: createBusinessDto.subscription || 1,
-        };
-        
+        // Create business first
         const business = await prisma.business.create({
           data: {
-            ...businessData,
-            tenant_id: createBusinessDto.company_name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+            company_name: createBusinessDto.company_name,
+            subscription: createBusinessDto.subscription || 1,
           },
         });
 
         // Hash the master user password
         const hashedPassword = await bcrypt.hash(createBusinessDto.master_user_password, 10);
 
-        // Create master user
+        // Create master user with business.id as tenant_id
         const masterUser = await prisma.user.create({
           data: {
             fullName: createBusinessDto.master_user_fullName,
             username: createBusinessDto.master_user_username,
             password: hashedPassword,
             user_level: 9, // Master user level
-            tenant_id: business.tenant_id,
+            tenant_id: business.id, // Use business.id as tenant_id
           },
         });
 
@@ -93,17 +96,7 @@ export class BusinessService {
 
     this.logger.log(`Business created successfully: ${result.business.company_name} with master user: ${result.masterUser.username}`);
 
-    return {
-      business: this.mapToResponseDto(result.business),
-      master_user: {
-        id: result.masterUser.id,
-        fullName: result.masterUser.fullName,
-        username: result.masterUser.username,
-        user_level: result.masterUser.user_level,
-      },
-      auth: authToken,
-      message: 'Business and master user created successfully',
-    };
+    return authToken;
   }
 
   async update(id: string, updateBusinessDto: BusinessUpdateDto): Promise<BusinessResponseDto> {
@@ -134,6 +127,50 @@ export class BusinessService {
     await this.businessRepository.remove(id);
     this.logger.log(`Business removed successfully with ID: ${id}`);
   }
+
+  async validateTenantId(tenantId: string): Promise<boolean> {
+    this.logger.log(`Validating tenant ID: ${tenantId}`);
+    return await this.businessRepository.validateTenantId(tenantId);
+  }
+
+  /**
+   * PURGE - Permanently delete business and all related entities
+   * WARNING: This method permanently deletes data and cannot be undone
+   * Should only be used for testing purposes or data cleanup
+   * NOT EXPOSED TO CONTROLLERS - Service level only
+   */
+  async purge(id: string): Promise<void> {
+    this.logger.warn(`PURGING business with ID: ${id} - PERMANENT DELETION`);
+    
+    // Check if business exists
+    const existingBusiness = await this.businessRepository.findOne(id);
+    if (!existingBusiness) {
+      this.logger.warn(`Business with ID ${id} not found for purge`);
+      throw new NotFoundException(`Business with ID ${id} not found`);
+    }
+
+    // Use business.id as tenant_id
+    const tenantId = existingBusiness.id;
+
+    // Start transaction to ensure all related data is purged atomically
+    await this.prisma.$transaction(async (prisma) => {
+      // 1. Purge all user roles for users in this tenant
+      const users = await this.userRepository.findByTenant(tenantId);
+      for (const user of users) {
+        await this.userRepository.purgeUserRoles(user.id);
+      }
+
+      // 2. Purge all users in this tenant
+      await this.userRepository.purgeByTenant(tenantId);
+
+      // 3. Finally purge the business itself
+      await this.businessRepository.purge(id);
+    });
+    
+    this.logger.warn(`Business PURGED permanently with ID: ${id} and tenant: ${tenantId}`);
+  }
+
+
 
   private mapToResponseDto(business: Business): BusinessResponseDto {
     return {

@@ -39,7 +39,8 @@ export class AuthorizationService {
     this.logger.log(`Creating token for user: ${user.username}`);
     const payload: JwtPayload = {
       tenant_id: user.tenant_id,
-      username: user.username,
+      user_id: user.id,
+      user_level: user.user_level,
     };
 
     const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '30m');
@@ -57,6 +58,8 @@ export class AuthorizationService {
     };
   }
 
+
+
   async validateToken(token: string): Promise<JwtPayload> {
     // Check if token is in expired cache
     if (this.expiredTokensCache.has(token)) {
@@ -69,14 +72,16 @@ export class AuthorizationService {
         secret: this.configService.get<string>('JWT_SECRET'),
       }) as JwtPayload;
 
-      // Verify user still exists by username and tenant_id
-      const user = await this.userService.findByUsername(payload.username);
+
+
+      // Verify user still exists by user_id and tenant_id
+      const user = await this.userService.findOneRaw(payload.user_id);
       if (!user || user.tenant_id !== payload.tenant_id) {
-        this.logger.warn(`Token validation failed: User ${payload.username} not found or tenant mismatch`);
+        this.logger.warn(`Token validation failed: User ${payload.user_id} not found or tenant mismatch`);
         throw new UnauthorizedException('User not found');
       }
 
-      this.logger.log(`Token validated for user: ${payload.username}`);
+      this.logger.log(`Token validated for user: ${payload.user_id}`);
       return payload;
     } catch (error) {
       this.logger.error(`Token validation failed: ${error.message}`);
@@ -89,9 +94,9 @@ export class AuthorizationService {
     const payload = await this.validateToken(token);
     
     // Get fresh user data
-    const user = await this.userService.findByUsername(payload.username);
+    const user = await this.userService.findOneRaw(payload.user_id);
     if (!user || user.tenant_id !== payload.tenant_id) {
-      this.logger.warn(`Token refresh failed: User ${payload.username} not found or tenant mismatch`);
+      this.logger.warn(`Token refresh failed: User ${payload.user_id} not found or tenant mismatch`);
       throw new UnauthorizedException('User not found');
     }
 
@@ -99,7 +104,7 @@ export class AuthorizationService {
     this.invalidateToken(token);
 
     // Create new token
-    this.logger.log(`Token refreshed for user: ${payload.username}`);
+    this.logger.log(`Token refreshed for user: ${payload.user_id}`);
     return this.createToken(user);
   }
 
@@ -117,7 +122,15 @@ export class AuthorizationService {
     }
   }
 
+  async logout(token: string): Promise<{ message: string }> {
+    this.logger.log('User logout requested');
+    this.invalidateToken(token);
+    return { message: 'Logged out successfully' };
+  }
+
   isDevelopmentEnvironment(): boolean {
     return this.configService.get<string>('NODE_ENV') === 'development';
   }
+
+
 }

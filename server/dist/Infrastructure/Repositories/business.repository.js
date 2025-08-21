@@ -44,21 +44,11 @@ let BusinessRepository = class BusinessRepository {
         });
         return business ? new Business_1.Business(business) : null;
     }
-    async findByTenantId(tenant_id) {
-        const business = await this.prisma.business.findFirst({
-            where: {
-                tenant_id,
-                deleted_at: null
-            },
-        });
-        return business ? new Business_1.Business(business) : null;
-    }
     async create(businessData) {
         const business = await this.prisma.business.create({
             data: {
                 company_name: businessData.company_name,
                 subscription: businessData.subscription || 1,
-                tenant_id: businessData.company_name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
             },
         });
         return new Business_1.Business(business);
@@ -91,14 +81,19 @@ let BusinessRepository = class BusinessRepository {
         });
         return count > 0;
     }
-    async existsByTenantId(tenant_id) {
+    async validateTenantId(tenantId) {
         const count = await this.prisma.business.count({
             where: {
-                tenant_id,
+                id: tenantId,
                 deleted_at: null
             },
         });
         return count > 0;
+    }
+    async purge(id) {
+        await this.prisma.business.delete({
+            where: { id },
+        });
     }
 };
 exports.BusinessRepository = BusinessRepository;

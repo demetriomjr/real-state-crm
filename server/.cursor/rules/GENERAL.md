@@ -57,3 +57,8 @@
 - Please confirm with the user to run a workflow file, if it's name is set at (WORKFLOW_LOG.md)
     - This file is fed manually by the developer.
     - The workflow file is a markdown that contains the names of all approved workflows executed by the developer.
+
+# Previous mistakes to avoid
+- Do not delete .env file.
+- When trying to run commands at terminal, remember this is a windows 11 power shell terminal.
+- do not delete files under /public without asking the developer.

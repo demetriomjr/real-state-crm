@@ -17,8 +17,8 @@ class BusinessCreateResponseDto {
 }
 exports.BusinessCreateResponseDto = BusinessCreateResponseDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Business information', type: business_response_dto_1.BusinessResponseDto }),
-    __metadata("design:type", business_response_dto_1.BusinessResponseDto)
+    (0, swagger_1.ApiProperty)({ description: 'Business information with ID', type: business_response_dto_1.BusinessResponseDto }),
+    __metadata("design:type", Object)
 ], BusinessCreateResponseDto.prototype, "business", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Master user information' }),

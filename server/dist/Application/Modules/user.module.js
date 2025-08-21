@@ -13,12 +13,13 @@ const user_service_1 = require("../Services/user.service");
 const user_repository_1 = require("../../Infrastructure/Repositories/user.repository");
 const user_validator_1 = require("../Validators/user.validator");
 const database_module_1 = require("../../Infrastructure/Database/database.module");
+const authorization_module_1 = require("./authorization.module");
 let UserModule = class UserModule {
 };
 exports.UserModule = UserModule;
 exports.UserModule = UserModule = __decorate([
     (0, common_1.Module)({
-        imports: [database_module_1.DatabaseModule],
+        imports: [database_module_1.DatabaseModule, (0, common_1.forwardRef)(() => authorization_module_1.AuthorizationModule)],
         controllers: [user_controller_1.UserController],
         providers: [user_service_1.UserService, user_repository_1.UserRepository, user_validator_1.UserValidator],
         exports: [user_service_1.UserService, user_repository_1.UserRepository],

@@ -109,6 +109,59 @@ export class UserService {
     return await this.userRepository.findByUsername(username);
   }
 
+  async findOneRaw(id: string): Promise<User | null> {
+    this.logger.log(`Fetching raw user with ID: ${id}`);
+    return await this.userRepository.findOne(id);
+  }
+
+  /**
+   * PURGE - Permanently delete user and all related entities
+   * WARNING: This method permanently deletes data and cannot be undone
+   * Should only be used for testing purposes or data cleanup
+   * NOT EXPOSED TO CONTROLLERS - Service level only
+   */
+  async purge(id: string): Promise<void> {
+    this.logger.warn(`PURGING user with ID: ${id} - PERMANENT DELETION`);
+    
+    // Check if user exists
+    const existingUser = await this.userRepository.findOne(id);
+    if (!existingUser) {
+      this.logger.warn(`User with ID ${id} not found for purge`);
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Get the user's tenant_id for related entity cleanup
+    const tenantId = existingUser.tenant_id;
+
+    // Purge related entities first (respecting foreign key constraints)
+    await this.userRepository.purgeUserRoles(id);
+    
+    // Finally purge the user
+    await this.userRepository.purge(id);
+    
+    this.logger.warn(`User PURGED permanently with ID: ${id} from tenant: ${tenantId}`);
+  }
+
+  /**
+   * PURGE BY TENANT - Permanently delete all users in a tenant
+   * WARNING: This method permanently deletes data and cannot be undone
+   * Should only be used for testing purposes or data cleanup
+   * NOT EXPOSED TO CONTROLLERS - Service level only
+   */
+  async purgeByTenant(tenant_id: string): Promise<void> {
+    this.logger.warn(`PURGING all users for tenant: ${tenant_id} - PERMANENT DELETION`);
+    
+    // Get all users in the tenant
+    const users = await this.userRepository.findByTenant(tenant_id);
+    
+    // Purge each user individually to ensure proper cleanup
+    for (const user of users) {
+      await this.purge(user.id);
+    }
+    
+    this.logger.warn(`All users PURGED permanently for tenant: ${tenant_id}`);
+  }
+
   private mapToResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,

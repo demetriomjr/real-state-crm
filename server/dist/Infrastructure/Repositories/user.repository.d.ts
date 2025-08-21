@@ -15,4 +15,7 @@ export declare class UserRepository {
     remove(id: string): Promise<void>;
     exists(id: string): Promise<boolean>;
     findByTenant(tenant_id: string): Promise<User[]>;
+    purge(id: string): Promise<void>;
+    purgeUserRoles(userId: string): Promise<void>;
+    purgeByTenant(tenant_id: string): Promise<void>;
 }

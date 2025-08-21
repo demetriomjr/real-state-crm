@@ -9,10 +9,10 @@ export declare class BusinessRepository {
         total: number;
     }>;
     findOne(id: string): Promise<Business | null>;
-    findByTenantId(tenant_id: string): Promise<Business | null>;
     create(businessData: BusinessCreateDto): Promise<Business>;
     update(id: string, updateBusinessDto: BusinessUpdateDto): Promise<Business>;
     remove(id: string): Promise<void>;
     exists(id: string): Promise<boolean>;
-    existsByTenantId(tenant_id: string): Promise<boolean>;
+    validateTenantId(tenantId: string): Promise<boolean>;
+    purge(id: string): Promise<void>;
 }

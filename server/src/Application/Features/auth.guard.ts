@@ -14,10 +14,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException('Authentication required');
     }
 
-    // Inject tenant_id into request object
+    // Inject tenant_id, user_id, and user_level into request object
     const request = context.switchToHttp().getRequest<Request>();
     const jwtUser = user as JwtPayload;
     request['tenantId'] = jwtUser.tenant_id;
+    request['userId'] = jwtUser.user_id;
+    request['userLevel'] = jwtUser.user_level;
     request['user'] = jwtUser;
 
     return user;

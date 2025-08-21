@@ -27,8 +27,12 @@ let BusinessService = BusinessService_1 = class BusinessService {
     get prisma() {
         return this.businessRepository['prisma'];
     }
-    async findAll(page = 1, limit = 10) {
+    async findAll(page = 1, limit = 10, userLevel) {
         this.logger.log(`Fetching businesses with pagination: page=${page}, limit=${limit}`);
+        if (userLevel !== undefined && userLevel < 10) {
+            this.logger.warn(`User with level ${userLevel} attempted to access findAll - access denied`);
+            throw new common_1.BadRequestException('Access denied. Developer level (10) required to view all businesses.');
+        }
         const result = await this.businessRepository.findAll(page, limit);
         return {
             businesses: result.businesses.map(business => this.mapToResponseDto(business)),
@@ -55,14 +59,10 @@ let BusinessService = BusinessService_1 = class BusinessService {
         }
         const result = await this.prisma.$transaction(async (prisma) => {
             try {
-                const businessData = {
-                    company_name: createBusinessDto.company_name,
-                    subscription: createBusinessDto.subscription || 1,
-                };
                 const business = await prisma.business.create({
                     data: {
-                        ...businessData,
-                        tenant_id: createBusinessDto.company_name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+                        company_name: createBusinessDto.company_name,
+                        subscription: createBusinessDto.subscription || 1,
                     },
                 });
                 const hashedPassword = await bcrypt.hash(createBusinessDto.master_user_password, 10);
@@ -72,7 +72,7 @@ let BusinessService = BusinessService_1 = class BusinessService {
                         username: createBusinessDto.master_user_username,
                         password: hashedPassword,
                         user_level: 9,
-                        tenant_id: business.tenant_id,
+                        tenant_id: business.id,
                     },
                 });
                 return { business: new Business_1.Business(business), masterUser };
@@ -84,17 +84,7 @@ let BusinessService = BusinessService_1 = class BusinessService {
         });
         const authToken = await this.authorizationService.createToken(result.masterUser);
         this.logger.log(`Business created successfully: ${result.business.company_name} with master user: ${result.masterUser.username}`);
-        return {
-            business: this.mapToResponseDto(result.business),
-            master_user: {
-                id: result.masterUser.id,
-                fullName: result.masterUser.fullName,
-                username: result.masterUser.username,
-                user_level: result.masterUser.user_level,
-            },
-            auth: authToken,
-            message: 'Business and master user created successfully',
-        };
+        return authToken;
     }
     async update(id, updateBusinessDto) {
         this.logger.log(`Updating business with ID: ${id}`);
@@ -116,6 +106,28 @@ let BusinessService = BusinessService_1 = class BusinessService {
         }
         await this.businessRepository.remove(id);
         this.logger.log(`Business removed successfully with ID: ${id}`);
+    }
+    async validateTenantId(tenantId) {
+        this.logger.log(`Validating tenant ID: ${tenantId}`);
+        return await this.businessRepository.validateTenantId(tenantId);
+    }
+    async purge(id) {
+        this.logger.warn(`PURGING business with ID: ${id} - PERMANENT DELETION`);
+        const existingBusiness = await this.businessRepository.findOne(id);
+        if (!existingBusiness) {
+            this.logger.warn(`Business with ID ${id} not found for purge`);
+            throw new common_1.NotFoundException(`Business with ID ${id} not found`);
+        }
+        const tenantId = existingBusiness.id;
+        await this.prisma.$transaction(async (prisma) => {
+            const users = await this.userRepository.findByTenant(tenantId);
+            for (const user of users) {
+                await this.userRepository.purgeUserRoles(user.id);
+            }
+            await this.userRepository.purgeByTenant(tenantId);
+            await this.businessRepository.purge(id);
+        });
+        this.logger.warn(`Business PURGED permanently with ID: ${id} and tenant: ${tenantId}`);
     }
     mapToResponseDto(business) {
         return {

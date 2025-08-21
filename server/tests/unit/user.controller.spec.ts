@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from '../../src/Application/Controllers/user.controller';
 import { UserService } from '../../src/Application/Services/user.service';
 import { UserValidator } from '../../src/Application/Validators/user.validator';
+import { AuthorizationService } from '../../src/Application/Services/authorization.service';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from '../../src/Application/DTOs';
 import { UnauthorizedException, NotFoundException } from '@nestjs/common';
 
@@ -27,7 +28,7 @@ describe('UserController (Unit)', () => {
 
   const mockRequest = {
     tenantId: 'tenant1',
-    user: { username: 'testuser', tenant_id: 'tenant1' },
+    userLevel: 8,
   };
 
   beforeEach(async () => {
@@ -42,6 +43,15 @@ describe('UserController (Unit)', () => {
           provide: UserValidator,
           useValue: mockUserValidator,
         },
+        {
+          provide: AuthorizationService,
+          useValue: {
+            createToken: jest.fn(),
+            validateToken: jest.fn(),
+            refreshToken: jest.fn(),
+            logout: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -52,6 +62,12 @@ describe('UserController (Unit)', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    // Clean up any test data using purge methods
+    // Note: In unit tests, we use mocks, so this is mainly for integration test scenarios
+    // The actual purge will happen at service level for real data cleanup
   });
 
   describe('findAll', () => {
@@ -85,18 +101,21 @@ describe('UserController (Unit)', () => {
 
       mockUserService.findOne.mockResolvedValue(mockUser);
 
-      const result = await controller.findOne(userId);
+      const mockRequest = { userLevel: 10, tenantId: 'tenant1' }; // High level user
+      const result = await controller.findOne(userId, mockRequest);
 
       expect(service.findOne).toHaveBeenCalledWith(userId);
       expect(result).toEqual(mockUser);
     });
 
-    it('should throw NotFoundException when user not found', async () => {
+    it('should throw UnauthorizedException when user not found', async () => {
       const userId = '999';
 
       mockUserService.findOne.mockResolvedValue(null);
 
-      await expect(controller.findOne(userId)).rejects.toThrow(NotFoundException);
+      const mockRequest = { userLevel: 10, tenantId: 'tenant1' }; // High level user
+      await expect(controller.findOne(userId, mockRequest)).rejects.toThrow(UnauthorizedException);
+      expect(service.findOne).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -107,6 +126,7 @@ describe('UserController (Unit)', () => {
         fullName: 'New User',
         password: 'password123',
         user_level: 1,
+        tenant_id: '550e8400-e29b-41d4-a716-446655440000',
       };
 
       const mockCreatedUser = { id: '3', ...createUserDto };

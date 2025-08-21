@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PostgresContext = void 0;
+exports.PrismaService = exports.PostgresContext = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 let PostgresContext = class PostgresContext extends client_1.PrismaClient {
@@ -65,7 +65,8 @@ let PostgresContext = class PostgresContext extends client_1.PrismaClient {
     }
 };
 exports.PostgresContext = PostgresContext;
-exports.PostgresContext = PostgresContext = __decorate([
+exports.PrismaService = PostgresContext;
+exports.PrismaService = exports.PostgresContext = PostgresContext = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], PostgresContext);

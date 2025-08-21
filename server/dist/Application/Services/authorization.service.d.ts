@@ -15,5 +15,8 @@ export declare class AuthorizationService {
     validateToken(token: string): Promise<JwtPayload>;
     refreshToken(token: string): Promise<AuthorizationResponseDto>;
     invalidateToken(token: string): void;
+    logout(token: string): Promise<{
+        message: string;
+    }>;
     isDevelopmentEnvironment(): boolean;
 }

@@ -1,0 +1,98 @@
+{
+  "summary": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "coverage": 0,
+    "duration": 9493,
+    "categories": {
+      "unit": {
+        "category": "unit",
+        "success": false,
+        "exitCode": 1,
+        "output": "\n> real-state-crm-server@1.0.0 test:unit\n> jest tests/unit --config jest.config.js\n\n",
+        "errorOutput": "FAIL tests/unit/authorization.controller.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/unit/authorization.controller.spec.ts\u001b[0m:\u001b[93m98\u001b[0m:\u001b[93m22\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2339: \u001b[0mProperty 'logout' does not exist on type 'AuthorizationService'.\n\n    \u001b[7m98\u001b[0m       expect(service.logout).toHaveBeenCalledWith(token);\n    \u001b[7m  \u001b[0m \u001b[91m                     ~~~~~~\u001b[0m\n\nFAIL tests/unit/user.controller.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/unit/user.controller.spec.ts\u001b[0m:\u001b[93m105\u001b[0m:\u001b[93m13\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2741: \u001b[0mProperty 'tenant_id' is missing in type '{ username: string; fullName: string; password: string; user_level: number; }' but required in type 'CreateUserDto'.\n\n    \u001b[7m105\u001b[0m       const createUserDto: CreateUserDto = {\n    \u001b[7m   \u001b[0m \u001b[91m            ~~~~~~~~~~~~~\u001b[0m\n\n      \u001b[96msrc/Application/DTOs/Users/user-create.dto.ts\u001b[0m:\u001b[93m26\u001b[0m:\u001b[93m3\u001b[0m\n        \u001b[7m26\u001b[0m   tenant_id: string;\n        \u001b[7m  \u001b[0m \u001b[96m  ~~~~~~~~~\u001b[0m\n        'tenant_id' is declared here.\n\nPASS tests/unit/business.controller.spec.ts\n  ● Console\n\n    console.log\n      [dotenv@17.2.1] injecting env (0) from ..\\.env -- tip: ⚙️  suppress all logs with { quiet: true }\n\n      at _log (node_modules/dotenv/lib/main.js:139:11)\n\n\nTest Suites: 2 failed, 1 passed, 3 total\nTests:       10 passed, 10 total\nSnapshots:   0 total\nTime:        3.79 s, estimated 4 s\nRan all test suites matching /tests\\\\unit/i.\n",
+        "duration": 4511,
+        "timestamp": "2025-08-20T14:56:01.121Z",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "coverage": 0
+      },
+      "integration": {
+        "category": "integration",
+        "success": false,
+        "exitCode": 1,
+        "output": "\n> real-state-crm-server@1.0.0 test:integration\n> jest tests/integration --config jest.config.js\n\n",
+        "errorOutput": "FAIL tests/integration/authorization.integration.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/integration/authorization.integration.spec.ts\u001b[0m:\u001b[93m4\u001b[0m:\u001b[93m10\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2305: \u001b[0mModule '\"../../src/Infrastructure/Database/postgres.context\"' has no exported member 'PrismaService'.\n\n    \u001b[7m4\u001b[0m import { PrismaService } from '../../src/Infrastructure/Database/postgres.context';\n    \u001b[7m \u001b[0m \u001b[91m         ~~~~~~~~~~~~~\u001b[0m\n\nFAIL tests/integration/business.integration.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/integration/business.integration.spec.ts\u001b[0m:\u001b[93m4\u001b[0m:\u001b[93m10\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2305: \u001b[0mModule '\"../../src/Infrastructure/Database/postgres.context\"' has no exported member 'PrismaService'.\n\n    \u001b[7m4\u001b[0m import { PrismaService } from '../../src/Infrastructure/Database/postgres.context';\n    \u001b[7m \u001b[0m \u001b[91m         ~~~~~~~~~~~~~\u001b[0m\n\nTest Suites: 2 failed, 2 total\nTests:       0 total\nSnapshots:   0 total\nTime:        3.475 s\nRan all test suites matching /tests\\\\integration/i.\n",
+        "duration": 4261,
+        "timestamp": "2025-08-20T14:56:05.391Z",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "coverage": 0
+      },
+      "e2e": {
+        "category": "e2e",
+        "success": false,
+        "exitCode": 1,
+        "output": "\n> real-state-crm-server@1.0.0 test:e2e\n> jest tests/e2e --config jest.config.js\n\nNo tests found, exiting with code 1\nRun with `--passWithNoTests` to exit with code 0\nIn D:\\PROJETOS\\real-state-crm\\server\n  53 files checked.\n  roots: D:\\PROJETOS\\real-state-crm\\server\\src, D:\\PROJETOS\\real-state-crm\\server\\tests - 53 matches\n  testMatch:  - 0 matches\n  testPathIgnorePatterns: \\\\node_modules\\\\, \\\\dist\\\\ - 53 matches\n  testRegex: .*\\.spec\\.ts$ - 5 matches\nPattern: tests\\\\e2e - 0 matches\n",
+        "errorOutput": "",
+        "duration": 710,
+        "timestamp": "2025-08-20T14:56:06.102Z",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "coverage": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "category": "unit",
+      "success": false,
+      "exitCode": 1,
+      "output": "\n> real-state-crm-server@1.0.0 test:unit\n> jest tests/unit --config jest.config.js\n\n",
+      "errorOutput": "FAIL tests/unit/authorization.controller.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/unit/authorization.controller.spec.ts\u001b[0m:\u001b[93m98\u001b[0m:\u001b[93m22\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2339: \u001b[0mProperty 'logout' does not exist on type 'AuthorizationService'.\n\n    \u001b[7m98\u001b[0m       expect(service.logout).toHaveBeenCalledWith(token);\n    \u001b[7m  \u001b[0m \u001b[91m                     ~~~~~~\u001b[0m\n\nFAIL tests/unit/user.controller.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/unit/user.controller.spec.ts\u001b[0m:\u001b[93m105\u001b[0m:\u001b[93m13\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2741: \u001b[0mProperty 'tenant_id' is missing in type '{ username: string; fullName: string; password: string; user_level: number; }' but required in type 'CreateUserDto'.\n\n    \u001b[7m105\u001b[0m       const createUserDto: CreateUserDto = {\n    \u001b[7m   \u001b[0m \u001b[91m            ~~~~~~~~~~~~~\u001b[0m\n\n      \u001b[96msrc/Application/DTOs/Users/user-create.dto.ts\u001b[0m:\u001b[93m26\u001b[0m:\u001b[93m3\u001b[0m\n        \u001b[7m26\u001b[0m   tenant_id: string;\n        \u001b[7m  \u001b[0m \u001b[96m  ~~~~~~~~~\u001b[0m\n        'tenant_id' is declared here.\n\nPASS tests/unit/business.controller.spec.ts\n  ● Console\n\n    console.log\n      [dotenv@17.2.1] injecting env (0) from ..\\.env -- tip: ⚙️  suppress all logs with { quiet: true }\n\n      at _log (node_modules/dotenv/lib/main.js:139:11)\n\n\nTest Suites: 2 failed, 1 passed, 3 total\nTests:       10 passed, 10 total\nSnapshots:   0 total\nTime:        3.79 s, estimated 4 s\nRan all test suites matching /tests\\\\unit/i.\n",
+      "duration": 4511,
+      "timestamp": "2025-08-20T14:56:01.121Z",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "coverage": 0
+    },
+    {
+      "category": "integration",
+      "success": false,
+      "exitCode": 1,
+      "output": "\n> real-state-crm-server@1.0.0 test:integration\n> jest tests/integration --config jest.config.js\n\n",
+      "errorOutput": "FAIL tests/integration/authorization.integration.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/integration/authorization.integration.spec.ts\u001b[0m:\u001b[93m4\u001b[0m:\u001b[93m10\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2305: \u001b[0mModule '\"../../src/Infrastructure/Database/postgres.context\"' has no exported member 'PrismaService'.\n\n    \u001b[7m4\u001b[0m import { PrismaService } from '../../src/Infrastructure/Database/postgres.context';\n    \u001b[7m \u001b[0m \u001b[91m         ~~~~~~~~~~~~~\u001b[0m\n\nFAIL tests/integration/business.integration.spec.ts\n  ● Test suite failed to run\n\n    \u001b[96mtests/integration/business.integration.spec.ts\u001b[0m:\u001b[93m4\u001b[0m:\u001b[93m10\u001b[0m - \u001b[91merror\u001b[0m\u001b[90m TS2305: \u001b[0mModule '\"../../src/Infrastructure/Database/postgres.context\"' has no exported member 'PrismaService'.\n\n    \u001b[7m4\u001b[0m import { PrismaService } from '../../src/Infrastructure/Database/postgres.context';\n    \u001b[7m \u001b[0m \u001b[91m         ~~~~~~~~~~~~~\u001b[0m\n\nTest Suites: 2 failed, 2 total\nTests:       0 total\nSnapshots:   0 total\nTime:        3.475 s\nRan all test suites matching /tests\\\\integration/i.\n",
+      "duration": 4261,
+      "timestamp": "2025-08-20T14:56:05.391Z",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "coverage": 0
+    },
+    {
+      "category": "e2e",
+      "success": false,
+      "exitCode": 1,
+      "output": "\n> real-state-crm-server@1.0.0 test:e2e\n> jest tests/e2e --config jest.config.js\n\nNo tests found, exiting with code 1\nRun with `--passWithNoTests` to exit with code 0\nIn D:\\PROJETOS\\real-state-crm\\server\n  53 files checked.\n  roots: D:\\PROJETOS\\real-state-crm\\server\\src, D:\\PROJETOS\\real-state-crm\\server\\tests - 53 matches\n  testMatch:  - 0 matches\n  testPathIgnorePatterns: \\\\node_modules\\\\, \\\\dist\\\\ - 53 matches\n  testRegex: .*\\.spec\\.ts$ - 5 matches\nPattern: tests\\\\e2e - 0 matches\n",
+      "errorOutput": "",
+      "duration": 710,
+      "timestamp": "2025-08-20T14:56:06.102Z",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "coverage": 0
+    }
+  ],
+  "timestamp": "2025-08-20T14:56:06.104Z",
+  "environment": {
+    "nodeEnv": "test",
+    "testUser": "admin",
+    "majesticPort": "4000"
+  }
+}

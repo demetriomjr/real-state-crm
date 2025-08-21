@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var UserController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
@@ -19,20 +20,37 @@ const user_service_1 = require("../Services/user.service");
 const DTOs_1 = require("../DTOs");
 const user_validator_1 = require("../Validators/user.validator");
 const auth_guard_1 = require("../Features/auth.guard");
-let UserController = class UserController {
-    constructor(userService, userValidator) {
+const authorization_service_1 = require("../Services/authorization.service");
+let UserController = UserController_1 = class UserController {
+    constructor(userService, userValidator, authorizationService) {
         this.userService = userService;
         this.userValidator = userValidator;
+        this.authorizationService = authorizationService;
+        this.logger = new common_1.Logger(UserController_1.name);
     }
     async findAll(page = 1, limit = 10, req) {
         const tenantId = req.tenantId;
+        const userLevel = req.userLevel;
         if (!tenantId) {
             throw new common_1.UnauthorizedException('Tenant ID is required');
         }
+        if (userLevel < 8) {
+            this.logger.warn(`User with level ${userLevel} attempted to access findAll - access denied`);
+            throw new common_1.BadRequestException('Access denied. Admin level (8+) required to view all users.');
+        }
         return this.userService.findByTenant(tenantId);
     }
-    async findOne(id) {
-        return this.userService.findOne(id);
+    async findOne(id, req) {
+        const userLevel = req.userLevel;
+        const user = await this.userService.findOne(id);
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        const targetUser = await this.userService.findByUsername(user.username);
+        if (targetUser && userLevel < targetUser.user_level) {
+            throw new common_1.BadRequestException('Access denied. Your user level is insufficient to view this user.');
+        }
+        return user;
     }
     async create(createUserDto) {
         await this.userValidator.validateCreate(createUserDto);
@@ -69,11 +87,12 @@ let UserController = class UserController {
 exports.UserController = UserController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all users with pagination' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all users with pagination (Admin Only)' }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false, description: 'Page number (default: 1)' }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Items per page (default: 10)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns paginated list of users', type: [DTOs_1.UserResponseDto] }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Admin level required' }),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
     __param(2, (0, common_1.Request)()),
@@ -86,10 +105,13 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get user by ID' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'User ID (UUID)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns user details', type: DTOs_1.UserResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Insufficient user level' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "findOne", null);
 __decorate([
@@ -133,12 +155,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "remove", null);
-exports.UserController = UserController = __decorate([
+exports.UserController = UserController = UserController_1 = __decorate([
     (0, swagger_1.ApiTags)('users'),
     (0, common_1.Controller)('users'),
     (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
+    __param(2, (0, common_1.Inject)((0, common_1.forwardRef)(() => authorization_service_1.AuthorizationService))),
     __metadata("design:paramtypes", [user_service_1.UserService,
-        user_validator_1.UserValidator])
+        user_validator_1.UserValidator,
+        authorization_service_1.AuthorizationService])
 ], UserController);
 //# sourceMappingURL=user.controller.js.map

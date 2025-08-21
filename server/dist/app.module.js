@@ -15,7 +15,13 @@ const database_module_1 = require("./Infrastructure/Database/database.module");
 const user_module_1 = require("./Application/Modules/user.module");
 const authorization_module_1 = require("./Application/Modules/authorization.module");
 const business_module_1 = require("./Application/Modules/business.module");
+const tenant_validation_middleware_1 = require("./Application/Features/tenant-validation.middleware");
 let AppModule = class AppModule {
+    configure(consumer) {
+        consumer
+            .apply(tenant_validation_middleware_1.TenantValidationMiddleware)
+            .forRoutes('*');
+    }
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([

@@ -32,6 +32,9 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         if (!payload.tenant_id) {
             throw new common_1.UnauthorizedException('Tenant ID is required');
         }
+        if (payload.user_level === undefined || payload.user_level === null) {
+            throw new common_1.UnauthorizedException('User level is required');
+        }
         return payload;
     }
 };

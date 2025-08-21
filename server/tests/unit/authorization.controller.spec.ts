@@ -9,13 +9,14 @@ describe('AuthorizationController (Unit)', () => {
   let service: AuthorizationService;
 
   const mockAuthorizationService = {
-    validateUser: jest.fn(),
-    createToken: jest.fn(),
-    validateToken: jest.fn(),
-    refreshToken: jest.fn(),
-    logout: jest.fn(),
-    isDevelopmentEnvironment: jest.fn(),
-  };
+  validateUser: jest.fn(),
+  createToken: jest.fn(),
+  validateToken: jest.fn(),
+  refreshToken: jest.fn(),
+  logout: jest.fn(),
+  invalidateToken: jest.fn(),
+  isDevelopmentEnvironment: jest.fn(),
+};
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -89,20 +90,32 @@ describe('AuthorizationController (Unit)', () => {
   describe('logout', () => {
     it('should successfully logout and invalidate token', async () => {
       const token = 'mock-jwt-token';
-      const mockResponse = { message: 'Logged out successfully' };
+      const authHeader = `Bearer ${token}`;
+      const mockResponse = { message: 'Logout successful' };
 
-      mockAuthorizationService.logout.mockResolvedValue(mockResponse);
+      mockAuthorizationService.validateToken.mockResolvedValue({ username: 'testuser', tenant_id: 'tenant1' });
+      mockAuthorizationService.invalidateToken.mockImplementation(() => {});
 
-      const result = await controller.logout(token);
+      const result = await controller.logout(authHeader);
 
-      expect(service.logout).toHaveBeenCalledWith(token);
+      expect(service.validateToken).toHaveBeenCalledWith(token);
+      expect(service.invalidateToken).toHaveBeenCalledWith(token);
       expect(result).toEqual(mockResponse);
+    });
+
+    it('should throw UnauthorizedException for invalid authorization header', async () => {
+      const invalidHeader = 'InvalidHeader';
+
+      await expect(controller.logout(invalidHeader)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
   describe('refresh', () => {
     it('should refresh token successfully', async () => {
       const token = 'mock-jwt-token';
+      const authHeader = `Bearer ${token}`;
       const mockResponse: AuthorizationResponseDto = {
         token: 'new-mock-jwt-token',
         expires_at: new Date(),
@@ -110,7 +123,7 @@ describe('AuthorizationController (Unit)', () => {
 
       mockAuthorizationService.refreshToken.mockResolvedValue(mockResponse);
 
-      const result = await controller.refresh(token);
+      const result = await controller.refresh(authHeader);
 
       expect(service.refreshToken).toHaveBeenCalledWith(token);
       expect(result).toEqual(mockResponse);
@@ -118,15 +131,24 @@ describe('AuthorizationController (Unit)', () => {
 
     it('should throw UnauthorizedException when refresh fails', async () => {
       const token = 'invalid-token';
+      const authHeader = `Bearer ${token}`;
 
       mockAuthorizationService.refreshToken.mockRejectedValue(
         new UnauthorizedException('Invalid token'),
       );
 
-      await expect(controller.refresh(token)).rejects.toThrow(
+      await expect(controller.refresh(authHeader)).rejects.toThrow(
         UnauthorizedException,
       );
       expect(service.refreshToken).toHaveBeenCalledWith(token);
+    });
+
+    it('should throw UnauthorizedException for invalid authorization header', async () => {
+      const invalidHeader = 'InvalidHeader';
+
+      await expect(controller.refresh(invalidHeader)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

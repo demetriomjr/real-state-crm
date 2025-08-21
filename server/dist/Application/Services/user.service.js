@@ -94,6 +94,30 @@ let UserService = UserService_1 = class UserService {
         this.logger.log(`Fetching user by username: ${username}`);
         return await this.userRepository.findByUsername(username);
     }
+    async findOneRaw(id) {
+        this.logger.log(`Fetching raw user with ID: ${id}`);
+        return await this.userRepository.findOne(id);
+    }
+    async purge(id) {
+        this.logger.warn(`PURGING user with ID: ${id} - PERMANENT DELETION`);
+        const existingUser = await this.userRepository.findOne(id);
+        if (!existingUser) {
+            this.logger.warn(`User with ID ${id} not found for purge`);
+            throw new common_1.NotFoundException(`User with ID ${id} not found`);
+        }
+        const tenantId = existingUser.tenant_id;
+        await this.userRepository.purgeUserRoles(id);
+        await this.userRepository.purge(id);
+        this.logger.warn(`User PURGED permanently with ID: ${id} from tenant: ${tenantId}`);
+    }
+    async purgeByTenant(tenant_id) {
+        this.logger.warn(`PURGING all users for tenant: ${tenant_id} - PERMANENT DELETION`);
+        const users = await this.userRepository.findByTenant(tenant_id);
+        for (const user of users) {
+            await this.purge(user.id);
+        }
+        this.logger.warn(`All users PURGED permanently for tenant: ${tenant_id}`);
+    }
     mapToResponseDto(user) {
         return {
             id: user.id,

@@ -106,6 +106,21 @@ let UserRepository = class UserRepository {
         });
         return users.map(user => new User_1.User(user));
     }
+    async purge(id) {
+        await this.prisma.user.delete({
+            where: { id },
+        });
+    }
+    async purgeUserRoles(userId) {
+        await this.prisma.userRole.deleteMany({
+            where: { user_id: userId },
+        });
+    }
+    async purgeByTenant(tenant_id) {
+        await this.prisma.user.deleteMany({
+            where: { tenant_id },
+        });
+    }
 };
 exports.UserRepository = UserRepository;
 exports.UserRepository = UserRepository = __decorate([

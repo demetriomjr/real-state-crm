@@ -67,3 +67,6 @@ export class PostgresContext extends PrismaClient implements OnModuleInit, OnMod
     return 'system';
   }
 }
+
+// Export alias for backward compatibility with tests
+export { PostgresContext as PrismaService };

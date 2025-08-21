@@ -3,8 +3,8 @@ import { BusinessResponseDto } from './business-response.dto';
 import { AuthorizationResponseDto } from '../Authorization/authorization-response.dto';
 
 export class BusinessCreateResponseDto {
-  @ApiProperty({ description: 'Business information', type: BusinessResponseDto })
-  business: BusinessResponseDto;
+  @ApiProperty({ description: 'Business information with ID', type: BusinessResponseDto })
+  business: BusinessResponseDto & { id: string };
 
   @ApiProperty({ description: 'Master user information' })
   master_user: {

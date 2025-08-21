@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BusinessCreateResponseDto = exports.BusinessResponseDto = exports.BusinessUpdateDto = exports.BusinessCreateDto = exports.UserResponseDto = exports.UpdateUserDto = exports.CreateUserDto = void 0;
+exports.CustomerResponseDto = exports.CustomerUpdateDto = exports.CustomerCreateDto = exports.LeadResponseDto = exports.LeadUpdateDto = exports.LeadCreateDto = exports.BusinessCreateResponseDto = exports.BusinessResponseDto = exports.BusinessUpdateDto = exports.BusinessCreateDto = exports.UserResponseDto = exports.UpdateUserDto = exports.CreateUserDto = void 0;
 var Users_1 = require("./Users");
 Object.defineProperty(exports, "CreateUserDto", { enumerable: true, get: function () { return Users_1.CreateUserDto; } });
 Object.defineProperty(exports, "UpdateUserDto", { enumerable: true, get: function () { return Users_1.UpdateUserDto; } });
@@ -10,4 +10,12 @@ Object.defineProperty(exports, "BusinessCreateDto", { enumerable: true, get: fun
 Object.defineProperty(exports, "BusinessUpdateDto", { enumerable: true, get: function () { return Business_1.BusinessUpdateDto; } });
 Object.defineProperty(exports, "BusinessResponseDto", { enumerable: true, get: function () { return Business_1.BusinessResponseDto; } });
 Object.defineProperty(exports, "BusinessCreateResponseDto", { enumerable: true, get: function () { return Business_1.BusinessCreateResponseDto; } });
+var Leads_1 = require("./Leads");
+Object.defineProperty(exports, "LeadCreateDto", { enumerable: true, get: function () { return Leads_1.LeadCreateDto; } });
+Object.defineProperty(exports, "LeadUpdateDto", { enumerable: true, get: function () { return Leads_1.LeadUpdateDto; } });
+Object.defineProperty(exports, "LeadResponseDto", { enumerable: true, get: function () { return Leads_1.LeadResponseDto; } });
+var Customers_1 = require("./Customers");
+Object.defineProperty(exports, "CustomerCreateDto", { enumerable: true, get: function () { return Customers_1.CustomerCreateDto; } });
+Object.defineProperty(exports, "CustomerUpdateDto", { enumerable: true, get: function () { return Customers_1.CustomerUpdateDto; } });
+Object.defineProperty(exports, "CustomerResponseDto", { enumerable: true, get: function () { return Customers_1.CustomerResponseDto; } });
 //# sourceMappingURL=index.js.map

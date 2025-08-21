@@ -9,3 +9,4 @@ export declare class PostgresContext extends PrismaClient implements OnModuleIni
     $beforeDelete(params: any): Promise<void>;
     private getCurrentUserId;
 }
+export { PostgresContext as PrismaService };

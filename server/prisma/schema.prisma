@@ -43,7 +43,7 @@ model User {
   // Relations
   userRoles UserRole[]
   tenant_id String?
-  business  Business? @relation(fields: [tenant_id], references: [tenant_id])
+  business  Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("users")
 }
@@ -62,7 +62,7 @@ model UserRole {
   deleted_by String?
 
   // Relations
-  user User @relation(fields: [user_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("user_roles")
 }
@@ -72,7 +72,6 @@ model Business {
   id           String   @id @default(uuid())
   company_name String
   subscription Int
-  tenant_id    String   @unique
   created_at   DateTime @default(now())
   created_by   String?
   updated_at   DateTime @updatedAt
@@ -84,4 +83,136 @@ model Business {
   users User[]
 
   @@map("businesses")
+}
+
+// Person entity
+model Person {
+  id              String   @id @default(uuid())
+  full_name       String
+  document_type   String
+  document_number String
+  created_at      DateTime @default(now())
+  created_by      String?
+  updated_at      DateTime @updatedAt
+  updated_by      String?
+  deleted_at      DateTime?
+  deleted_by      String?
+
+  // Relations
+  addresses Address[]
+  contacts  Contact[]
+  documents Document[]
+  leads     Lead[]
+  customers Customer[]
+
+  @@map("people")
+}
+
+// Address entity
+model Address {
+  id            String   @id @default(uuid())
+  address_line_1 String
+  address_line_2 String?
+  city          String
+  state         String
+  country       String
+  zip_code      String
+  district      String?
+  is_primary    Boolean  @default(false)
+  created_at    DateTime @default(now())
+  created_by    String?
+  updated_at    DateTime @updatedAt
+  updated_by    String?
+  deleted_at    DateTime?
+  deleted_by    String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("addresses")
+}
+
+// Contact entity
+model Contact {
+  id            String   @id @default(uuid())
+  contact_type  String
+  contact_value String
+  is_primary    Boolean  @default(false)
+  created_at    DateTime @default(now())
+  created_by    String?
+  updated_at    DateTime @updatedAt
+  updated_by    String?
+  deleted_at    DateTime?
+  deleted_by    String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("contacts")
+}
+
+// Document entity
+model Document {
+  id              String   @id @default(uuid())
+  document_type   String
+  document_number String
+  is_primary      Boolean  @default(false)
+  created_at      DateTime @default(now())
+  created_by      String?
+  updated_at      DateTime @updatedAt
+  updated_by      String?
+  deleted_at      DateTime?
+  deleted_by      String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("documents")
+}
+
+// Lead entity
+model Lead {
+  id                  String   @id @default(uuid())
+  lead_type           String
+  lead_status         String
+  lead_temperature    String
+  lead_origin         String
+  lead_description    String
+  lead_notes          String[]
+  first_contacted_by  String
+  created_at          DateTime @default(now())
+  created_by          String?
+  updated_at          DateTime @updatedAt
+  updated_by          String?
+  deleted_at          DateTime?
+  deleted_by          String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("leads")
+}
+
+// Customer entity
+model Customer {
+  id             String   @id @default(uuid())
+  customer_type  String
+  customer_status String
+  fidelized_by   String?
+  created_at     DateTime @default(now())
+  created_by     String?
+  updated_at     DateTime @updatedAt
+  updated_by     String?
+  deleted_at     DateTime?
+  deleted_by     String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("customers")
 }

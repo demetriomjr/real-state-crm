@@ -150,6 +150,14 @@ describe('FlexSuite CRM API (e2e)', () => {
 
   describe('Authentication Flow', () => {
     it('should handle complete authentication flow', async () => {
+      // Create test business first
+      const testBusiness = await prisma.business.create({
+        data: {
+          company_name: 'Test Business',
+          subscription: 1,
+        },
+      });
+
       // Create test user
       const hashedPassword = await bcrypt.hash('testpass123', 10);
       await prisma.user.create({
@@ -158,7 +166,7 @@ describe('FlexSuite CRM API (e2e)', () => {
           fullName: 'Test User',
           password: hashedPassword,
           user_level: 1,
-          tenant_id: 'test-tenant',
+          tenant_id: testBusiness.id,
         },
       });
 

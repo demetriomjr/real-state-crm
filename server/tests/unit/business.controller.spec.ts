@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BusinessController } from '../../src/Application/Controllers/business.controller';
 import { BusinessService } from '../../src/Application/Services/business.service';
+import { AuthorizationService } from '../../src/Application/Services/authorization.service';
 import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto, BusinessCreateResponseDto } from '../../src/Application/DTOs';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
@@ -23,6 +24,15 @@ describe('BusinessController (Unit)', () => {
         {
           provide: BusinessService,
           useValue: mockBusinessService,
+        },
+        {
+          provide: AuthorizationService,
+          useValue: {
+            createToken: jest.fn(),
+            validateToken: jest.fn(),
+            refreshToken: jest.fn(),
+            logout: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -49,9 +59,10 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.findAll.mockResolvedValue(mockResponse);
 
-      const result = await controller.findAll(1, 10);
+      const mockRequest = { userLevel: 10, tenantId: 'test-tenant' }; // Developer level
+      const result = await controller.findAll(1, 10, mockRequest);
 
-      expect(service.findAll).toHaveBeenCalledWith(1, 10);
+      expect(service.findAll).toHaveBeenCalledWith(1, 10, 10);
       expect(result).toEqual(mockResponse);
     });
 
@@ -65,9 +76,10 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.findAll.mockResolvedValue(mockResponse);
 
-      await controller.findAll();
+      const mockRequest = { userLevel: 10, tenantId: 'test-tenant' }; // Developer level
+      await controller.findAll(1, 10, mockRequest);
 
-      expect(service.findAll).toHaveBeenCalledWith(1, 10);
+      expect(service.findAll).toHaveBeenCalledWith(1, 10, 10);
     });
   });
 
@@ -84,7 +96,8 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.findOne.mockResolvedValue(mockBusiness);
 
-      const result = await controller.findOne(businessId);
+      const mockRequest = { userLevel: 10, tenantId: businessId }; // Admin level
+      const result = await controller.findOne(businessId, mockRequest);
 
       expect(service.findOne).toHaveBeenCalledWith(businessId);
       expect(result).toEqual(mockBusiness);
@@ -95,7 +108,8 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.findOne.mockRejectedValue(new NotFoundException('Business not found'));
 
-      await expect(controller.findOne(businessId)).rejects.toThrow(NotFoundException);
+      const mockRequest = { userLevel: 10, tenantId: businessId }; // Admin level
+      await expect(controller.findOne(businessId, mockRequest)).rejects.toThrow(NotFoundException);
       expect(service.findOne).toHaveBeenCalledWith(businessId);
     });
   });
@@ -112,6 +126,7 @@ describe('BusinessController (Unit)', () => {
 
       const mockResponse: BusinessCreateResponseDto = {
         business: {
+          id: 'business-1',
           company_name: 'New Business',
           subscription: 1,
           subscription_level: 'Basic',
@@ -175,7 +190,8 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.update.mockResolvedValue(mockBusiness);
 
-      const result = await controller.update(businessId, updateBusinessDto);
+      const mockRequest = { userLevel: 9, tenantId: businessId };
+      const result = await controller.update(businessId, updateBusinessDto, mockRequest);
 
       expect(service.update).toHaveBeenCalledWith(businessId, updateBusinessDto);
       expect(result).toEqual(mockBusiness);
@@ -189,7 +205,8 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.update.mockRejectedValue(new NotFoundException('Business not found'));
 
-      await expect(controller.update(businessId, updateBusinessDto)).rejects.toThrow(NotFoundException);
+      const mockRequest = { userLevel: 9, tenantId: businessId };
+      await expect(controller.update(businessId, updateBusinessDto, mockRequest)).rejects.toThrow(NotFoundException);
       expect(service.update).toHaveBeenCalledWith(businessId, updateBusinessDto);
     });
   });
@@ -200,7 +217,8 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.remove.mockResolvedValue(undefined);
 
-      const result = await controller.remove(businessId);
+      const mockRequest = { userLevel: 10, tenantId: businessId };
+      const result = await controller.remove(businessId, mockRequest);
 
       expect(service.remove).toHaveBeenCalledWith(businessId);
       expect(result).toBeUndefined();
@@ -211,7 +229,8 @@ describe('BusinessController (Unit)', () => {
 
       mockBusinessService.remove.mockRejectedValue(new NotFoundException('Business not found'));
 
-      await expect(controller.remove(businessId)).rejects.toThrow(NotFoundException);
+      const mockRequest = { userLevel: 10, tenantId: businessId };
+      await expect(controller.remove(businessId, mockRequest)).rejects.toThrow(NotFoundException);
       expect(service.remove).toHaveBeenCalledWith(businessId);
     });
   });

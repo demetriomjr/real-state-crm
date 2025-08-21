@@ -39,23 +39,11 @@ export class BusinessRepository {
     return business ? new Business(business) : null;
   }
 
-  async findByTenantId(tenant_id: string): Promise<Business | null> {
-    const business = await this.prisma.business.findFirst({
-      where: { 
-        tenant_id,
-        deleted_at: null 
-      },
-    });
-
-    return business ? new Business(business) : null;
-  }
-
   async create(businessData: BusinessCreateDto): Promise<Business> {
     const business = await this.prisma.business.create({
       data: {
         company_name: businessData.company_name,
         subscription: businessData.subscription || 1,
-        tenant_id: businessData.company_name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(), // Generate tenant_id
       },
     });
 
@@ -94,13 +82,26 @@ export class BusinessRepository {
     return count > 0;
   }
 
-  async existsByTenantId(tenant_id: string): Promise<boolean> {
+  async validateTenantId(tenantId: string): Promise<boolean> {
     const count = await this.prisma.business.count({
       where: { 
-        tenant_id,
+        id: tenantId,
         deleted_at: null 
       },
     });
     return count > 0;
+  }
+
+
+
+  /**
+   * PURGE - Permanently delete business from database
+   * WARNING: This method permanently deletes data and cannot be undone
+   * Should only be used for testing purposes or data cleanup
+   */
+  async purge(id: string): Promise<void> {
+    await this.prisma.business.delete({
+      where: { id },
+    });
   }
 }

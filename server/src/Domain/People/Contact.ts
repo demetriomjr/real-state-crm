@@ -1,0 +1,29 @@
+import { IAuditBase } from '@/Domain/Interfaces/IAuditBase';
+
+export class Contact implements IAuditBase {
+  id: string;
+  contact_type: string; // "email", "phone", "whatsapp", "cellphone"
+  contact_value: string;
+  person_id: string;
+  is_primary: boolean;
+  created_at: Date;
+  created_by?: string;
+  updated_at: Date;
+  updated_by?: string;
+  deleted_at?: Date;
+  deleted_by?: string;
+
+  constructor(data: Partial<Contact>) {
+    this.id = data.id || '';
+    this.contact_type = data.contact_type || '';
+    this.contact_value = data.contact_value || '';
+    this.person_id = data.person_id || '';
+    this.is_primary = data.is_primary || false;
+    this.created_at = data.created_at || new Date();
+    this.created_by = data.created_by;
+    this.updated_at = data.updated_at || new Date();
+    this.updated_by = data.updated_by;
+    this.deleted_at = data.deleted_at;
+    this.deleted_by = data.deleted_by;
+  }
+}

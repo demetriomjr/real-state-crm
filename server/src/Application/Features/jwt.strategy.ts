@@ -29,6 +29,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Tenant ID is required');
     }
 
+    // Ensure user_level is present
+    if (payload.user_level === undefined || payload.user_level === null) {
+      throw new UnauthorizedException('User level is required');
+    }
+
+
+
     return payload;
   }
 }

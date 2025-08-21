@@ -17,5 +17,8 @@ export declare class UserService {
     remove(id: string): Promise<void>;
     findByTenant(tenant_id: string): Promise<UserResponseDto[]>;
     findByUsername(username: string): Promise<User | null>;
+    findOneRaw(id: string): Promise<User | null>;
+    purge(id: string): Promise<void>;
+    purgeByTenant(tenant_id: string): Promise<void>;
     private mapToResponseDto;
 }
