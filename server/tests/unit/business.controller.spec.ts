@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { BusinessController } from '../../src/Application/Controllers/business.controller';
 import { BusinessService } from '../../src/Application/Services/business.service';
 import { AuthorizationService } from '../../src/Application/Services/authorization.service';
@@ -32,6 +33,15 @@ describe('BusinessController (Unit)', () => {
             validateToken: jest.fn(),
             refreshToken: jest.fn(),
             logout: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'NODE_ENV') return 'test';
+              return 'test-value';
+            }),
           },
         },
       ],

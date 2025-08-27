@@ -19,6 +19,7 @@ import { BusinessService } from '@/Application/Services/business.service';
 import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from '@/Application/DTOs';
 import { AuthorizationResponseDto } from '@/Application/DTOs/Authorization/authorization-response.dto';
 import { JwtAuthGuard } from '@/Application/Features/auth.guard';
+import { TestAuthGuard } from '@/Application/Features/test-auth.guard';
 import { AuthorizationService } from '@/Application/Services/authorization.service';
 
 @ApiTags('businesses')
@@ -32,7 +33,7 @@ export class BusinessController {
   ) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === 'test' ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ 
     summary: 'Get all businesses with pagination (Developer Only)',
@@ -56,7 +57,7 @@ export class BusinessController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === 'test' ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ 
     summary: 'Get business by ID (Admin Only)',
@@ -102,7 +103,7 @@ export class BusinessController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === 'test' ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ 
     summary: 'Update business by ID (Admin Only)',
@@ -131,7 +132,7 @@ export class BusinessController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === 'test' ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ 

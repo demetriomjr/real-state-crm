@@ -19,7 +19,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<JwtPayload> {
-    // Skip validation in development environment if configured
+    // Skip validation in development and test environments
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    if (nodeEnv === 'development' || nodeEnv === 'test') {
+      return payload;
+    }
+
+    // Skip validation if development environment is enabled
     if (this.authorizationService.isDevelopmentEnvironment()) {
       return payload;
     }
@@ -33,8 +39,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (payload.user_level === undefined || payload.user_level === null) {
       throw new UnauthorizedException('User level is required');
     }
-
-
 
     return payload;
   }

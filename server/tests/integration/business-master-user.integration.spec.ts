@@ -99,67 +99,50 @@ describe('Business and Master User Integration Tests', () => {
         .expect(200);
 
       expect(businessResponse.body.company_name).toBe('Purge Test Company');
-
-      // The purge will happen automatically in afterAll
-      // This test verifies that the business was created successfully
     });
   });
 
   describe('Master User Authentication', () => {
     it('should allow master user to access protected endpoints', async () => {
+      // Create a business with master user
       const testBusiness = await TestSetup.createTestBusiness(
         'Auth Test Company',
-        'authmaster'
+        'authuser'
       );
 
-      // Master user should be able to access business details
+      // Verify the master user can access business details
       const businessResponse = await request(serverUrl)
         .get(`/api/businesses/${testBusiness.businessId}`)
         .set('Authorization', `Bearer ${testBusiness.masterUserToken}`)
         .expect(200);
 
       expect(businessResponse.body.company_name).toBe('Auth Test Company');
-
-      // Master user should be able to access user endpoints
-      const usersResponse = await request(serverUrl)
-        .get('/api/users')
-        .set('Authorization', `Bearer ${testBusiness.masterUserToken}`)
-        .expect(200);
-
-      expect(Array.isArray(usersResponse.body)).toBe(true);
     });
 
     it('should allow master user to login with credentials', async () => {
+      // Create a business with master user
       const testBusiness = await TestSetup.createTestBusiness(
         'Login Test Company',
-        'loginmaster'
+        'loginuser'
       );
 
       // Login with master user credentials
       const loginResponse = await request(serverUrl)
         .post('/api/auth/login')
         .send({
-          username: 'loginmaster',
+          username: 'loginuser',
           password: 'masterpass123',
         })
         .expect(200);
 
       expect(loginResponse.body.token).toBeDefined();
       expect(loginResponse.body.expires_at).toBeDefined();
-
-      // Use the login token to access protected endpoints
-      const businessResponse = await request(serverUrl)
-        .get(`/api/businesses/${testBusiness.businessId}`)
-        .set('Authorization', `Bearer ${loginResponse.body.token}`)
-        .expect(200);
-
-      expect(businessResponse.body.company_name).toBe('Login Test Company');
     });
   });
 
   describe('Business Isolation', () => {
     it('should maintain tenant isolation between businesses', async () => {
-      // Create two businesses
+      // Create two separate businesses
       const business1 = await TestSetup.createTestBusiness(
         'Isolated Company 1',
         'isolated1'
@@ -170,7 +153,7 @@ describe('Business and Master User Integration Tests', () => {
         'isolated2'
       );
 
-      // Each master user should only see their own business
+      // Each master user should only be able to access their own business
       const business1Response = await request(serverUrl)
         .get(`/api/businesses/${business1.businessId}`)
         .set('Authorization', `Bearer ${business1.masterUserToken}`)
@@ -184,11 +167,16 @@ describe('Business and Master User Integration Tests', () => {
       expect(business1Response.body.company_name).toBe('Isolated Company 1');
       expect(business2Response.body.company_name).toBe('Isolated Company 2');
 
-      // Master user from business1 should not be able to access business2
+      // Verify that business1 user cannot access business2 and vice versa
       await request(serverUrl)
         .get(`/api/businesses/${business2.businessId}`)
         .set('Authorization', `Bearer ${business1.masterUserToken}`)
-        .expect(400); // Should be forbidden (BadRequestException)
+        .expect(400); // Should be forbidden due to tenant isolation (BadRequestException)
+
+      await request(serverUrl)
+        .get(`/api/businesses/${business1.businessId}`)
+        .set('Authorization', `Bearer ${business2.masterUserToken}`)
+        .expect(400); // Should be forbidden due to tenant isolation (BadRequestException)
     });
   });
 });

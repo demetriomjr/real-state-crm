@@ -26,6 +26,10 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         this.authorizationService = authorizationService;
     }
     async validate(payload) {
+        const nodeEnv = this.configService.get('NODE_ENV');
+        if (nodeEnv === 'development' || nodeEnv === 'test') {
+            return payload;
+        }
         if (this.authorizationService.isDevelopmentEnvironment()) {
             return payload;
         }

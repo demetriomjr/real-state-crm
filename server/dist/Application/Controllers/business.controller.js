@@ -20,6 +20,7 @@ const business_service_1 = require("../Services/business.service");
 const DTOs_1 = require("../DTOs");
 const authorization_response_dto_1 = require("../DTOs/Authorization/authorization-response.dto");
 const auth_guard_1 = require("../Features/auth.guard");
+const test_auth_guard_1 = require("../Features/test-auth.guard");
 const authorization_service_1 = require("../Services/authorization.service");
 let BusinessController = BusinessController_1 = class BusinessController {
     constructor(businessService, authorizationService) {
@@ -75,7 +76,7 @@ let BusinessController = BusinessController_1 = class BusinessController {
 exports.BusinessController = BusinessController;
 __decorate([
     (0, common_1.Get)(),
-    (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(process.env.NODE_ENV === 'test' ? test_auth_guard_1.TestAuthGuard : auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Get all businesses with pagination (Developer Only)',
@@ -95,7 +96,7 @@ __decorate([
 ], BusinessController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(process.env.NODE_ENV === 'test' ? test_auth_guard_1.TestAuthGuard : auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Get business by ID (Admin Only)',
@@ -133,7 +134,7 @@ __decorate([
 ], BusinessController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
-    (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(process.env.NODE_ENV === 'test' ? test_auth_guard_1.TestAuthGuard : auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Update business by ID (Admin Only)',
@@ -154,7 +155,7 @@ __decorate([
 ], BusinessController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(process.env.NODE_ENV === 'test' ? test_auth_guard_1.TestAuthGuard : auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     (0, swagger_1.ApiOperation)({

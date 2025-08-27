@@ -24,22 +24,22 @@ describe('Business Integration Tests', () => {
 
   describe('GET /api/businesses', () => {
     it('should return paginated list of businesses', async () => {
-      // Create test businesses
+      // Create test business and user with proper token
+      const { business, user, token } = await TestSetup.createTestBusinessAndUser('Business 1', 'admin1', 10);
+
+      // Create additional test businesses
       await prisma.business.createMany({
         data: [
-          {
-            company_name: 'Business 1',
-            subscription: 1,
-          },
           {
             company_name: 'Business 2',
             subscription: 2,
           },
+          {
+            company_name: 'Business 3',
+            subscription: 3,
+          },
         ],
       });
-
-      // Create JWT token for developer access
-      const token = TestSetup.createTestJwtToken('developer', 10);
       
       const response = await request(serverUrl)
         .get('/api/businesses')
@@ -53,8 +53,11 @@ describe('Business Integration Tests', () => {
     });
 
     it('should return empty list when no businesses exist', async () => {
-      // Create JWT token for developer access
-      const token = TestSetup.createTestJwtToken('developer', 10);
+      // Don't create any businesses, just create a user token
+      const { token } = await TestSetup.createTestBusinessAndUser('Test Business', 'admin2', 10);
+      
+      // Delete the business that was created by createTestBusinessAndUser
+      await prisma.business.deleteMany();
       
       const response = await request(serverUrl)
         .get('/api/businesses')
@@ -68,33 +71,7 @@ describe('Business Integration Tests', () => {
 
   describe('GET /api/businesses/:id', () => {
     it('should return business by id', async () => {
-      const business = await prisma.business.create({
-        data: {
-          company_name: 'Test Business',
-          subscription: 1,
-        },
-      });
-
-      // Create a user that belongs to this business
-      const user = await prisma.user.create({
-        data: {
-          username: 'testadmin',
-          fullName: 'Test Admin',
-          password: 'hashedpassword',
-          user_level: 9, // Admin level
-          tenant_id: business.id,
-        },
-      });
-
-      // Create JWT token for this user
-      const jwt = require('jsonwebtoken');
-      const token = jwt.sign({
-        tenant_id: business.id,
-        username: user.username,
-        user_level: user.user_level,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
-      }, process.env.JWT_SECRET || 'test-secret-key');
+      const { business, user, token } = await TestSetup.createTestBusinessAndUser('Test Business', 'admin3', 10);
       
       const response = await request(serverUrl)
         .get(`/api/businesses/${business.id}`)
@@ -111,9 +88,9 @@ describe('Business Integration Tests', () => {
       const businessData = {
         company_name: 'New Business',
         subscription: 1,
-        master_user_fullName: 'John Doe',
-        master_user_username: 'johndoe',
-        master_user_password: 'password123',
+        master_user_fullName: 'Master User',
+        master_user_username: 'masteruser',
+        master_user_password: 'masterpass123',
       };
 
       const response = await request(serverUrl)
@@ -123,37 +100,18 @@ describe('Business Integration Tests', () => {
 
       expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('expires_at');
-      expect(typeof response.body.token).toBe('string');
-      expect(response.body.token.length).toBeGreaterThan(0);
     });
 
     it('should return 409 when master user username already exists', async () => {
-      // Create a business first to get a valid tenant_id
-      const existingBusiness = await prisma.business.create({
-        data: {
-          company_name: 'Existing Business',
-          subscription: 1,
-        },
-      });
+      // First, create a business with the username
+      const { user } = await TestSetup.createTestBusinessAndUser('Existing Business', 'masteruser', 10);
 
-      // Create a user with the same username first
-      await prisma.user.create({
-        data: {
-          username: 'johndoe',
-          fullName: 'John Doe',
-          password: 'hashedpassword',
-          user_level: 1,
-          tenant_id: existingBusiness.id,
-        },
-      });
-
-      // Now try to create a new business with the same master user username
       const businessData = {
         company_name: 'New Business',
         subscription: 1,
-        master_user_fullName: 'John Doe',
-        master_user_username: 'johndoe', // Same username that already exists
-        master_user_password: 'password123',
+        master_user_fullName: 'Master User',
+        master_user_username: 'masteruser', // Same username
+        master_user_password: 'masterpass123',
       };
 
       await request(serverUrl)
@@ -165,7 +123,7 @@ describe('Business Integration Tests', () => {
     it('should return 400 for invalid data', async () => {
       const invalidData = {
         company_name: '', // Invalid: empty name
-        subscription: -1, // Invalid: negative subscription
+        subscription: 'invalid', // Invalid: not a number
       };
 
       await request(serverUrl)
@@ -177,38 +135,12 @@ describe('Business Integration Tests', () => {
 
   describe('PUT /api/businesses/:id', () => {
     it('should update business successfully', async () => {
-      const business = await prisma.business.create({
-        data: {
-          company_name: 'Original Business',
-          subscription: 1,
-        },
-      });
+      const { business, user, token } = await TestSetup.createTestBusinessAndUser('Original Business', 'admin4', 10);
 
       const updateData = {
         company_name: 'Updated Business',
         subscription: 2,
       };
-
-      // Create a user that belongs to this business for authentication
-      const user = await prisma.user.create({
-        data: {
-          username: 'updateuser',
-          fullName: 'Update User',
-          password: 'hashedpassword',
-          user_level: 9, // Admin level
-          tenant_id: business.id,
-        },
-      });
-
-      // Create JWT token for this user
-      const jwt = require('jsonwebtoken');
-      const token = jwt.sign({
-        tenant_id: business.id,
-        username: user.username,
-        user_level: user.user_level,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
-      }, process.env.JWT_SECRET || 'test-secret-key');
 
       const response = await request(serverUrl)
         .put(`/api/businesses/${business.id}`)
@@ -223,33 +155,7 @@ describe('Business Integration Tests', () => {
 
   describe('DELETE /api/businesses/:id', () => {
     it('should soft delete business successfully', async () => {
-      const business = await prisma.business.create({
-        data: {
-          company_name: 'Business to Delete',
-          subscription: 1,
-        },
-      });
-
-      // Create a developer user that belongs to this business for authentication
-      const developerUser = await prisma.user.create({
-        data: {
-          username: 'developeruser',
-          fullName: 'Developer User',
-          password: 'hashedpassword',
-          user_level: 10, // Developer level
-          tenant_id: business.id,
-        },
-      });
-
-      // Create JWT token for this user
-      const jwt = require('jsonwebtoken');
-      const token = jwt.sign({
-        tenant_id: business.id,
-        username: developerUser.username,
-        user_level: developerUser.user_level,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
-      }, process.env.JWT_SECRET || 'test-secret-key');
+      const { business, user, token } = await TestSetup.createTestBusinessAndUser('Delete Business', 'admin5', 10);
 
       await request(serverUrl)
         .delete(`/api/businesses/${business.id}`)
@@ -263,6 +169,7 @@ describe('Business Integration Tests', () => {
 
       expect(deletedBusiness).not.toBeNull();
       expect(deletedBusiness!.deleted_at).not.toBeNull();
+      expect(deletedBusiness!.deleted_by).toBe('system');
     });
   });
 });

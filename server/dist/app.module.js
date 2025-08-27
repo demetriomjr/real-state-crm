@@ -15,6 +15,8 @@ const database_module_1 = require("./Infrastructure/Database/database.module");
 const user_module_1 = require("./Application/Modules/user.module");
 const authorization_module_1 = require("./Application/Modules/authorization.module");
 const business_module_1 = require("./Application/Modules/business.module");
+const lead_module_1 = require("./Application/Modules/lead.module");
+const customer_module_1 = require("./Application/Modules/customer.module");
 const tenant_validation_middleware_1 = require("./Application/Features/tenant-validation.middleware");
 let AppModule = class AppModule {
     configure(consumer) {
@@ -35,6 +37,8 @@ exports.AppModule = AppModule = __decorate([
             user_module_1.UserModule,
             authorization_module_1.AuthorizationModule,
             business_module_1.BusinessModule,
+            lead_module_1.LeadModule,
+            customer_module_1.CustomerModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
