@@ -16,6 +16,55 @@ services:
     networks:
       - real-state-network
 
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: real-state-crm-n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_USER_MANAGEMENT_DISABLED=false
+      - N8N_DATABASE_TYPE=postgresdb
+      - N8N_DATABASE_POSTGRESDB_HOST=postgres
+      - N8N_DATABASE_POSTGRESDB_PORT=5432
+      - N8N_DATABASE_POSTGRESDB_DATABASE=real_state_crm
+      - N8N_DATABASE_POSTGRESDB_USER=postgres
+      - N8N_DATABASE_POSTGRESDB_PASSWORD=postgres
+      - N8N_DATABASE_POSTGRESDB_SCHEMA=n8n
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+    networks:
+      - real-state-network
+
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: real-state-crm-waha
+    environment:
+      - WHATSAPP_DEFAULT_ANSWER=Hello! This is an automated response.
+      - WHATSAPP_GROUP_LIMIT=256
+      - WHATSAPP_INDIVIDUAL_LIMIT=1000
+      - WHATSAPP_WEBHOOK_BY_EVENTS=false
+      - WHATSAPP_WEBHOOK_GLOBAL_URL=http://n8n:5678/webhook/waha-inbound
+      - WHATSAPP_WEBHOOK_GLOBAL_ENABLED=true
+      - WHATSAPP_WEBHOOK_GLOBAL_VERIFY_TOKEN=your-whatsapp-webhook-secret
+    ports:
+      - "3100:3000"
+    volumes:
+      - waha_data:/app/instances
+    depends_on:
+      - n8n
+    networks:
+      - real-state-network
+
   app:
     build:
       context: .
@@ -24,8 +73,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/real_state_crm
+      - SSE_TIMEOUT_MINUTES=5
+      - WHATSAPP_WEBHOOK_SECRET=your-whatsapp-webhook-secret
     depends_on:
       - postgres
     volumes:
@@ -33,10 +84,12 @@ services:
       - /usr/src/app/node_modules
     networks:
       - real-state-network
-    command: npm run start:dev
+    command: npm run start:prod
 
 volumes:
   postgres_data:
+  n8n_data:
+  waha_data:
 
 networks:
   real-state-network:

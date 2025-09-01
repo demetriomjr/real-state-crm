@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRepository = void 0;
 const common_1 = require("@nestjs/common");
-const postgres_context_1 = require("../Database/postgres.context");
+const main_database_context_1 = require("../Database/main-database.context");
 const User_1 = require("../../Domain/Users/User");
 let UserRepository = class UserRepository {
     constructor(prisma) {
@@ -24,14 +24,14 @@ let UserRepository = class UserRepository {
                 where: { deleted_at: null },
                 skip,
                 take: limit,
-                orderBy: { created_at: 'desc' },
+                orderBy: { created_at: "desc" },
             }),
             this.prisma.user.count({
                 where: { deleted_at: null },
             }),
         ]);
         return {
-            users: users.map(user => new User_1.User(user)),
+            users: users.map((user) => new User_1.User(user)),
             total,
         };
     }
@@ -39,7 +39,7 @@ let UserRepository = class UserRepository {
         const user = await this.prisma.user.findFirst({
             where: {
                 id,
-                deleted_at: null
+                deleted_at: null,
             },
         });
         return user ? new User_1.User(user) : null;
@@ -48,7 +48,7 @@ let UserRepository = class UserRepository {
         const user = await this.prisma.user.findFirst({
             where: {
                 username,
-                deleted_at: null
+                deleted_at: null,
             },
         });
         return user ? new User_1.User(user) : null;
@@ -72,7 +72,9 @@ let UserRepository = class UserRepository {
                 ...(updateUserDto.fullName && { fullName: updateUserDto.fullName }),
                 ...(updateUserDto.username && { username: updateUserDto.username }),
                 ...(updateUserDto.password && { password: updateUserDto.password }),
-                ...(updateUserDto.user_level && { user_level: updateUserDto.user_level }),
+                ...(updateUserDto.user_level && {
+                    user_level: updateUserDto.user_level,
+                }),
                 ...(updateUserDto.tenant_id && { tenant_id: updateUserDto.tenant_id }),
             },
         });
@@ -83,7 +85,7 @@ let UserRepository = class UserRepository {
             where: { id },
             data: {
                 deleted_at: new Date(),
-                deleted_by: 'system',
+                deleted_by: "system",
             },
         });
     }
@@ -91,7 +93,7 @@ let UserRepository = class UserRepository {
         const count = await this.prisma.user.count({
             where: {
                 id,
-                deleted_at: null
+                deleted_at: null,
             },
         });
         return count > 0;
@@ -100,11 +102,11 @@ let UserRepository = class UserRepository {
         const users = await this.prisma.user.findMany({
             where: {
                 tenant_id,
-                deleted_at: null
+                deleted_at: null,
             },
-            orderBy: { created_at: 'desc' },
+            orderBy: { created_at: "desc" },
         });
-        return users.map(user => new User_1.User(user));
+        return users.map((user) => new User_1.User(user));
     }
     async purge(id) {
         await this.prisma.user.delete({
@@ -125,6 +127,6 @@ let UserRepository = class UserRepository {
 exports.UserRepository = UserRepository;
 exports.UserRepository = UserRepository = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [postgres_context_1.PostgresContext])
+    __metadata("design:paramtypes", [main_database_context_1.MainDatabaseContext])
 ], UserRepository);
 //# sourceMappingURL=user.repository.js.map

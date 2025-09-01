@@ -16,25 +16,41 @@ class UpdateUserDto {
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Full name of the user', example: 'John Doe', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Full name of the user",
+        example: "John Doe",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "fullName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Unique username', example: 'johndoe', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Unique username",
+        example: "johndoe",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "username", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User password (min 6 characters)', example: 'password123', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "User password (min 6 characters)",
+        example: "password123",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "password", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User level (1-10)', example: 5, required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "User level (1-10)",
+        example: 5,
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
@@ -42,7 +58,11 @@ __decorate([
     __metadata("design:type", Number)
 ], UpdateUserDto.prototype, "user_level", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Tenant ID (UUID)', example: '550e8400-e29b-41d4-a716-446655440000', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Tenant ID (UUID)",
+        example: "550e8400-e29b-41d4-a716-446655440000",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)

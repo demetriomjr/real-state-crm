@@ -23,7 +23,7 @@ let UserService = UserService_1 = class UserService {
         this.logger.log(`Fetching users with pagination: page=${page}, limit=${limit}`);
         const result = await this.userRepository.findAll(page, limit);
         return {
-            users: result.users.map(user => this.mapToResponseDto(user)),
+            users: result.users.map((user) => this.mapToResponseDto(user)),
             total: result.total,
             page,
             limit,
@@ -43,7 +43,7 @@ let UserService = UserService_1 = class UserService {
         const existingUser = await this.userRepository.findByUsername(createUserDto.username);
         if (existingUser) {
             this.logger.warn(`Username already exists: ${createUserDto.username}`);
-            throw new common_1.ConflictException('Username already exists');
+            throw new common_1.ConflictException("Username already exists");
         }
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
         const userData = {
@@ -61,11 +61,12 @@ let UserService = UserService_1 = class UserService {
             this.logger.warn(`User with ID ${id} not found for update`);
             throw new common_1.NotFoundException(`User with ID ${id} not found`);
         }
-        if (updateUserDto.username && updateUserDto.username !== existingUser.username) {
+        if (updateUserDto.username &&
+            updateUserDto.username !== existingUser.username) {
             const userWithUsername = await this.userRepository.findByUsername(updateUserDto.username);
             if (userWithUsername) {
                 this.logger.warn(`Username already exists during update: ${updateUserDto.username}`);
-                throw new common_1.ConflictException('Username already exists');
+                throw new common_1.ConflictException("Username already exists");
             }
         }
         if (updateUserDto.password) {
@@ -88,7 +89,7 @@ let UserService = UserService_1 = class UserService {
     async findByTenant(tenant_id) {
         this.logger.log(`Fetching users for tenant: ${tenant_id}`);
         const users = await this.userRepository.findByTenant(tenant_id);
-        return users.map(user => this.mapToResponseDto(user));
+        return users.map((user) => this.mapToResponseDto(user));
     }
     async findByUsername(username) {
         this.logger.log(`Fetching user by username: ${username}`);

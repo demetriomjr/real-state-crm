@@ -1,4 +1,4 @@
-import { IAuditBase } from '@/Domain/Interfaces/IAuditBase';
+import { IAuditBase } from "@/Domain/Interfaces/IAuditBase";
 
 export class Document implements IAuditBase {
   id: string;
@@ -14,10 +14,10 @@ export class Document implements IAuditBase {
   deleted_by?: string;
 
   constructor(data: Partial<Document>) {
-    this.id = data.id || '';
-    this.document_type = data.document_type || '';
-    this.document_number = data.document_number || '';
-    this.person_id = data.person_id || '';
+    this.id = data.id || "";
+    this.document_type = data.document_type || "";
+    this.document_number = data.document_number || "";
+    this.person_id = data.person_id || "";
     this.is_primary = data.is_primary || false;
     this.created_at = data.created_at || new Date();
     this.created_by = data.created_by;

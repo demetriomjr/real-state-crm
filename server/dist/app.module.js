@@ -17,12 +17,15 @@ const authorization_module_1 = require("./Application/Modules/authorization.modu
 const business_module_1 = require("./Application/Modules/business.module");
 const lead_module_1 = require("./Application/Modules/lead.module");
 const customer_module_1 = require("./Application/Modules/customer.module");
+const chat_module_1 = require("./Application/Modules/chat.module");
+const feedback_module_1 = require("./Application/Modules/feedback.module");
+const integrated_services_module_1 = require("./Application/Modules/integrated-services.module");
+const whatsapp_session_module_1 = require("./Application/Modules/whatsapp-session.module");
+const sse_chat_module_1 = require("./Application/Modules/sse-chat.module");
 const tenant_validation_middleware_1 = require("./Application/Features/tenant-validation.middleware");
 let AppModule = class AppModule {
     configure(consumer) {
-        consumer
-            .apply(tenant_validation_middleware_1.TenantValidationMiddleware)
-            .forRoutes('*');
+        consumer.apply(tenant_validation_middleware_1.TenantValidationMiddleware).forRoutes("*");
     }
 };
 exports.AppModule = AppModule;
@@ -31,7 +34,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                envFilePath: '.env',
+                envFilePath: ".env",
             }),
             database_module_1.DatabaseModule,
             user_module_1.UserModule,
@@ -39,6 +42,11 @@ exports.AppModule = AppModule = __decorate([
             business_module_1.BusinessModule,
             lead_module_1.LeadModule,
             customer_module_1.CustomerModule,
+            chat_module_1.ChatModule,
+            feedback_module_1.FeedbackModule,
+            integrated_services_module_1.IntegratedServicesModule,
+            whatsapp_session_module_1.WhatsappSessionModule,
+            sse_chat_module_1.SSEChatModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

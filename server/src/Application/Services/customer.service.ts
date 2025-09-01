@@ -1,16 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@/Infrastructure/Database/postgres.context';
+import { Injectable, Logger } from "@nestjs/common";
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
 
 @Injectable()
 export class CustomerService {
   private readonly logger = new Logger(CustomerService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: MainDatabaseContext) {}
 
   /**
    * Creates a new customer with associated person data
    */
-  async createCustomer(customerData: any, personData: any, userId?: string): Promise<any> {
+  async createCustomer(
+    customerData: any,
+    personData: any,
+    userId?: string,
+  ): Promise<any> {
     this.logger.log(`Creating new customer for person: ${personData.name}`);
 
     // Create person first
@@ -18,8 +22,8 @@ export class CustomerService {
       data: {
         ...personData,
         created_by: userId,
-        updated_by: userId
-      }
+        updated_by: userId,
+      },
     });
 
     // Create customer
@@ -28,11 +32,11 @@ export class CustomerService {
         ...customerData,
         person_id: person.id,
         created_by: userId,
-        updated_by: userId
+        updated_by: userId,
       },
       include: {
-        person: true
-      }
+        person: true,
+      },
     });
 
     // Handle addresses if provided
@@ -56,7 +60,12 @@ export class CustomerService {
   /**
    * Updates an existing customer
    */
-  async updateCustomer(customerId: string, customerData: any, personData: any, userId?: string): Promise<any> {
+  async updateCustomer(
+    customerId: string,
+    customerData: any,
+    personData: any,
+    userId?: string,
+  ): Promise<any> {
     this.logger.log(`Updating customer: ${customerId}`);
 
     // Update customer
@@ -64,11 +73,11 @@ export class CustomerService {
       where: { id: customerId },
       data: {
         ...customerData,
-        updated_by: userId
+        updated_by: userId,
       },
       include: {
-        person: true
-      }
+        person: true,
+      },
     });
 
     // Update person data
@@ -77,24 +86,36 @@ export class CustomerService {
         where: { id: customer.person_id },
         data: {
           ...personData,
-          updated_by: userId
-        }
+          updated_by: userId,
+        },
       });
     }
 
     // Handle address updates if provided
     if (personData?.addresses) {
-      await this.updateAddresses(customer.person_id, personData.addresses, userId);
+      await this.updateAddresses(
+        customer.person_id,
+        personData.addresses,
+        userId,
+      );
     }
 
     // Handle contact updates if provided
     if (personData?.contacts) {
-      await this.updateContacts(customer.person_id, personData.contacts, userId);
+      await this.updateContacts(
+        customer.person_id,
+        personData.contacts,
+        userId,
+      );
     }
 
     // Handle document updates if provided
     if (personData?.documents) {
-      await this.updateDocuments(customer.person_id, personData.documents, userId);
+      await this.updateDocuments(
+        customer.person_id,
+        personData.documents,
+        userId,
+      );
     }
 
     return customer;
@@ -112,17 +133,17 @@ export class CustomerService {
         person: {
           include: {
             addresses: {
-              where: { deleted_at: null }
+              where: { deleted_at: null },
             },
             contacts: {
-              where: { deleted_at: null }
+              where: { deleted_at: null },
             },
             documents: {
-              where: { deleted_at: null }
-            }
-          }
-        }
-      }
+              where: { deleted_at: null },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -142,22 +163,22 @@ export class CustomerService {
           person: {
             include: {
               addresses: {
-                where: { deleted_at: null }
+                where: { deleted_at: null },
               },
               contacts: {
-                where: { deleted_at: null }
+                where: { deleted_at: null },
               },
               documents: {
-                where: { deleted_at: null }
-              }
-            }
-          }
+                where: { deleted_at: null },
+              },
+            },
+          },
         },
-        where: { deleted_at: null }
+        where: { deleted_at: null },
       }),
       this.prisma.customer.count({
-        where: { deleted_at: null }
-      })
+        where: { deleted_at: null },
+      }),
     ]);
 
     return {
@@ -165,7 +186,7 @@ export class CustomerService {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -179,27 +200,31 @@ export class CustomerService {
       where: { id: customerId },
       data: {
         deleted_at: new Date(),
-        deleted_by: userId
-      }
+        deleted_by: userId,
+      },
     });
   }
 
   /**
    * Converts a lead to a customer
    */
-  async convertLeadToCustomer(leadId: string, customerData: any, userId?: string): Promise<any> {
+  async convertLeadToCustomer(
+    leadId: string,
+    customerData: any,
+    userId?: string,
+  ): Promise<any> {
     this.logger.log(`Converting lead to customer: ${leadId}`);
 
     // Get the lead with person data
     const lead = await this.prisma.lead.findUnique({
       where: { id: leadId },
       include: {
-        person: true
-      }
+        person: true,
+      },
     });
 
     if (!lead) {
-      throw new Error('Lead not found');
+      throw new Error("Lead not found");
     }
 
     // Create customer using the same person
@@ -208,11 +233,11 @@ export class CustomerService {
         ...customerData,
         person_id: lead.person_id,
         created_by: userId,
-        updated_by: userId
+        updated_by: userId,
       },
       include: {
-        person: true
-      }
+        person: true,
+      },
     });
 
     // Soft delete the lead
@@ -220,26 +245,31 @@ export class CustomerService {
       where: { id: leadId },
       data: {
         deleted_at: new Date(),
-        deleted_by: userId
-      }
+        deleted_by: userId,
+      },
     });
 
     return customer;
   }
 
   // Address management methods
-  async handleAddressPrimaryFlag(personId: string, isPrimary?: boolean): Promise<boolean> {
+  async handleAddressPrimaryFlag(
+    personId: string,
+    isPrimary?: boolean,
+  ): Promise<boolean> {
     this.logger.log(`Handling address primary flag for person: ${personId}`);
 
     const existingAddresses = await this.prisma.address.count({
       where: {
         person_id: personId,
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     });
 
     if (existingAddresses === 0) {
-      this.logger.log(`First address for person ${personId}, setting as primary`);
+      this.logger.log(
+        `First address for person ${personId}, setting as primary`,
+      );
       return true;
     }
 
@@ -248,11 +278,11 @@ export class CustomerService {
         where: {
           person_id: personId,
           is_primary: true,
-          deleted_at: null
+          deleted_at: null,
         },
         data: {
-          is_primary: false
-        }
+          is_primary: false,
+        },
       });
       this.logger.log(`Unset other primary addresses for person ${personId}`);
       return true;
@@ -261,13 +291,22 @@ export class CustomerService {
     return false;
   }
 
-  async createAddresses(personId: string, addresses: any[], userId?: string): Promise<any[]> {
-    this.logger.log(`Creating ${addresses.length} addresses for person: ${personId}`);
+  async createAddresses(
+    personId: string,
+    addresses: any[],
+    userId?: string,
+  ): Promise<any[]> {
+    this.logger.log(
+      `Creating ${addresses.length} addresses for person: ${personId}`,
+    );
 
     const createdAddresses = [];
 
     for (const address of addresses) {
-      const isPrimary = await this.handleAddressPrimaryFlag(personId, address.is_primary);
+      const isPrimary = await this.handleAddressPrimaryFlag(
+        personId,
+        address.is_primary,
+      );
 
       const createdAddress = await this.prisma.address.create({
         data: {
@@ -275,8 +314,8 @@ export class CustomerService {
           person_id: personId,
           is_primary: isPrimary,
           created_by: userId,
-          updated_by: userId
-        }
+          updated_by: userId,
+        },
       });
 
       createdAddresses.push(createdAddress);
@@ -285,29 +324,37 @@ export class CustomerService {
     return createdAddresses;
   }
 
-  async updateAddresses(personId: string, addresses: any[], userId?: string): Promise<any[]> {
+  async updateAddresses(
+    personId: string,
+    addresses: any[],
+    userId?: string,
+  ): Promise<any[]> {
     this.logger.log(`Updating addresses for person: ${personId}`);
 
     const updatedAddresses = [];
 
     for (const address of addresses) {
       if (address.id) {
-        const isPrimary = address.is_primary === true ? 
-          await this.handleAddressPrimaryFlag(personId, true) : 
-          address.is_primary;
+        const isPrimary =
+          address.is_primary === true
+            ? await this.handleAddressPrimaryFlag(personId, true)
+            : address.is_primary;
 
         const updatedAddress = await this.prisma.address.update({
           where: { id: address.id },
           data: {
             ...address,
             is_primary: isPrimary,
-            updated_by: userId
-          }
+            updated_by: userId,
+          },
         });
 
         updatedAddresses.push(updatedAddress);
       } else {
-        const isPrimary = await this.handleAddressPrimaryFlag(personId, address.is_primary);
+        const isPrimary = await this.handleAddressPrimaryFlag(
+          personId,
+          address.is_primary,
+        );
 
         const createdAddress = await this.prisma.address.create({
           data: {
@@ -315,8 +362,8 @@ export class CustomerService {
             person_id: personId,
             is_primary: isPrimary,
             created_by: userId,
-            updated_by: userId
-          }
+            updated_by: userId,
+          },
         });
 
         updatedAddresses.push(createdAddress);
@@ -327,18 +374,23 @@ export class CustomerService {
   }
 
   // Contact management methods
-  async handleContactPrimaryFlag(personId: string, isPrimary?: boolean): Promise<boolean> {
+  async handleContactPrimaryFlag(
+    personId: string,
+    isPrimary?: boolean,
+  ): Promise<boolean> {
     this.logger.log(`Handling contact primary flag for person: ${personId}`);
 
     const existingContacts = await this.prisma.contact.count({
       where: {
         person_id: personId,
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     });
 
     if (existingContacts === 0) {
-      this.logger.log(`First contact for person ${personId}, setting as primary`);
+      this.logger.log(
+        `First contact for person ${personId}, setting as primary`,
+      );
       return true;
     }
 
@@ -347,11 +399,11 @@ export class CustomerService {
         where: {
           person_id: personId,
           is_primary: true,
-          deleted_at: null
+          deleted_at: null,
         },
         data: {
-          is_primary: false
-        }
+          is_primary: false,
+        },
       });
       this.logger.log(`Unset other primary contacts for person ${personId}`);
       return true;
@@ -360,13 +412,22 @@ export class CustomerService {
     return false;
   }
 
-  async createContacts(personId: string, contacts: any[], userId?: string): Promise<any[]> {
-    this.logger.log(`Creating ${contacts.length} contacts for person: ${personId}`);
+  async createContacts(
+    personId: string,
+    contacts: any[],
+    userId?: string,
+  ): Promise<any[]> {
+    this.logger.log(
+      `Creating ${contacts.length} contacts for person: ${personId}`,
+    );
 
     const createdContacts = [];
 
     for (const contact of contacts) {
-      const isPrimary = await this.handleContactPrimaryFlag(personId, contact.is_primary);
+      const isPrimary = await this.handleContactPrimaryFlag(
+        personId,
+        contact.is_primary,
+      );
 
       const createdContact = await this.prisma.contact.create({
         data: {
@@ -374,8 +435,8 @@ export class CustomerService {
           person_id: personId,
           is_primary: isPrimary,
           created_by: userId,
-          updated_by: userId
-        }
+          updated_by: userId,
+        },
       });
 
       createdContacts.push(createdContact);
@@ -384,29 +445,37 @@ export class CustomerService {
     return createdContacts;
   }
 
-  async updateContacts(personId: string, contacts: any[], userId?: string): Promise<any[]> {
+  async updateContacts(
+    personId: string,
+    contacts: any[],
+    userId?: string,
+  ): Promise<any[]> {
     this.logger.log(`Updating contacts for person: ${personId}`);
 
     const updatedContacts = [];
 
     for (const contact of contacts) {
       if (contact.id) {
-        const isPrimary = contact.is_primary === true ? 
-          await this.handleContactPrimaryFlag(personId, true) : 
-          contact.is_primary;
+        const isPrimary =
+          contact.is_primary === true
+            ? await this.handleContactPrimaryFlag(personId, true)
+            : contact.is_primary;
 
         const updatedContact = await this.prisma.contact.update({
           where: { id: contact.id },
           data: {
             ...contact,
             is_primary: isPrimary,
-            updated_by: userId
-          }
+            updated_by: userId,
+          },
         });
 
         updatedContacts.push(updatedContact);
       } else {
-        const isPrimary = await this.handleContactPrimaryFlag(personId, contact.is_primary);
+        const isPrimary = await this.handleContactPrimaryFlag(
+          personId,
+          contact.is_primary,
+        );
 
         const createdContact = await this.prisma.contact.create({
           data: {
@@ -414,8 +483,8 @@ export class CustomerService {
             person_id: personId,
             is_primary: isPrimary,
             created_by: userId,
-            updated_by: userId
-          }
+            updated_by: userId,
+          },
         });
 
         updatedContacts.push(createdContact);
@@ -426,18 +495,23 @@ export class CustomerService {
   }
 
   // Document management methods
-  async handleDocumentPrimaryFlag(personId: string, isPrimary?: boolean): Promise<boolean> {
+  async handleDocumentPrimaryFlag(
+    personId: string,
+    isPrimary?: boolean,
+  ): Promise<boolean> {
     this.logger.log(`Handling document primary flag for person: ${personId}`);
 
     const existingDocuments = await this.prisma.document.count({
       where: {
         person_id: personId,
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     });
 
     if (existingDocuments === 0) {
-      this.logger.log(`First document for person ${personId}, setting as primary`);
+      this.logger.log(
+        `First document for person ${personId}, setting as primary`,
+      );
       return true;
     }
 
@@ -446,11 +520,11 @@ export class CustomerService {
         where: {
           person_id: personId,
           is_primary: true,
-          deleted_at: null
+          deleted_at: null,
         },
         data: {
-          is_primary: false
-        }
+          is_primary: false,
+        },
       });
       this.logger.log(`Unset other primary documents for person ${personId}`);
       return true;
@@ -459,13 +533,22 @@ export class CustomerService {
     return false;
   }
 
-  async createDocuments(personId: string, documents: any[], userId?: string): Promise<any[]> {
-    this.logger.log(`Creating ${documents.length} documents for person: ${personId}`);
+  async createDocuments(
+    personId: string,
+    documents: any[],
+    userId?: string,
+  ): Promise<any[]> {
+    this.logger.log(
+      `Creating ${documents.length} documents for person: ${personId}`,
+    );
 
     const createdDocuments = [];
 
     for (const document of documents) {
-      const isPrimary = await this.handleDocumentPrimaryFlag(personId, document.is_primary);
+      const isPrimary = await this.handleDocumentPrimaryFlag(
+        personId,
+        document.is_primary,
+      );
 
       const createdDocument = await this.prisma.document.create({
         data: {
@@ -473,8 +556,8 @@ export class CustomerService {
           person_id: personId,
           is_primary: isPrimary,
           created_by: userId,
-          updated_by: userId
-        }
+          updated_by: userId,
+        },
       });
 
       createdDocuments.push(createdDocument);
@@ -483,29 +566,37 @@ export class CustomerService {
     return createdDocuments;
   }
 
-  async updateDocuments(personId: string, documents: any[], userId?: string): Promise<any[]> {
+  async updateDocuments(
+    personId: string,
+    documents: any[],
+    userId?: string,
+  ): Promise<any[]> {
     this.logger.log(`Updating documents for person: ${personId}`);
 
     const updatedDocuments = [];
 
     for (const document of documents) {
       if (document.id) {
-        const isPrimary = document.is_primary === true ? 
-          await this.handleDocumentPrimaryFlag(personId, true) : 
-          document.is_primary;
+        const isPrimary =
+          document.is_primary === true
+            ? await this.handleDocumentPrimaryFlag(personId, true)
+            : document.is_primary;
 
         const updatedDocument = await this.prisma.document.update({
           where: { id: document.id },
           data: {
             ...document,
             is_primary: isPrimary,
-            updated_by: userId
-          }
+            updated_by: userId,
+          },
         });
 
         updatedDocuments.push(updatedDocument);
       } else {
-        const isPrimary = await this.handleDocumentPrimaryFlag(personId, document.is_primary);
+        const isPrimary = await this.handleDocumentPrimaryFlag(
+          personId,
+          document.is_primary,
+        );
 
         const createdDocument = await this.prisma.document.create({
           data: {
@@ -513,8 +604,8 @@ export class CustomerService {
             person_id: personId,
             is_primary: isPrimary,
             created_by: userId,
-            updated_by: userId
-          }
+            updated_by: userId,
+          },
         });
 
         updatedDocuments.push(createdDocument);

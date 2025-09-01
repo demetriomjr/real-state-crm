@@ -1,7 +1,7 @@
-import { IAudit } from '@/Domain/Interfaces/IAudit';
-import { Document } from './Document';
-import { Contact } from './Contact';
-import { Address } from './Address';
+import { IAudit } from "@/Domain/Interfaces/IAudit";
+import { Document } from "./Document";
+import { Contact } from "./Contact";
+import { Address } from "./Address";
 export declare class Person implements IAudit {
     id: string;
     full_name: string;

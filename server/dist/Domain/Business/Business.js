@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Business = void 0;
 class Business {
     constructor(data) {
-        this.id = data.id || '';
-        this.company_name = data.company_name || '';
+        this.id = data.id || "";
+        this.company_name = data.company_name || "";
         this.subscription = data.subscription || 0;
         this.created_at = data.created_at || new Date();
         this.created_by = data.created_by;
@@ -24,10 +24,10 @@ class Business {
     }
     getSubscriptionLevel() {
         if (this.subscription >= 10)
-            return 'premium';
+            return "premium";
         if (this.subscription >= 5)
-            return 'standard';
-        return 'basic';
+            return "standard";
+        return "basic";
     }
 }
 exports.Business = Business;

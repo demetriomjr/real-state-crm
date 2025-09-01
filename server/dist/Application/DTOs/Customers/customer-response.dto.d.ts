@@ -1,4 +1,4 @@
-import { AddressResponseDto, ContactResponseDto, DocumentResponseDto } from '../Leads/lead-response.dto';
+import { AddressResponseDto, ContactResponseDto, DocumentResponseDto } from "../Leads/lead-response.dto";
 export declare class CustomerResponseDto {
     id: string;
     customer_type: string;

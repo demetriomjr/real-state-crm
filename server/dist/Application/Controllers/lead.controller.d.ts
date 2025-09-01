@@ -1,7 +1,7 @@
-import { LeadService } from '@/Application/Services/lead.service';
-import { LeadCreateDto } from '@/Application/DTOs/Leads/lead-create.dto';
-import { LeadUpdateDto } from '@/Application/DTOs/Leads/lead-update.dto';
-import { LeadResponseDto } from '@/Application/DTOs/Leads/lead-response.dto';
+import { LeadService } from "@/Application/Services/lead.service";
+import { LeadCreateDto } from "@/Application/DTOs/Leads/lead-create.dto";
+import { LeadUpdateDto } from "@/Application/DTOs/Leads/lead-update.dto";
+import { LeadResponseDto } from "@/Application/DTOs/Leads/lead-response.dto";
 export declare class LeadController {
     private readonly leadService;
     constructor(leadService: LeadService);

@@ -1,7 +1,7 @@
-import { CustomerService } from '@/Application/Services/customer.service';
-import { CustomerCreateDto } from '@/Application/DTOs/Customers/customer-create.dto';
-import { CustomerUpdateDto } from '@/Application/DTOs/Customers/customer-update.dto';
-import { CustomerResponseDto } from '@/Application/DTOs/Customers/customer-response.dto';
+import { CustomerService } from "@/Application/Services/customer.service";
+import { CustomerCreateDto } from "@/Application/DTOs/Customers/customer-create.dto";
+import { CustomerUpdateDto } from "@/Application/DTOs/Customers/customer-update.dto";
+import { CustomerResponseDto } from "@/Application/DTOs/Customers/customer-response.dto";
 export declare class CustomerController {
     private readonly customerService;
     constructor(customerService: CustomerService);

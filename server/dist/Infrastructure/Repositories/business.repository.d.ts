@@ -1,9 +1,9 @@
-import { PostgresContext } from '@/Infrastructure/Database/postgres.context';
-import { Business } from '@/Domain/Business/Business';
-import { BusinessCreateDto, BusinessUpdateDto } from '@/Application/DTOs';
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
+import { Business } from "@/Domain/Business/Business";
+import { BusinessCreateDto, BusinessUpdateDto } from "@/Application/DTOs";
 export declare class BusinessRepository {
     private readonly prisma;
-    constructor(prisma: PostgresContext);
+    constructor(prisma: MainDatabaseContext);
     findAll(page?: number, limit?: number): Promise<{
         businesses: Business[];
         total: number;

@@ -1,21 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { PostgresContext } from '@/Infrastructure/Database/postgres.context';
-import { Business } from '@/Domain/Business/Business';
-import { BusinessCreateDto, BusinessUpdateDto } from '@/Application/DTOs';
+import { Injectable } from "@nestjs/common";
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
+import { Business } from "@/Domain/Business/Business";
+import { BusinessCreateDto, BusinessUpdateDto } from "@/Application/DTOs";
 
 @Injectable()
 export class BusinessRepository {
-  constructor(private readonly prisma: PostgresContext) {}
+  constructor(private readonly prisma: MainDatabaseContext) {}
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ businesses: Business[]; total: number }> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ businesses: Business[]; total: number }> {
     const skip = (page - 1) * limit;
-    
+
     const [businesses, total] = await Promise.all([
       this.prisma.business.findMany({
         where: { deleted_at: null },
         skip,
         take: limit,
-        orderBy: { created_at: 'desc' },
+        orderBy: { created_at: "desc" },
       }),
       this.prisma.business.count({
         where: { deleted_at: null },
@@ -23,16 +26,16 @@ export class BusinessRepository {
     ]);
 
     return {
-      businesses: businesses.map(business => new Business(business)),
+      businesses: businesses.map((business) => new Business(business)),
       total,
     };
   }
 
   async findOne(id: string): Promise<Business | null> {
     const business = await this.prisma.business.findFirst({
-      where: { 
+      where: {
         id,
-        deleted_at: null 
+        deleted_at: null,
       },
     });
 
@@ -50,12 +53,19 @@ export class BusinessRepository {
     return new Business(business);
   }
 
-  async update(id: string, updateBusinessDto: BusinessUpdateDto): Promise<Business> {
+  async update(
+    id: string,
+    updateBusinessDto: BusinessUpdateDto,
+  ): Promise<Business> {
     const business = await this.prisma.business.update({
       where: { id },
       data: {
-        ...(updateBusinessDto.company_name && { company_name: updateBusinessDto.company_name }),
-        ...(updateBusinessDto.subscription !== undefined && { subscription: updateBusinessDto.subscription }),
+        ...(updateBusinessDto.company_name && {
+          company_name: updateBusinessDto.company_name,
+        }),
+        ...(updateBusinessDto.subscription !== undefined && {
+          subscription: updateBusinessDto.subscription,
+        }),
       },
     });
 
@@ -65,18 +75,18 @@ export class BusinessRepository {
   async remove(id: string): Promise<void> {
     await this.prisma.business.update({
       where: { id },
-      data: { 
+      data: {
         deleted_at: new Date(),
-        deleted_by: 'system', // This should come from auth context
+        deleted_by: "system", // This should come from auth context
       },
     });
   }
 
   async exists(id: string): Promise<boolean> {
     const count = await this.prisma.business.count({
-      where: { 
+      where: {
         id,
-        deleted_at: null 
+        deleted_at: null,
       },
     });
     return count > 0;
@@ -84,15 +94,13 @@ export class BusinessRepository {
 
   async validateTenantId(tenantId: string): Promise<boolean> {
     const count = await this.prisma.business.count({
-      where: { 
+      where: {
         id: tenantId,
-        deleted_at: null 
+        deleted_at: null,
       },
     });
     return count > 0;
   }
-
-
 
   /**
    * PURGE - Permanently delete business from database

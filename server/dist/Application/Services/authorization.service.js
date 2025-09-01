@@ -41,19 +41,22 @@ let AuthorizationService = AuthorizationService_1 = class AuthorizationService {
             return null;
         }
     }
-    async createToken(user) {
+    async createToken(user, isRefresh = false) {
         this.logger.log(`Creating token for user: ${user.username}`);
         const payload = {
             tenant_id: user.tenant_id,
             user_id: user.id,
             user_level: user.user_level,
         };
-        const expiresIn = this.configService.get('JWT_EXPIRES_IN', '30m');
+        if (user.refresh_id) {
+            payload.refresh_id = user.refresh_id;
+        }
+        const expiresIn = this.configService.get("JWT_EXPIRES_IN", "30m");
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 30);
         const token = this.jwtService.sign(payload, {
             expiresIn,
-            secret: this.configService.get('JWT_SECRET'),
+            secret: this.configService.get("JWT_SECRET"),
         });
         return {
             token,
@@ -62,72 +65,76 @@ let AuthorizationService = AuthorizationService_1 = class AuthorizationService {
     }
     async validateToken(token) {
         if (this.expiredTokensCache.has(token)) {
-            this.logger.warn('Attempted to use invalidated token');
-            throw new common_1.UnauthorizedException('Token has been invalidated');
+            this.logger.warn("Attempted to use invalidated token");
+            throw new common_1.UnauthorizedException("Token has been invalidated");
         }
         try {
             const payload = this.jwtService.verify(token, {
-                secret: this.configService.get('JWT_SECRET'),
+                secret: this.configService.get("JWT_SECRET"),
             });
-            const nodeEnv = this.configService.get('NODE_ENV');
-            if (nodeEnv === 'development' || nodeEnv === 'test') {
+            const nodeEnv = this.configService.get("NODE_ENV");
+            if (nodeEnv === "development" || nodeEnv === "test") {
                 this.logger.log(`Token validated for user: ${payload.user_id} (${nodeEnv} mode)`);
                 return payload;
             }
             const user = await this.userService.findOneRaw(payload.user_id);
             if (!user || user.tenant_id !== payload.tenant_id) {
                 this.logger.warn(`Token validation failed: User ${payload.user_id} not found or tenant mismatch`);
-                throw new common_1.UnauthorizedException('User not found');
+                throw new common_1.UnauthorizedException("User not found");
             }
             this.logger.log(`Token validated for user: ${payload.user_id}`);
             return payload;
         }
         catch (error) {
             this.logger.error(`Token validation failed: ${error.message}`);
-            throw new common_1.UnauthorizedException('Invalid token');
+            throw new common_1.UnauthorizedException("Invalid token");
         }
     }
     async refreshToken(token) {
-        this.logger.log('Refreshing token');
+        this.logger.log("Refreshing token");
         const payload = await this.validateToken(token);
-        const nodeEnv = this.configService.get('NODE_ENV');
-        if (nodeEnv === 'development' || nodeEnv === 'test') {
+        const nodeEnv = this.configService.get("NODE_ENV");
+        if (nodeEnv === "development" || nodeEnv === "test") {
             const mockUser = {
                 id: payload.user_id,
                 tenant_id: payload.tenant_id,
                 user_level: payload.user_level,
-                username: 'test-user',
+                username: "test-user",
             };
             this.invalidateToken(token);
             this.logger.log(`Token refreshed for user: ${payload.user_id} (${nodeEnv} mode)`);
-            return this.createToken(mockUser);
+            const mockUserWithId = {
+                ...mockUser,
+                refresh_id: Date.now(),
+            };
+            return this.createToken(mockUserWithId);
         }
         const user = await this.userService.findOneRaw(payload.user_id);
         if (!user || user.tenant_id !== payload.tenant_id) {
             this.logger.warn(`Token refresh failed: User ${payload.user_id} not found or tenant mismatch`);
-            throw new common_1.UnauthorizedException('User not found');
+            throw new common_1.UnauthorizedException("User not found");
         }
         this.invalidateToken(token);
         this.logger.log(`Token refreshed for user: ${payload.user_id}`);
         return this.createToken(user);
     }
     invalidateToken(token) {
-        this.logger.log('Invalidating token');
+        this.logger.log("Invalidating token");
         this.expiredTokensCache.add(token);
         if (this.expiredTokensCache.size > this.maxCacheSize) {
             const tokensArray = Array.from(this.expiredTokensCache);
             const oldestToken = tokensArray[0];
             this.expiredTokensCache.delete(oldestToken);
-            this.logger.log('Token cache cleanup performed');
+            this.logger.log("Token cache cleanup performed");
         }
     }
     async logout(token) {
-        this.logger.log('User logout requested');
+        this.logger.log("User logout requested");
         this.invalidateToken(token);
-        return { message: 'Logged out successfully' };
+        return { message: "Logged out successfully" };
     }
     isDevelopmentEnvironment() {
-        return this.configService.get('NODE_ENV') === 'development';
+        return this.configService.get("NODE_ENV") === "development";
     }
 };
 exports.AuthorizationService = AuthorizationService;

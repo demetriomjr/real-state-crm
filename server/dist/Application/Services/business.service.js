@@ -25,17 +25,17 @@ let BusinessService = BusinessService_1 = class BusinessService {
         this.logger = new common_1.Logger(BusinessService_1.name);
     }
     get prisma() {
-        return this.businessRepository['prisma'];
+        return this.businessRepository["prisma"];
     }
     async findAll(page = 1, limit = 10, userLevel) {
         this.logger.log(`Fetching businesses with pagination: page=${page}, limit=${limit}`);
         if (userLevel !== undefined && userLevel < 10) {
             this.logger.warn(`User with level ${userLevel} attempted to access findAll - access denied`);
-            throw new common_1.BadRequestException('Access denied. Developer level (10) required to view all businesses.');
+            throw new common_1.BadRequestException("Access denied. Developer level (10) required to view all businesses.");
         }
         const result = await this.businessRepository.findAll(page, limit);
         return {
-            businesses: result.businesses.map(business => this.mapToResponseDto(business)),
+            businesses: result.businesses.map((business) => this.mapToResponseDto(business)),
             total: result.total,
             page,
             limit,
@@ -55,7 +55,7 @@ let BusinessService = BusinessService_1 = class BusinessService {
         const existingUser = await this.userRepository.findByUsername(createBusinessDto.master_user_username);
         if (existingUser) {
             this.logger.warn(`Master user username already exists: ${createBusinessDto.master_user_username}`);
-            throw new common_1.ConflictException('Master user username already exists');
+            throw new common_1.ConflictException("Master user username already exists");
         }
         const result = await this.prisma.$transaction(async (prisma) => {
             try {
@@ -79,7 +79,7 @@ let BusinessService = BusinessService_1 = class BusinessService {
             }
             catch (error) {
                 this.logger.error(`Transaction failed: ${error.message}`);
-                throw new common_1.BadRequestException('Failed to create business and master user');
+                throw new common_1.BadRequestException("Failed to create business and master user");
             }
         });
         const authToken = await this.authorizationService.createToken(result.masterUser);

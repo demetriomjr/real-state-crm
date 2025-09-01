@@ -1,11 +1,21 @@
-import { Injectable, NotFoundException, ConflictException, Logger, BadRequestException } from '@nestjs/common';
-import { BusinessRepository } from '@/Infrastructure/Repositories/business.repository';
-import { UserRepository } from '@/Infrastructure/Repositories/user.repository';
-import { Business } from '@/Domain/Business/Business';
-import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from '@/Application/DTOs';
-import { AuthorizationResponseDto } from '@/Application/DTOs/Authorization/authorization-response.dto';
-import { AuthorizationService } from './authorization.service';
-import * as bcrypt from 'bcryptjs';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  Logger,
+  BadRequestException,
+} from "@nestjs/common";
+import { BusinessRepository } from "@/Infrastructure/Repositories/business.repository";
+import { UserRepository } from "@/Infrastructure/Repositories/user.repository";
+import { Business } from "@/Domain/Business/Business";
+import {
+  BusinessCreateDto,
+  BusinessUpdateDto,
+  BusinessResponseDto,
+} from "@/Application/DTOs";
+import { AuthorizationResponseDto } from "@/Application/DTOs/Authorization/authorization-response.dto";
+import { AuthorizationService } from "./authorization.service";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class BusinessService {
@@ -18,21 +28,38 @@ export class BusinessService {
   ) {}
 
   private get prisma() {
-    return this.businessRepository['prisma'];
+    return this.businessRepository["prisma"];
   }
 
-  async findAll(page: number = 1, limit: number = 10, userLevel?: number): Promise<{ businesses: BusinessResponseDto[]; total: number; page: number; limit: number }> {
-    this.logger.log(`Fetching businesses with pagination: page=${page}, limit=${limit}`);
-    
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    userLevel?: number,
+  ): Promise<{
+    businesses: BusinessResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    this.logger.log(
+      `Fetching businesses with pagination: page=${page}, limit=${limit}`,
+    );
+
     // Check if user has developer access (level 10)
     if (userLevel !== undefined && userLevel < 10) {
-      this.logger.warn(`User with level ${userLevel} attempted to access findAll - access denied`);
-      throw new BadRequestException('Access denied. Developer level (10) required to view all businesses.');
+      this.logger.warn(
+        `User with level ${userLevel} attempted to access findAll - access denied`,
+      );
+      throw new BadRequestException(
+        "Access denied. Developer level (10) required to view all businesses.",
+      );
     }
-    
+
     const result = await this.businessRepository.findAll(page, limit);
     return {
-      businesses: result.businesses.map(business => this.mapToResponseDto(business)),
+      businesses: result.businesses.map((business) =>
+        this.mapToResponseDto(business),
+      ),
       total: result.total,
       page,
       limit,
@@ -49,14 +76,20 @@ export class BusinessService {
     return this.mapToResponseDto(business);
   }
 
-  async create(createBusinessDto: BusinessCreateDto): Promise<AuthorizationResponseDto> {
+  async create(
+    createBusinessDto: BusinessCreateDto,
+  ): Promise<AuthorizationResponseDto> {
     this.logger.log(`Creating new business: ${createBusinessDto.company_name}`);
-    
+
     // Check if master user username already exists
-    const existingUser = await this.userRepository.findByUsername(createBusinessDto.master_user_username);
+    const existingUser = await this.userRepository.findByUsername(
+      createBusinessDto.master_user_username,
+    );
     if (existingUser) {
-      this.logger.warn(`Master user username already exists: ${createBusinessDto.master_user_username}`);
-      throw new ConflictException('Master user username already exists');
+      this.logger.warn(
+        `Master user username already exists: ${createBusinessDto.master_user_username}`,
+      );
+      throw new ConflictException("Master user username already exists");
     }
 
     // Start transaction
@@ -71,7 +104,10 @@ export class BusinessService {
         });
 
         // Hash the master user password
-        const hashedPassword = await bcrypt.hash(createBusinessDto.master_user_password, 10);
+        const hashedPassword = await bcrypt.hash(
+          createBusinessDto.master_user_password,
+          10,
+        );
 
         // Create master user with business.id as tenant_id
         const masterUser = await prisma.user.create({
@@ -87,21 +123,30 @@ export class BusinessService {
         return { business: new Business(business), masterUser };
       } catch (error) {
         this.logger.error(`Transaction failed: ${error.message}`);
-        throw new BadRequestException('Failed to create business and master user');
+        throw new BadRequestException(
+          "Failed to create business and master user",
+        );
       }
     });
 
     // Create JWT token for the master user
-    const authToken = await this.authorizationService.createToken(result.masterUser);
+    const authToken = await this.authorizationService.createToken(
+      result.masterUser,
+    );
 
-    this.logger.log(`Business created successfully: ${result.business.company_name} with master user: ${result.masterUser.username}`);
+    this.logger.log(
+      `Business created successfully: ${result.business.company_name} with master user: ${result.masterUser.username}`,
+    );
 
     return authToken;
   }
 
-  async update(id: string, updateBusinessDto: BusinessUpdateDto): Promise<BusinessResponseDto> {
+  async update(
+    id: string,
+    updateBusinessDto: BusinessUpdateDto,
+  ): Promise<BusinessResponseDto> {
     this.logger.log(`Updating business with ID: ${id}`);
-    
+
     // Check if business exists
     const existingBusiness = await this.businessRepository.findOne(id);
     if (!existingBusiness) {
@@ -109,14 +154,17 @@ export class BusinessService {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
-    const business = await this.businessRepository.update(id, updateBusinessDto);
+    const business = await this.businessRepository.update(
+      id,
+      updateBusinessDto,
+    );
     this.logger.log(`Business updated successfully with ID: ${business.id}`);
     return this.mapToResponseDto(business);
   }
 
   async remove(id: string): Promise<void> {
     this.logger.log(`Removing business with ID: ${id}`);
-    
+
     // Check if business exists
     const existingBusiness = await this.businessRepository.findOne(id);
     if (!existingBusiness) {
@@ -141,7 +189,7 @@ export class BusinessService {
    */
   async purge(id: string): Promise<void> {
     this.logger.warn(`PURGING business with ID: ${id} - PERMANENT DELETION`);
-    
+
     // Check if business exists
     const existingBusiness = await this.businessRepository.findOne(id);
     if (!existingBusiness) {
@@ -166,11 +214,11 @@ export class BusinessService {
       // 3. Finally purge the business itself
       await this.businessRepository.purge(id);
     });
-    
-    this.logger.warn(`Business PURGED permanently with ID: ${id} and tenant: ${tenantId}`);
+
+    this.logger.warn(
+      `Business PURGED permanently with ID: ${id} and tenant: ${tenantId}`,
+    );
   }
-
-
 
   private mapToResponseDto(business: Business): BusinessResponseDto {
     return {

@@ -24,23 +24,34 @@ let LeadController = class LeadController {
     }
     async createLead(createLeadDto, req) {
         const userId = req.user?.id;
-        const { lead_type, lead_status, lead_temperature, lead_origin, lead_description, lead_notes, first_contacted_by, full_name, document_type, document_number, addresses, contacts, other_documents } = createLeadDto;
+        const { lead_type, lead_status, lead_temperature, lead_origin, lead_description, lead_notes, first_contacted_by, full_name, document_type, document_number, addresses, contacts, other_documents, } = createLeadDto;
         const leadData = {
-            lead_type, lead_status, lead_temperature, lead_origin, lead_description, lead_notes, first_contacted_by
+            lead_type,
+            lead_status,
+            lead_temperature,
+            lead_origin,
+            lead_description,
+            lead_notes,
+            first_contacted_by,
         };
         const personData = {
-            full_name, document_type, document_number, addresses, contacts, documents: other_documents
+            full_name,
+            document_type,
+            document_number,
+            addresses,
+            contacts,
+            documents: other_documents,
         };
         const createdLead = await this.leadService.createLead(leadData, personData, userId);
         return createdLead;
     }
-    async getAllLeads(page = '1', limit = '10') {
+    async getAllLeads(page = "1", limit = "10") {
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const result = await this.leadService.getAllLeads(pageNum, limitNum);
         return {
             ...result,
-            leads: result.leads
+            leads: result.leads,
         };
     }
     async getLeadById(id) {
@@ -49,12 +60,23 @@ let LeadController = class LeadController {
     }
     async updateLead(id, updateLeadDto, req) {
         const userId = req.user?.id;
-        const { lead_type, lead_status, lead_temperature, lead_origin, lead_description, lead_notes, first_contacted_by, full_name, document_type, document_number, addresses, contacts, other_documents } = updateLeadDto;
+        const { lead_type, lead_status, lead_temperature, lead_origin, lead_description, lead_notes, first_contacted_by, full_name, document_type, document_number, addresses, contacts, other_documents, } = updateLeadDto;
         const leadData = {
-            lead_type, lead_status, lead_temperature, lead_origin, lead_description, lead_notes, first_contacted_by
+            lead_type,
+            lead_status,
+            lead_temperature,
+            lead_origin,
+            lead_description,
+            lead_notes,
+            first_contacted_by,
         };
         const personData = {
-            full_name, document_type, document_number, addresses, contacts, documents: other_documents
+            full_name,
+            document_type,
+            document_number,
+            addresses,
+            contacts,
+            documents: other_documents,
         };
         const updatedLead = await this.leadService.updateLead(id, leadData, personData, userId);
         return updatedLead;
@@ -62,7 +84,7 @@ let LeadController = class LeadController {
     async deleteLead(id, req) {
         const userId = req.user?.id;
         await this.leadService.deleteLead(id, userId);
-        return { message: 'Lead deleted successfully' };
+        return { message: "Lead deleted successfully" };
     }
 };
 exports.LeadController = LeadController;
@@ -76,22 +98,22 @@ __decorate([
 ], LeadController.prototype, "createLead", null);
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('page')),
-    __param(1, (0, common_1.Query)('limit')),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], LeadController.prototype, "getAllLeads", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], LeadController.prototype, "getLeadById", null);
 __decorate([
-    (0, common_1.Put)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Put)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -99,15 +121,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], LeadController.prototype, "updateLead", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], LeadController.prototype, "deleteLead", null);
 exports.LeadController = LeadController = __decorate([
-    (0, common_1.Controller)('leads'),
+    (0, common_1.Controller)("leads"),
     (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [lead_service_1.LeadService])
 ], LeadController);

@@ -1,4 +1,4 @@
-import { IAuditBase } from '../Interfaces/IAuditBase';
+import { IAuditBase } from "../Interfaces/IAuditBase";
 export declare class UserRole implements IAuditBase {
     id: string;
     user_id: string;

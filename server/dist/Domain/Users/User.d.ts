@@ -1,4 +1,4 @@
-import { IAudit } from '../Interfaces/IAudit';
+import { IAudit } from "../Interfaces/IAudit";
 export declare class User implements IAudit {
     id: string;
     fullName: string;

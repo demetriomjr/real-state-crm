@@ -10,11 +10,11 @@ exports.AppService = void 0;
 const common_1 = require("@nestjs/common");
 let AppService = class AppService {
     getHello() {
-        return 'Real State CRM API is running!';
+        return "Real State CRM API is running!";
     }
     getHealth() {
         return {
-            status: 'ok',
+            status: "ok",
             timestamp: new Date().toISOString(),
         };
     }

@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BusinessRepository = void 0;
 const common_1 = require("@nestjs/common");
-const postgres_context_1 = require("../Database/postgres.context");
+const main_database_context_1 = require("../Database/main-database.context");
 const Business_1 = require("../../Domain/Business/Business");
 let BusinessRepository = class BusinessRepository {
     constructor(prisma) {
@@ -24,14 +24,14 @@ let BusinessRepository = class BusinessRepository {
                 where: { deleted_at: null },
                 skip,
                 take: limit,
-                orderBy: { created_at: 'desc' },
+                orderBy: { created_at: "desc" },
             }),
             this.prisma.business.count({
                 where: { deleted_at: null },
             }),
         ]);
         return {
-            businesses: businesses.map(business => new Business_1.Business(business)),
+            businesses: businesses.map((business) => new Business_1.Business(business)),
             total,
         };
     }
@@ -39,7 +39,7 @@ let BusinessRepository = class BusinessRepository {
         const business = await this.prisma.business.findFirst({
             where: {
                 id,
-                deleted_at: null
+                deleted_at: null,
             },
         });
         return business ? new Business_1.Business(business) : null;
@@ -57,8 +57,12 @@ let BusinessRepository = class BusinessRepository {
         const business = await this.prisma.business.update({
             where: { id },
             data: {
-                ...(updateBusinessDto.company_name && { company_name: updateBusinessDto.company_name }),
-                ...(updateBusinessDto.subscription !== undefined && { subscription: updateBusinessDto.subscription }),
+                ...(updateBusinessDto.company_name && {
+                    company_name: updateBusinessDto.company_name,
+                }),
+                ...(updateBusinessDto.subscription !== undefined && {
+                    subscription: updateBusinessDto.subscription,
+                }),
             },
         });
         return new Business_1.Business(business);
@@ -68,7 +72,7 @@ let BusinessRepository = class BusinessRepository {
             where: { id },
             data: {
                 deleted_at: new Date(),
-                deleted_by: 'system',
+                deleted_by: "system",
             },
         });
     }
@@ -76,7 +80,7 @@ let BusinessRepository = class BusinessRepository {
         const count = await this.prisma.business.count({
             where: {
                 id,
-                deleted_at: null
+                deleted_at: null,
             },
         });
         return count > 0;
@@ -85,7 +89,7 @@ let BusinessRepository = class BusinessRepository {
         const count = await this.prisma.business.count({
             where: {
                 id: tenantId,
-                deleted_at: null
+                deleted_at: null,
             },
         });
         return count > 0;
@@ -99,6 +103,6 @@ let BusinessRepository = class BusinessRepository {
 exports.BusinessRepository = BusinessRepository;
 exports.BusinessRepository = BusinessRepository = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [postgres_context_1.PostgresContext])
+    __metadata("design:paramtypes", [main_database_context_1.MainDatabaseContext])
 ], BusinessRepository);
 //# sourceMappingURL=business.repository.js.map

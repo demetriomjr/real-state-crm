@@ -20,24 +20,24 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get('JWT_SECRET'),
+            secretOrKey: configService.get("JWT_SECRET"),
         });
         this.configService = configService;
         this.authorizationService = authorizationService;
     }
     async validate(payload) {
-        const nodeEnv = this.configService.get('NODE_ENV');
-        if (nodeEnv === 'development' || nodeEnv === 'test') {
+        const nodeEnv = this.configService.get("NODE_ENV");
+        if (nodeEnv === "development" || nodeEnv === "test") {
             return payload;
         }
         if (this.authorizationService.isDevelopmentEnvironment()) {
             return payload;
         }
         if (!payload.tenant_id) {
-            throw new common_1.UnauthorizedException('Tenant ID is required');
+            throw new common_1.UnauthorizedException("Tenant ID is required");
         }
         if (payload.user_level === undefined || payload.user_level === null) {
-            throw new common_1.UnauthorizedException('User level is required');
+            throw new common_1.UnauthorizedException("User level is required");
         }
         return payload;
     }

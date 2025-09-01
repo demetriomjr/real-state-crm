@@ -1,8 +1,17 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { UserRepository } from '@/Infrastructure/Repositories/user.repository';
-import { User } from '@/Domain/Users/User';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from '@/Application/DTOs';
-import * as bcrypt from 'bcryptjs';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  Logger,
+} from "@nestjs/common";
+import { UserRepository } from "@/Infrastructure/Repositories/user.repository";
+import { User } from "@/Domain/Users/User";
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UserResponseDto,
+} from "@/Application/DTOs";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class UserService {
@@ -10,11 +19,21 @@ export class UserService {
 
   constructor(private readonly userRepository: UserRepository) {}
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ users: UserResponseDto[]; total: number; page: number; limit: number }> {
-    this.logger.log(`Fetching users with pagination: page=${page}, limit=${limit}`);
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{
+    users: UserResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    this.logger.log(
+      `Fetching users with pagination: page=${page}, limit=${limit}`,
+    );
     const result = await this.userRepository.findAll(page, limit);
     return {
-      users: result.users.map(user => this.mapToResponseDto(user)),
+      users: result.users.map((user) => this.mapToResponseDto(user)),
       total: result.total,
       page,
       limit,
@@ -32,13 +51,17 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    this.logger.log(`Creating new user with username: ${createUserDto.username}`);
-    
+    this.logger.log(
+      `Creating new user with username: ${createUserDto.username}`,
+    );
+
     // Check if username already exists
-    const existingUser = await this.userRepository.findByUsername(createUserDto.username);
+    const existingUser = await this.userRepository.findByUsername(
+      createUserDto.username,
+    );
     if (existingUser) {
       this.logger.warn(`Username already exists: ${createUserDto.username}`);
-      throw new ConflictException('Username already exists');
+      throw new ConflictException("Username already exists");
     }
 
     // Hash the password
@@ -55,9 +78,12 @@ export class UserService {
     return this.mapToResponseDto(user);
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
     this.logger.log(`Updating user with ID: ${id}`);
-    
+
     // Check if user exists
     const existingUser = await this.userRepository.findOne(id);
     if (!existingUser) {
@@ -66,11 +92,18 @@ export class UserService {
     }
 
     // If username is being updated, check for conflicts
-    if (updateUserDto.username && updateUserDto.username !== existingUser.username) {
-      const userWithUsername = await this.userRepository.findByUsername(updateUserDto.username);
+    if (
+      updateUserDto.username &&
+      updateUserDto.username !== existingUser.username
+    ) {
+      const userWithUsername = await this.userRepository.findByUsername(
+        updateUserDto.username,
+      );
       if (userWithUsername) {
-        this.logger.warn(`Username already exists during update: ${updateUserDto.username}`);
-        throw new ConflictException('Username already exists');
+        this.logger.warn(
+          `Username already exists during update: ${updateUserDto.username}`,
+        );
+        throw new ConflictException("Username already exists");
       }
     }
 
@@ -86,7 +119,7 @@ export class UserService {
 
   async remove(id: string): Promise<void> {
     this.logger.log(`Removing user with ID: ${id}`);
-    
+
     // Check if user exists
     const existingUser = await this.userRepository.findOne(id);
     if (!existingUser) {
@@ -101,7 +134,7 @@ export class UserService {
   async findByTenant(tenant_id: string): Promise<UserResponseDto[]> {
     this.logger.log(`Fetching users for tenant: ${tenant_id}`);
     const users = await this.userRepository.findByTenant(tenant_id);
-    return users.map(user => this.mapToResponseDto(user));
+    return users.map((user) => this.mapToResponseDto(user));
   }
 
   async findByUsername(username: string): Promise<User | null> {
@@ -122,7 +155,7 @@ export class UserService {
    */
   async purge(id: string): Promise<void> {
     this.logger.warn(`PURGING user with ID: ${id} - PERMANENT DELETION`);
-    
+
     // Check if user exists
     const existingUser = await this.userRepository.findOne(id);
     if (!existingUser) {
@@ -135,11 +168,13 @@ export class UserService {
 
     // Purge related entities first (respecting foreign key constraints)
     await this.userRepository.purgeUserRoles(id);
-    
+
     // Finally purge the user
     await this.userRepository.purge(id);
-    
-    this.logger.warn(`User PURGED permanently with ID: ${id} from tenant: ${tenantId}`);
+
+    this.logger.warn(
+      `User PURGED permanently with ID: ${id} from tenant: ${tenantId}`,
+    );
   }
 
   /**
@@ -149,16 +184,18 @@ export class UserService {
    * NOT EXPOSED TO CONTROLLERS - Service level only
    */
   async purgeByTenant(tenant_id: string): Promise<void> {
-    this.logger.warn(`PURGING all users for tenant: ${tenant_id} - PERMANENT DELETION`);
-    
+    this.logger.warn(
+      `PURGING all users for tenant: ${tenant_id} - PERMANENT DELETION`,
+    );
+
     // Get all users in the tenant
     const users = await this.userRepository.findByTenant(tenant_id);
-    
+
     // Purge each user individually to ensure proper cleanup
     for (const user of users) {
       await this.purge(user.id);
     }
-    
+
     this.logger.warn(`All users PURGED permanently for tenant: ${tenant_id}`);
   }
 

@@ -1,4 +1,4 @@
-import { CreateUserDto, UpdateUserDto } from '@/Application/DTOs';
+import { CreateUserDto, UpdateUserDto } from "@/Application/DTOs";
 export declare class UserValidator {
     private readonly logger;
     validateCreate(createUserDto: CreateUserDto): Promise<void>;

@@ -16,13 +16,18 @@ class BusinessCreateDto {
 }
 exports.BusinessCreateDto = BusinessCreateDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Company name', example: 'Acme Corporation' }),
+    (0, swagger_1.ApiProperty)({ description: "Company name", example: "Acme Corporation" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], BusinessCreateDto.prototype, "company_name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Subscription level (0-10)', example: 5, required: false, default: 1 }),
+    (0, swagger_1.ApiProperty)({
+        description: "Subscription level (0-10)",
+        example: 5,
+        required: false,
+        default: 1,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(0),
@@ -30,19 +35,19 @@ __decorate([
     __metadata("design:type", Number)
 ], BusinessCreateDto.prototype, "subscription", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Master user full name', example: 'John Doe' }),
+    (0, swagger_1.ApiProperty)({ description: "Master user full name", example: "John Doe" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], BusinessCreateDto.prototype, "master_user_fullName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Master user username', example: 'johndoe' }),
+    (0, swagger_1.ApiProperty)({ description: "Master user username", example: "johndoe" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], BusinessCreateDto.prototype, "master_user_username", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Master user password', example: 'password123' }),
+    (0, swagger_1.ApiProperty)({ description: "Master user password", example: "password123" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)

@@ -24,23 +24,30 @@ let CustomerController = class CustomerController {
     }
     async createCustomer(createCustomerDto, req) {
         const userId = req.user?.id;
-        const { customer_type, customer_status, fidelized_by, full_name, document_type, document_number, addresses, contacts, other_documents } = createCustomerDto;
+        const { customer_type, customer_status, fidelized_by, full_name, document_type, document_number, addresses, contacts, other_documents, } = createCustomerDto;
         const customerData = {
-            customer_type, customer_status, fidelized_by
+            customer_type,
+            customer_status,
+            fidelized_by,
         };
         const personData = {
-            full_name, document_type, document_number, addresses, contacts, documents: other_documents
+            full_name,
+            document_type,
+            document_number,
+            addresses,
+            contacts,
+            documents: other_documents,
         };
         const createdCustomer = await this.customerService.createCustomer(customerData, personData, userId);
         return createdCustomer;
     }
-    async getAllCustomers(page = '1', limit = '10') {
+    async getAllCustomers(page = "1", limit = "10") {
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const result = await this.customerService.getAllCustomers(pageNum, limitNum);
         return {
             ...result,
-            customers: result.customers
+            customers: result.customers,
         };
     }
     async getCustomerById(id) {
@@ -49,12 +56,19 @@ let CustomerController = class CustomerController {
     }
     async updateCustomer(id, updateCustomerDto, req) {
         const userId = req.user?.id;
-        const { customer_type, customer_status, fidelized_by, full_name, document_type, document_number, addresses, contacts, other_documents } = updateCustomerDto;
+        const { customer_type, customer_status, fidelized_by, full_name, document_type, document_number, addresses, contacts, other_documents, } = updateCustomerDto;
         const customerData = {
-            customer_type, customer_status, fidelized_by
+            customer_type,
+            customer_status,
+            fidelized_by,
         };
         const personData = {
-            full_name, document_type, document_number, addresses, contacts, documents: other_documents
+            full_name,
+            document_type,
+            document_number,
+            addresses,
+            contacts,
+            documents: other_documents,
         };
         const updatedCustomer = await this.customerService.updateCustomer(id, customerData, personData, userId);
         return updatedCustomer;
@@ -62,7 +76,7 @@ let CustomerController = class CustomerController {
     async deleteCustomer(id, req) {
         const userId = req.user?.id;
         await this.customerService.deleteCustomer(id, userId);
-        return { message: 'Customer deleted successfully' };
+        return { message: "Customer deleted successfully" };
     }
     async convertLeadToCustomer(leadId, customerData, req) {
         const userId = req.user?.id;
@@ -81,22 +95,22 @@ __decorate([
 ], CustomerController.prototype, "createCustomer", null);
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('page')),
-    __param(1, (0, common_1.Query)('limit')),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "getAllCustomers", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "getCustomerById", null);
 __decorate([
-    (0, common_1.Put)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Put)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -104,16 +118,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "updateCustomer", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "deleteCustomer", null);
 __decorate([
-    (0, common_1.Post)('convert-from-lead/:leadId'),
-    __param(0, (0, common_1.Param)('leadId')),
+    (0, common_1.Post)("convert-from-lead/:leadId"),
+    __param(0, (0, common_1.Param)("leadId")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -121,7 +135,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "convertLeadToCustomer", null);
 exports.CustomerController = CustomerController = __decorate([
-    (0, common_1.Controller)('customers'),
+    (0, common_1.Controller)("customers"),
     (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [customer_service_1.CustomerService])
 ], CustomerController);

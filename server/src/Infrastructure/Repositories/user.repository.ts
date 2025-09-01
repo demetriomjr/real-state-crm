@@ -1,21 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { PostgresContext } from '@/Infrastructure/Database/postgres.context';
-import { User } from '@/Domain/Users/User';
-import { CreateUserDto, UpdateUserDto } from '@/Application/DTOs';
+import { Injectable } from "@nestjs/common";
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
+import { User } from "@/Domain/Users/User";
+import { CreateUserDto, UpdateUserDto } from "@/Application/DTOs";
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PostgresContext) {}
+  constructor(private readonly prisma: MainDatabaseContext) {}
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ users: User[]; total: number }> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ users: User[]; total: number }> {
     const skip = (page - 1) * limit;
-    
+
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where: { deleted_at: null },
         skip,
         take: limit,
-        orderBy: { created_at: 'desc' },
+        orderBy: { created_at: "desc" },
       }),
       this.prisma.user.count({
         where: { deleted_at: null },
@@ -23,16 +26,16 @@ export class UserRepository {
     ]);
 
     return {
-      users: users.map(user => new User(user)),
+      users: users.map((user) => new User(user)),
       total,
     };
   }
 
   async findOne(id: string): Promise<User | null> {
     const user = await this.prisma.user.findFirst({
-      where: { 
+      where: {
         id,
-        deleted_at: null 
+        deleted_at: null,
       },
     });
 
@@ -41,9 +44,9 @@ export class UserRepository {
 
   async findByUsername(username: string): Promise<User | null> {
     const user = await this.prisma.user.findFirst({
-      where: { 
+      where: {
         username,
-        deleted_at: null 
+        deleted_at: null,
       },
     });
 
@@ -71,7 +74,9 @@ export class UserRepository {
         ...(updateUserDto.fullName && { fullName: updateUserDto.fullName }),
         ...(updateUserDto.username && { username: updateUserDto.username }),
         ...(updateUserDto.password && { password: updateUserDto.password }),
-        ...(updateUserDto.user_level && { user_level: updateUserDto.user_level }),
+        ...(updateUserDto.user_level && {
+          user_level: updateUserDto.user_level,
+        }),
         ...(updateUserDto.tenant_id && { tenant_id: updateUserDto.tenant_id }),
       },
     });
@@ -82,18 +87,18 @@ export class UserRepository {
   async remove(id: string): Promise<void> {
     await this.prisma.user.update({
       where: { id },
-      data: { 
+      data: {
         deleted_at: new Date(),
-        deleted_by: 'system', // This should come from auth context
+        deleted_by: "system", // This should come from auth context
       },
     });
   }
 
   async exists(id: string): Promise<boolean> {
     const count = await this.prisma.user.count({
-      where: { 
+      where: {
         id,
-        deleted_at: null 
+        deleted_at: null,
       },
     });
     return count > 0;
@@ -101,14 +106,14 @@ export class UserRepository {
 
   async findByTenant(tenant_id: string): Promise<User[]> {
     const users = await this.prisma.user.findMany({
-      where: { 
+      where: {
         tenant_id,
-        deleted_at: null 
+        deleted_at: null,
       },
-      orderBy: { created_at: 'desc' },
+      orderBy: { created_at: "desc" },
     });
 
-    return users.map(user => new User(user));
+    return users.map((user) => new User(user));
   }
 
   /**

@@ -1,7 +1,7 @@
-import { IAudit } from '@/Domain/Interfaces/IAudit';
-import { Document } from './Document';
-import { Contact } from './Contact';
-import { Address } from './Address';
+import { IAudit } from "@/Domain/Interfaces/IAudit";
+import { Document } from "./Document";
+import { Contact } from "./Contact";
+import { Address } from "./Address";
 
 export class Person implements IAudit {
   id: string;
@@ -20,11 +20,11 @@ export class Person implements IAudit {
   deleted_by?: string;
 
   constructor(data: Partial<Person>) {
-    this.id = data.id || '';
-    this.full_name = data.full_name || '';
-    this.document_type = data.document_type || '';
-    this.document_number = data.document_number || '';
-    this.tenant_id = data.tenant_id || '';
+    this.id = data.id || "";
+    this.full_name = data.full_name || "";
+    this.document_type = data.document_type || "";
+    this.document_number = data.document_number || "";
+    this.tenant_id = data.tenant_id || "";
     this.other_documents = data.other_documents || [];
     this.contacts = data.contacts || [];
     this.addresses = data.addresses || [];

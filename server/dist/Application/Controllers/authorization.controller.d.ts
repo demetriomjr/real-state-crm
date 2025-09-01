@@ -1,5 +1,5 @@
-import { AuthorizationService } from '@/Application/Services/authorization.service';
-import { AuthorizationRequestDto, AuthorizationResponseDto } from '@/Application/DTOs/Authorization';
+import { AuthorizationService } from "@/Application/Services/authorization.service";
+import { AuthorizationRequestDto, AuthorizationResponseDto } from "@/Application/DTOs/Authorization";
 export declare class AuthorizationController {
     private readonly authorizationService;
     private readonly logger;

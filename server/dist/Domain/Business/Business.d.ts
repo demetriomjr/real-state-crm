@@ -1,4 +1,4 @@
-import { IAuditBase } from '../Interfaces/IAuditBase';
+import { IAuditBase } from "../Interfaces/IAuditBase";
 export declare class Business implements IAuditBase {
     id: string;
     company_name: string;

@@ -1,9 +1,13 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
-import { UserService } from './user.service';
-import { AuthorizationResponseDto, AuthorizationRequestDto, JwtPayload } from '@/Application/DTOs/Authorization';
+import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcryptjs";
+import { UserService } from "./user.service";
+import {
+  AuthorizationResponseDto,
+  AuthorizationRequestDto,
+  JwtPayload,
+} from "@/Application/DTOs/Authorization";
 
 @Injectable()
 export class AuthorizationService {
@@ -35,7 +39,10 @@ export class AuthorizationService {
     }
   }
 
-  async createToken(user: any, isRefresh: boolean = false): Promise<AuthorizationResponseDto> {
+  async createToken(
+    user: any,
+    isRefresh: boolean = false,
+  ): Promise<AuthorizationResponseDto> {
     this.logger.log(`Creating token for user: ${user.username}`);
     const payload: JwtPayload = {
       tenant_id: user.tenant_id,
@@ -48,13 +55,13 @@ export class AuthorizationService {
       payload.refresh_id = user.refresh_id;
     }
 
-    const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '30m');
+    const expiresIn = this.configService.get<string>("JWT_EXPIRES_IN", "30m");
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes
 
     const token = this.jwtService.sign(payload, {
       expiresIn,
-      secret: this.configService.get<string>('JWT_SECRET'),
+      secret: this.configService.get<string>("JWT_SECRET"),
     });
 
     return {
@@ -63,74 +70,80 @@ export class AuthorizationService {
     };
   }
 
-
-
   async validateToken(token: string): Promise<JwtPayload> {
     // Check if token is in expired cache
     if (this.expiredTokensCache.has(token)) {
-      this.logger.warn('Attempted to use invalidated token');
-      throw new UnauthorizedException('Token has been invalidated');
+      this.logger.warn("Attempted to use invalidated token");
+      throw new UnauthorizedException("Token has been invalidated");
     }
 
     try {
       const payload = this.jwtService.verify(token, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>("JWT_SECRET"),
       }) as JwtPayload;
 
       // Skip user validation in development and test environments
-      const nodeEnv = this.configService.get<string>('NODE_ENV');
-      if (nodeEnv === 'development' || nodeEnv === 'test') {
-        this.logger.log(`Token validated for user: ${payload.user_id} (${nodeEnv} mode)`);
+      const nodeEnv = this.configService.get<string>("NODE_ENV");
+      if (nodeEnv === "development" || nodeEnv === "test") {
+        this.logger.log(
+          `Token validated for user: ${payload.user_id} (${nodeEnv} mode)`,
+        );
         return payload;
       }
 
       // Verify user still exists by user_id and tenant_id
       const user = await this.userService.findOneRaw(payload.user_id);
       if (!user || user.tenant_id !== payload.tenant_id) {
-        this.logger.warn(`Token validation failed: User ${payload.user_id} not found or tenant mismatch`);
-        throw new UnauthorizedException('User not found');
+        this.logger.warn(
+          `Token validation failed: User ${payload.user_id} not found or tenant mismatch`,
+        );
+        throw new UnauthorizedException("User not found");
       }
 
       this.logger.log(`Token validated for user: ${payload.user_id}`);
       return payload;
     } catch (error) {
       this.logger.error(`Token validation failed: ${error.message}`);
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException("Invalid token");
     }
   }
 
   async refreshToken(token: string): Promise<AuthorizationResponseDto> {
-    this.logger.log('Refreshing token');
+    this.logger.log("Refreshing token");
     const payload = await this.validateToken(token);
-    
+
     // Skip user validation in development and test environments
-    const nodeEnv = this.configService.get<string>('NODE_ENV');
-    if (nodeEnv === 'development' || nodeEnv === 'test') {
+    const nodeEnv = this.configService.get<string>("NODE_ENV");
+    if (nodeEnv === "development" || nodeEnv === "test") {
       // In test mode, we'll create a mock user object for token creation
       const mockUser = {
         id: payload.user_id,
         tenant_id: payload.tenant_id,
         user_level: payload.user_level,
-        username: 'test-user',
+        username: "test-user",
       };
-      
+
       // Invalidate old token
       this.invalidateToken(token);
 
       // Create new token with unique identifier
-      this.logger.log(`Token refreshed for user: ${payload.user_id} (${nodeEnv} mode)`);
+      this.logger.log(
+        `Token refreshed for user: ${payload.user_id} (${nodeEnv} mode)`,
+      );
       const mockUserWithId = {
         ...mockUser,
         refresh_id: Date.now(), // Add unique identifier for refresh
       };
       return this.createToken(mockUserWithId);
     }
-    
+
     // Get fresh user data
     const user = await this.userService.findOneRaw(payload.user_id);
     if (!user || user.tenant_id !== payload.tenant_id) {
-      this.logger.warn(`Token refresh failed: User ${payload.user_id} not found or tenant mismatch`);
-      throw new UnauthorizedException('User not found');
+      this.logger.warn(
+        `Token refresh failed: User ${payload.user_id} not found or tenant mismatch`,
+      );
+      throw new UnauthorizedException("User not found");
     }
 
     // Invalidate old token
@@ -142,7 +155,7 @@ export class AuthorizationService {
   }
 
   invalidateToken(token: string): void {
-    this.logger.log('Invalidating token');
+    this.logger.log("Invalidating token");
     // Add token to expired cache
     this.expiredTokensCache.add(token);
 
@@ -151,19 +164,17 @@ export class AuthorizationService {
       const tokensArray = Array.from(this.expiredTokensCache);
       const oldestToken = tokensArray[0];
       this.expiredTokensCache.delete(oldestToken);
-      this.logger.log('Token cache cleanup performed');
+      this.logger.log("Token cache cleanup performed");
     }
   }
 
   async logout(token: string): Promise<{ message: string }> {
-    this.logger.log('User logout requested');
+    this.logger.log("User logout requested");
     this.invalidateToken(token);
-    return { message: 'Logged out successfully' };
+    return { message: "Logged out successfully" };
   }
 
   isDevelopmentEnvironment(): boolean {
-    return this.configService.get<string>('NODE_ENV') === 'development';
+    return this.configService.get<string>("NODE_ENV") === "development";
   }
-
-
 }

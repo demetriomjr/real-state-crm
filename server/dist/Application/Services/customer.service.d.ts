@@ -1,8 +1,8 @@
-import { PrismaService } from '@/Infrastructure/Database/postgres.context';
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
 export declare class CustomerService {
     private readonly prisma;
     private readonly logger;
-    constructor(prisma: PrismaService);
+    constructor(prisma: MainDatabaseContext);
     createCustomer(customerData: any, personData: any, userId?: string): Promise<any>;
     updateCustomer(customerId: string, customerData: any, personData: any, userId?: string): Promise<any>;
     getCustomerById(customerId: string): Promise<any>;

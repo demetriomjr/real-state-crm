@@ -9,13 +9,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseModule = void 0;
 const common_1 = require("@nestjs/common");
 const postgres_context_1 = require("./postgres.context");
+const main_database_context_1 = require("./main-database.context");
 let DatabaseModule = class DatabaseModule {
 };
 exports.DatabaseModule = DatabaseModule;
 exports.DatabaseModule = DatabaseModule = __decorate([
     (0, common_1.Module)({
-        providers: [postgres_context_1.PostgresContext],
-        exports: [postgres_context_1.PostgresContext],
+        providers: [postgres_context_1.PostgresContext, main_database_context_1.MainDatabaseContext],
+        exports: [postgres_context_1.PostgresContext, main_database_context_1.MainDatabaseContext],
     })
 ], DatabaseModule);
 //# sourceMappingURL=database.module.js.map

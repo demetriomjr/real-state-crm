@@ -15,11 +15,17 @@ class AuthorizationResponseDto {
 }
 exports.AuthorizationResponseDto = AuthorizationResponseDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'JWT token for authentication', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }),
+    (0, swagger_1.ApiProperty)({
+        description: "JWT token for authentication",
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    }),
     __metadata("design:type", String)
 ], AuthorizationResponseDto.prototype, "token", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Token expiration date', example: '2024-01-01T12:00:00.000Z' }),
+    (0, swagger_1.ApiProperty)({
+        description: "Token expiration date",
+        example: "2024-01-01T12:00:00.000Z",
+    }),
     __metadata("design:type", Date)
 ], AuthorizationResponseDto.prototype, "expires_at", void 0);
 //# sourceMappingURL=authorization-response.dto.js.map

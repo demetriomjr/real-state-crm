@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Contact = void 0;
 class Contact {
     constructor(data) {
-        this.id = data.id || '';
-        this.contact_type = data.contact_type || '';
-        this.contact_value = data.contact_value || '';
-        this.person_id = data.person_id || '';
+        this.id = data.id || "";
+        this.contact_type = data.contact_type || "";
+        this.contact_value = data.contact_value || "";
+        this.person_id = data.person_id || "";
         this.is_primary = data.is_primary || false;
         this.created_at = data.created_at || new Date();
         this.created_by = data.created_by;

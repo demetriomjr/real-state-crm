@@ -1,7 +1,7 @@
-import { UserService } from '@/Application/Services/user.service';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from '@/Application/DTOs';
-import { UserValidator } from '@/Application/Validators/user.validator';
-import { AuthorizationService } from '@/Application/Services/authorization.service';
+import { UserService } from "@/Application/Services/user.service";
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from "@/Application/DTOs";
+import { UserValidator } from "@/Application/Validators/user.validator";
+import { AuthorizationService } from "@/Application/Services/authorization.service";
 export declare class UserController {
     private readonly userService;
     private readonly userValidator;

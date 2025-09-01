@@ -18,53 +18,78 @@ class CustomerCreateDto {
 }
 exports.CustomerCreateDto = CustomerCreateDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Full name of the person' }),
+    (0, swagger_1.ApiProperty)({ description: "Full name of the person" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CustomerCreateDto.prototype, "full_name", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Primary document type',
-        enum: ['cpf', 'cnpj', 'rg', 'passport', 'driver_license', 'voter_id', 'work_card', 'other'],
-        example: 'cpf'
+        description: "Primary document type",
+        enum: [
+            "cpf",
+            "cnpj",
+            "rg",
+            "passport",
+            "driver_license",
+            "voter_id",
+            "work_card",
+            "other",
+        ],
+        example: "cpf",
     }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['cpf', 'cnpj', 'rg', 'passport', 'driver_license', 'voter_id', 'work_card', 'other']),
+    (0, class_validator_1.IsIn)([
+        "cpf",
+        "cnpj",
+        "rg",
+        "passport",
+        "driver_license",
+        "voter_id",
+        "work_card",
+        "other",
+    ]),
     __metadata("design:type", String)
 ], CustomerCreateDto.prototype, "document_type", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Primary document number' }),
+    (0, swagger_1.ApiProperty)({ description: "Primary document number" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CustomerCreateDto.prototype, "document_number", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Type of customer',
-        enum: ['individual', 'company'],
-        example: 'individual'
+        description: "Type of customer",
+        enum: ["individual", "company"],
+        example: "individual",
     }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['individual', 'company']),
+    (0, class_validator_1.IsIn)(["individual", "company"]),
     __metadata("design:type", String)
 ], CustomerCreateDto.prototype, "customer_type", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Status of the customer',
-        enum: ['active', 'inactive'],
-        example: 'active'
+        description: "Status of the customer",
+        enum: ["active", "inactive"],
+        example: "active",
     }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['active', 'inactive']),
+    (0, class_validator_1.IsIn)(["active", "inactive"]),
     __metadata("design:type", String)
 ], CustomerCreateDto.prototype, "customer_status", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID of the user who fidelized this customer', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "ID of the user who fidelized this customer",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], CustomerCreateDto.prototype, "fidelized_by", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional addresses', type: [lead_create_dto_1.AddressDto], required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Additional addresses",
+        type: [lead_create_dto_1.AddressDto],
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
@@ -72,7 +97,11 @@ __decorate([
     __metadata("design:type", Array)
 ], CustomerCreateDto.prototype, "addresses", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional contacts', type: [lead_create_dto_1.ContactDto], required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Additional contacts",
+        type: [lead_create_dto_1.ContactDto],
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
@@ -80,7 +109,11 @@ __decorate([
     __metadata("design:type", Array)
 ], CustomerCreateDto.prototype, "contacts", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional documents', type: [lead_create_dto_1.DocumentDto], required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Additional documents",
+        type: [lead_create_dto_1.DocumentDto],
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),

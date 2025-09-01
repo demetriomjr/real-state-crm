@@ -1,4 +1,4 @@
-import { IAuditBase } from '@/Domain/Interfaces/IAuditBase';
+import { IAuditBase } from "@/Domain/Interfaces/IAuditBase";
 export declare class Document implements IAuditBase {
     id: string;
     document_type: string;

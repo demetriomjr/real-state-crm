@@ -1,4 +1,4 @@
-import { IAuditBase } from '@/Domain/Interfaces/IAuditBase';
+import { IAuditBase } from "@/Domain/Interfaces/IAuditBase";
 export declare class Contact implements IAuditBase {
     id: string;
     contact_type: string;

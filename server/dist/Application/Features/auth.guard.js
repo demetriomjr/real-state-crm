@@ -6,23 +6,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JwtAuthGuard = void 0;
+exports.TenantId = exports.JwtAuthGuard = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
-let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
+const common_2 = require("@nestjs/common");
+let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)("jwt") {
     canActivate(context) {
         return super.canActivate(context);
     }
     handleRequest(err, user, info, context) {
         if (err || !user) {
-            throw err || new common_1.UnauthorizedException('Authentication required');
+            throw err || new common_1.UnauthorizedException("Authentication required");
         }
         const request = context.switchToHttp().getRequest();
         const jwtUser = user;
-        request['tenantId'] = jwtUser.tenant_id;
-        request['userId'] = jwtUser.user_id;
-        request['userLevel'] = jwtUser.user_level;
-        request['user'] = jwtUser;
+        request["tenantId"] = jwtUser.tenant_id;
+        request["userId"] = jwtUser.user_id;
+        request["userLevel"] = jwtUser.user_level;
+        request["user"] = jwtUser;
         return user;
     }
 };
@@ -30,4 +31,12 @@ exports.JwtAuthGuard = JwtAuthGuard;
 exports.JwtAuthGuard = JwtAuthGuard = __decorate([
     (0, common_1.Injectable)()
 ], JwtAuthGuard);
+exports.TenantId = (0, common_2.createParamDecorator)((data, ctx) => {
+    const request = ctx.switchToHttp().getRequest();
+    const tenantId = request["tenantId"];
+    if (!tenantId) {
+        throw new common_1.UnauthorizedException("Tenant ID not found in request");
+    }
+    return tenantId;
+});
 //# sourceMappingURL=auth.guard.js.map

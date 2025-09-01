@@ -28,39 +28,39 @@ let AuthorizationController = AuthorizationController_1 = class AuthorizationCon
         const user = await this.authorizationService.validateUser(authRequest.username, authRequest.password);
         if (!user) {
             this.logger.warn(`Login failed for username: ${authRequest.username}`);
-            throw new common_1.UnauthorizedException('Invalid credentials');
+            throw new common_1.UnauthorizedException("Invalid credentials");
         }
         this.logger.log(`Login successful for username: ${authRequest.username}`);
         return this.authorizationService.createToken(user);
     }
     async logout(authHeader) {
-        this.logger.log('Logout attempt');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            this.logger.warn('Logout failed: Invalid authorization header');
-            throw new common_1.UnauthorizedException('Invalid authorization header');
+        this.logger.log("Logout attempt");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            this.logger.warn("Logout failed: Invalid authorization header");
+            throw new common_1.UnauthorizedException("Invalid authorization header");
         }
         const token = authHeader.substring(7);
         try {
             await this.authorizationService.validateToken(token);
             this.authorizationService.invalidateToken(token);
-            this.logger.log('Logout successful');
-            return { message: 'Logout successful' };
+            this.logger.log("Logout successful");
+            return { message: "Logout successful" };
         }
         catch (error) {
             this.logger.warn(`Logout failed: ${error.message}`);
-            throw new common_1.UnauthorizedException('Invalid token');
+            throw new common_1.UnauthorizedException("Invalid token");
         }
     }
     async refresh(authHeader) {
-        this.logger.log('Token refresh attempt');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            this.logger.warn('Token refresh failed: Invalid authorization header');
-            throw new common_1.UnauthorizedException('Invalid authorization header');
+        this.logger.log("Token refresh attempt");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            this.logger.warn("Token refresh failed: Invalid authorization header");
+            throw new common_1.UnauthorizedException("Invalid authorization header");
         }
         const token = authHeader.substring(7);
         try {
             const result = await this.authorizationService.refreshToken(token);
-            this.logger.log('Token refresh successful');
+            this.logger.log("Token refresh successful");
             return result;
         }
         catch (error) {
@@ -71,43 +71,59 @@ let AuthorizationController = AuthorizationController_1 = class AuthorizationCon
 };
 exports.AuthorizationController = AuthorizationController;
 __decorate([
-    (0, common_1.Post)('login'),
+    (0, common_1.Post)("login"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Authenticate user and return JWT token' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Login successful', type: Authorization_1.AuthorizationResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Invalid credentials' }),
+    (0, swagger_1.ApiOperation)({ summary: "Authenticate user and return JWT token" }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: "Login successful",
+        type: Authorization_1.AuthorizationResponseDto,
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "Invalid credentials" }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Authorization_1.AuthorizationRequestDto]),
     __metadata("design:returntype", Promise)
 ], AuthorizationController.prototype, "login", null);
 __decorate([
-    (0, common_1.Post)('logout'),
+    (0, common_1.Post)("logout"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Logout user and invalidate JWT token' }),
-    (0, swagger_1.ApiHeader)({ name: 'Authorization', description: 'Bearer token', required: true }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Logout successful' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    __param(0, (0, common_1.Headers)('authorization')),
+    (0, swagger_1.ApiOperation)({ summary: "Logout user and invalidate JWT token" }),
+    (0, swagger_1.ApiHeader)({
+        name: "Authorization",
+        description: "Bearer token",
+        required: true,
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Logout successful" }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "Unauthorized" }),
+    __param(0, (0, common_1.Headers)("authorization")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthorizationController.prototype, "logout", null);
 __decorate([
-    (0, common_1.Post)('refresh'),
+    (0, common_1.Post)("refresh"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Refresh JWT token' }),
-    (0, swagger_1.ApiHeader)({ name: 'Authorization', description: 'Bearer token', required: true }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Token refreshed successfully', type: Authorization_1.AuthorizationResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    __param(0, (0, common_1.Headers)('authorization')),
+    (0, swagger_1.ApiOperation)({ summary: "Refresh JWT token" }),
+    (0, swagger_1.ApiHeader)({
+        name: "Authorization",
+        description: "Bearer token",
+        required: true,
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: "Token refreshed successfully",
+        type: Authorization_1.AuthorizationResponseDto,
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "Unauthorized" }),
+    __param(0, (0, common_1.Headers)("authorization")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthorizationController.prototype, "refresh", null);
 exports.AuthorizationController = AuthorizationController = AuthorizationController_1 = __decorate([
-    (0, swagger_1.ApiTags)('auth'),
-    (0, common_1.Controller)('auth'),
+    (0, swagger_1.ApiTags)("auth"),
+    (0, common_1.Controller)("auth"),
     __metadata("design:paramtypes", [authorization_service_1.AuthorizationService])
 ], AuthorizationController);
 //# sourceMappingURL=authorization.controller.js.map

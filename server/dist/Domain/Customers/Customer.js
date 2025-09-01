@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Customer = void 0;
 class Customer {
     constructor(data) {
-        this.id = data.id || '';
-        this.person_id = data.person_id || '';
-        this.customer_type = data.customer_type || '';
-        this.customer_status = data.customer_status || '';
+        this.id = data.id || "";
+        this.person_id = data.person_id || "";
+        this.customer_type = data.customer_type || "";
+        this.customer_status = data.customer_status || "";
         this.fidelized_by = data.fidelized_by;
         this.created_at = data.created_at || new Date();
         this.created_by = data.created_by;

@@ -1,6 +1,6 @@
-import { UserRepository } from '@/Infrastructure/Repositories/user.repository';
-import { User } from '@/Domain/Users/User';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from '@/Application/DTOs';
+import { UserRepository } from "@/Infrastructure/Repositories/user.repository";
+import { User } from "@/Domain/Users/User";
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from "@/Application/DTOs";
 export declare class UserService {
     private readonly userRepository;
     private readonly logger;

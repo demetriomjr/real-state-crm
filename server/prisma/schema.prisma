@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -42,6 +43,7 @@ model User {
 
   // Relations
   userRoles UserRole[]
+  messages  Message[]
   tenant_id String?
   business  Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
@@ -81,6 +83,7 @@ model Business {
 
   // Relations
   users User[]
+  whatsappSessions WhatsappSession[]
 
   @@map("businesses")
 }
@@ -104,6 +107,7 @@ model Person {
   documents Document[]
   leads     Lead[]
   customers Customer[]
+  chats     Chat[]
 
   @@map("people")
 }
@@ -215,4 +219,97 @@ model Customer {
   person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("customers")
+}
+
+// Chat entity
+model Chat {
+  id                String    @id @default(uuid())
+  person_id         String
+  contact_name      String
+  contact_phone     String
+  user_observations String?
+  last_message_at   DateTime?
+  session_id        String?
+  created_at        DateTime  @default(now())
+  created_by        String?
+  updated_at        DateTime  @updatedAt
+  updated_by        String?
+  deleted_at        DateTime?
+  deleted_by        String?
+
+  // Relations
+  person     Person    @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  messages   Message[]
+  feedbacks  Feedback[]
+
+  @@map("chats")
+}
+
+// Message entity
+model Message {
+  id                String   @id @default(uuid())
+  chat_id           String
+  user_id           String?
+  message_id        String   @unique
+  message_direction String   // 'received' | 'sent'
+  message_type      String   // 'text' | 'image' | 'audio' | 'video' | 'file'
+  message_content   String
+  created_at        DateTime @default(now())
+  created_by        String?
+  updated_at        DateTime @updatedAt
+  updated_by        String?
+  deleted_at        DateTime?
+  deleted_by        String?
+
+  // Relations
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user User?  @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("messages")
+}
+
+// Feedback entity
+model Feedback {
+  id                String   @id @default(uuid())
+  chat_id           String
+  user_id           String
+  feedback_type     String   // 'positive' | 'negative' | 'neutral'
+  generation_type   String   // 'user_prompt' | 'ai_suggestion'
+  user_prompt       String?
+  feedback_content  String
+  created_at        DateTime @default(now())
+  created_by        String?
+  updated_at        DateTime @updatedAt
+  updated_by        String?
+  deleted_at        DateTime?
+  deleted_by        String?
+
+  // Relations
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("feedbacks")
+}
+
+// WhatsappSession entity
+model WhatsappSession {
+  id                 String    @id @default(uuid())
+  tenant_id          String
+  session_id         String    @unique // This is the session name in WAHA
+  session_name       String
+  status             String    @default("pending") // 'pending' | 'connected' | 'disconnected' | 'error'
+  qr_code            String?
+  qr_code_expires_at DateTime?
+  phone_number       String?
+  last_activity_at   DateTime?
+  created_at         DateTime  @default(now())
+  created_by         String?
+  updated_at         DateTime  @updatedAt
+  updated_by         String?
+  deleted_at         DateTime?
+  deleted_by         String?
+
+  // Relations
+  tenant Business @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("whatsapp_sessions")
 }

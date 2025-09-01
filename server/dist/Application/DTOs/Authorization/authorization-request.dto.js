@@ -16,13 +16,19 @@ class AuthorizationRequestDto {
 }
 exports.AuthorizationRequestDto = AuthorizationRequestDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Username for authentication', example: 'johndoe' }),
+    (0, swagger_1.ApiProperty)({
+        description: "Username for authentication",
+        example: "johndoe",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], AuthorizationRequestDto.prototype, "username", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Password for authentication', example: 'password123' }),
+    (0, swagger_1.ApiProperty)({
+        description: "Password for authentication",
+        example: "password123",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)

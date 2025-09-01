@@ -1,4 +1,4 @@
-import { IAudit } from '../Interfaces/IAudit';
+import { IAudit } from "../Interfaces/IAudit";
 
 export class User implements IAudit {
   id: string;
@@ -15,12 +15,12 @@ export class User implements IAudit {
   deleted_by?: string;
 
   constructor(data: Partial<User>) {
-    this.id = data.id || '';
-    this.fullName = data.fullName || '';
-    this.username = data.username || '';
-    this.password = data.password || '';
+    this.id = data.id || "";
+    this.fullName = data.fullName || "";
+    this.username = data.username || "";
+    this.password = data.password || "";
     this.user_level = data.user_level || 1;
-    this.tenant_id = data.tenant_id || '';
+    this.tenant_id = data.tenant_id || "";
     this.created_at = data.created_at || new Date();
     this.created_by = data.created_by;
     this.updated_at = data.updated_at || new Date();
@@ -31,7 +31,12 @@ export class User implements IAudit {
 
   // Validation method
   validate(): boolean {
-    return !!(this.fullName && this.username && this.password && this.tenant_id);
+    return !!(
+      this.fullName &&
+      this.username &&
+      this.password &&
+      this.tenant_id
+    );
   }
 
   // Business logic methods

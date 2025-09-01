@@ -17,19 +17,20 @@ let PostgresContext = class PostgresContext extends client_1.PrismaClient {
         super({
             datasources: {
                 db: {
-                    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/real_state_crm',
+                    url: process.env.DATABASE_URL ||
+                        "postgresql://postgres:postgres@localhost:5432/real_state_crm",
                 },
             },
-            log: ['query', 'info', 'warn', 'error'],
+            log: ["query", "info", "warn", "error"],
         });
     }
     async onModuleInit() {
         await this.$connect();
-        console.log('Database connected successfully');
+        console.log("Database connected successfully");
     }
     async onModuleDestroy() {
         await this.$disconnect();
-        console.log('Database disconnected');
+        console.log("Database disconnected");
     }
     async $beforeCreate(params) {
         const now = new Date();
@@ -52,8 +53,8 @@ let PostgresContext = class PostgresContext extends client_1.PrismaClient {
     async $beforeDelete(params) {
         const now = new Date();
         const userId = this.getCurrentUserId();
-        if (params.action === 'delete') {
-            params.action = 'update';
+        if (params.action === "delete") {
+            params.action = "update";
             params.args.data = {
                 deleted_at: now,
                 deleted_by: userId,
@@ -61,7 +62,7 @@ let PostgresContext = class PostgresContext extends client_1.PrismaClient {
         }
     }
     getCurrentUserId() {
-        return 'system';
+        return "system";
     }
 };
 exports.PostgresContext = PostgresContext;

@@ -1,7 +1,7 @@
-import { BusinessService } from '@/Application/Services/business.service';
-import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from '@/Application/DTOs';
-import { AuthorizationResponseDto } from '@/Application/DTOs/Authorization/authorization-response.dto';
-import { AuthorizationService } from '@/Application/Services/authorization.service';
+import { BusinessService } from "@/Application/Services/business.service";
+import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from "@/Application/DTOs";
+import { AuthorizationResponseDto } from "@/Application/DTOs/Authorization/authorization-response.dto";
+import { AuthorizationService } from "@/Application/Services/authorization.service";
 export declare class BusinessController {
     private readonly businessService;
     private readonly authorizationService;

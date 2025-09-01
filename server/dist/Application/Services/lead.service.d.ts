@@ -1,8 +1,8 @@
-import { PrismaService } from '@/Infrastructure/Database/postgres.context';
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
 export declare class LeadService {
     private readonly prisma;
     private readonly logger;
-    constructor(prisma: PrismaService);
+    constructor(prisma: MainDatabaseContext);
     createLead(leadData: any, personData: any, userId?: string): Promise<any>;
     updateLead(leadId: string, leadData: any, personData: any, userId?: string): Promise<any>;
     getLeadById(leadId: string): Promise<any>;

@@ -1,5 +1,5 @@
-import { BusinessResponseDto } from './business-response.dto';
-import { AuthorizationResponseDto } from '../Authorization/authorization-response.dto';
+import { BusinessResponseDto } from "./business-response.dto";
+import { AuthorizationResponseDto } from "../Authorization/authorization-response.dto";
 export declare class BusinessCreateResponseDto {
     business: BusinessResponseDto & {
         id: string;

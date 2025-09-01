@@ -1,4 +1,4 @@
-import { IAuditBase } from '../Interfaces/IAuditBase';
+import { IAuditBase } from "../Interfaces/IAuditBase";
 
 export class UserRole implements IAuditBase {
   id: string;
@@ -13,9 +13,9 @@ export class UserRole implements IAuditBase {
   deleted_by?: string;
 
   constructor(data: Partial<UserRole>) {
-    this.id = data.id || '';
-    this.user_id = data.user_id || '';
-    this.role = data.role || '';
+    this.id = data.id || "";
+    this.user_id = data.user_id || "";
+    this.role = data.role || "";
     this.is_allowed = data.is_allowed ?? true;
     this.created_at = data.created_at || new Date();
     this.created_by = data.created_by;

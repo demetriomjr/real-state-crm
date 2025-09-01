@@ -21,32 +21,39 @@ let TenantValidationMiddleware = TenantValidationMiddleware_1 = class TenantVali
         this.logger = new common_1.Logger(TenantValidationMiddleware_1.name);
     }
     async use(req, res, next) {
-        const tenantId = req['tenantId'];
-        const userLevel = req['userLevel'];
-        const isDevelopment = this.configService.get('NODE_ENV') === 'development';
-        const isTest = this.configService.get('NODE_ENV') === 'test';
+        const tenantId = req["tenantId"];
+        const userLevel = req["userLevel"];
+        const isDevelopment = this.configService.get("NODE_ENV") === "development";
+        const isTest = this.configService.get("NODE_ENV") === "test";
         if (isTest) {
-            this.logger.log('Test environment: Skipping tenant validation');
+            this.logger.log("Test environment: Skipping tenant validation");
             return next();
         }
         const path = req.path;
         const method = req.method;
-        if (method === 'POST' && path === '/api/businesses') {
-            this.logger.log('Skipping tenant validation for business creation endpoint');
+        if (method === "POST" && path === "/api/businesses") {
+            this.logger.log("Skipping tenant validation for business creation endpoint");
+            return next();
+        }
+        if (method === "POST" &&
+            path === "/integrated-services/whatsapp/webhook") {
+            this.logger.log("Skipping tenant validation for WhatsApp inbound webhook");
             return next();
         }
         if (!tenantId || userLevel === undefined) {
-            this.logger.warn('Missing tenant_id or user_level in request');
-            throw new common_1.UnauthorizedException('Missing tenant_id or user_level');
+            this.logger.warn("Missing tenant_id or user_level in request");
+            throw new common_1.UnauthorizedException("Missing tenant_id or user_level");
         }
-        if (isDevelopment && (!tenantId || tenantId === '00000000-0000-0000-0000-000000000000') && userLevel >= 10) {
-            this.logger.log('Development mode: Skipping tenant validation for admin user');
+        if (isDevelopment &&
+            (!tenantId || tenantId === "00000000-0000-0000-0000-000000000000") &&
+            userLevel >= 10) {
+            this.logger.log("Development mode: Skipping tenant validation for admin user");
             return next();
         }
         const isValidTenant = await this.businessService.validateTenantId(tenantId);
         if (!isValidTenant) {
             this.logger.warn(`Invalid tenant_id: ${tenantId}`);
-            throw new common_1.UnauthorizedException('Invalid tenant_id');
+            throw new common_1.UnauthorizedException("Invalid tenant_id");
         }
         this.logger.log(`Tenant validation passed for tenant_id: ${tenantId}`);
         next();

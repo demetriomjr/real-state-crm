@@ -1,0 +1,274 @@
+{
+  "name": "WAHA-NestJS-Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waha-inbound"
+      },
+      "id": "1",
+      "name": "Receive WAHA Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-500, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json;\nif (!(data.sessionId || data.session)) { throw new Error('Missing sessionId or session'); }\nif (!data.message || typeof data.message !== 'object') { throw new Error('Missing message'); }\nif (!data.message.id) { throw new Error('Missing message.id'); }\nif (!data.message.from) { throw new Error('Missing message.from'); }\nreturn [{ json: data }];"
+      },
+      "id": "8",
+      "name": "Validate WAHA Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [-300, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://app:3000/integrated-services/whatsapp/webhook",
+        "method": "POST",
+        "jsonParameters": true,
+        "sendBody": true,
+        "bodyParametersJson": "={{$json}}",
+        "headerParametersJson": "={ \"x-webhook-secret\": \"your-whatsapp-webhook-secret\" }"
+      },
+      "id": "2",
+      "name": "Forward to NestJS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [-100, 200]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200,
+        "headers": "={\"content-type\":\"application/json\"}"
+      },
+      "id": "5",
+      "name": "Respond to WAHA",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [100, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-message"
+      },
+      "id": "3",
+      "name": "Receive NestJS Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-500, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { sessionId, chatId, text } = $json;\nif (!sessionId || typeof sessionId !== 'string') { throw new Error('sessionId is required'); }\nif (!chatId || typeof chatId !== 'string') { throw new Error('chatId is required'); }\nif (!text || typeof text !== 'string') { throw new Error('text is required'); }\nreturn [{ json: { sessionId, chatId, text } }];"
+      },
+      "id": "9",
+      "name": "Validate NestJS Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [-300, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: {\n  sessionId: $json.sessionId,\n  chatId: ($json.chatId && $json.chatId.endsWith('@c.us')) ? $json.chatId : `${$json.chatId}@c.us`,\n  text: $json.text,\n}}];"
+      },
+      "id": "6",
+      "name": "Prepare WAHA Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [-100, 500]
+    },
+    {
+      "parameters": {
+        "url": "http://waha:3000/api/{{$json.sessionId}}/sendText",
+        "method": "POST",
+        "jsonParameters": true,
+        "sendBody": true,
+        "bodyParametersJson": "={\"chatId\":\"{{$json.chatId}}\",\"text\":\"{{$json.text}}\"}",
+        "headerParametersJson": "={ }"
+      },
+      "id": "4",
+      "name": "Send to WAHA API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [100, 500]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200,
+        "headers": "={\"content-type\":\"application/json\"}"
+      },
+      "id": "7",
+      "name": "Respond to NestJS",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [300, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "session-status-update"
+      },
+      "id": "10",
+      "name": "Session Status Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-500, 800]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json;\nif (!data.sessionId) { throw new Error('Missing sessionId'); }\nif (!data.status) { throw new Error('Missing status'); }\nreturn [{ json: data }];"
+      },
+      "id": "11",
+      "name": "Validate Status Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [-300, 800]
+    },
+    {
+      "parameters": {
+        "url": "http://app:3000/api/whatsapp-sessions/{{$json.sessionId}}/status",
+        "method": "PUT",
+        "jsonParameters": true,
+        "sendBody": true,
+        "bodyParametersJson": "={\"status\":\"{{$json.status}}\",\"phone_number\":\"{{$json.phoneNumber}}\"}",
+        "headerParametersJson": "={ \"Authorization\": \"Bearer {{$env.N8N_API_TOKEN}}\" }"
+      },
+      "id": "12",
+      "name": "Update Session Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [-100, 800]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200,
+        "headers": "={\"content-type\":\"application/json\"}"
+      },
+      "id": "13",
+      "name": "Respond Status Update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [100, 800]
+    }
+  ],
+  "connections": {
+    "Receive WAHA Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate WAHA Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate WAHA Payload": {
+      "main": [
+        [
+          {
+            "node": "Forward to NestJS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forward to NestJS": {
+      "main": [
+        [
+          {
+            "node": "Respond to WAHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive NestJS Request": {
+      "main": [
+        [
+          {
+            "node": "Validate NestJS Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate NestJS Payload": {
+      "main": [
+        [
+          {
+            "node": "Prepare WAHA Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare WAHA Payload": {
+      "main": [
+        [
+          {
+            "node": "Send to WAHA API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to WAHA API": {
+      "main": [
+        [
+          {
+            "node": "Respond to NestJS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session Status Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Status Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Status Payload": {
+      "main": [
+        [
+          {
+            "node": "Update Session Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Session Status": {
+      "main": [
+        [
+          {
+            "node": "Respond Status Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "WAHA-NestJS-Integration"
+}

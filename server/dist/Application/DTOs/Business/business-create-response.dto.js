@@ -17,19 +17,25 @@ class BusinessCreateResponseDto {
 }
 exports.BusinessCreateResponseDto = BusinessCreateResponseDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Business information with ID', type: business_response_dto_1.BusinessResponseDto }),
+    (0, swagger_1.ApiProperty)({
+        description: "Business information with ID",
+        type: business_response_dto_1.BusinessResponseDto,
+    }),
     __metadata("design:type", Object)
 ], BusinessCreateResponseDto.prototype, "business", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Master user information' }),
+    (0, swagger_1.ApiProperty)({ description: "Master user information" }),
     __metadata("design:type", Object)
 ], BusinessCreateResponseDto.prototype, "master_user", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Authentication token for the master user', type: authorization_response_dto_1.AuthorizationResponseDto }),
+    (0, swagger_1.ApiProperty)({
+        description: "Authentication token for the master user",
+        type: authorization_response_dto_1.AuthorizationResponseDto,
+    }),
     __metadata("design:type", authorization_response_dto_1.AuthorizationResponseDto)
 ], BusinessCreateResponseDto.prototype, "auth", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Success message' }),
+    (0, swagger_1.ApiProperty)({ description: "Success message" }),
     __metadata("design:type", String)
 ], BusinessCreateResponseDto.prototype, "message", void 0);
 //# sourceMappingURL=business-create-response.dto.js.map

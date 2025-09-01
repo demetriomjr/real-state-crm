@@ -26,9 +26,9 @@ exports.AuthorizationModule = AuthorizationModule = __decorate([
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: async (configService) => ({
-                    secret: configService.get('JWT_SECRET'),
+                    secret: configService.get("JWT_SECRET"),
                     signOptions: {
-                        expiresIn: configService.get('JWT_EXPIRES_IN', '30m'),
+                        expiresIn: configService.get("JWT_EXPIRES_IN", "30m"),
                     },
                 }),
                 inject: [config_1.ConfigService],

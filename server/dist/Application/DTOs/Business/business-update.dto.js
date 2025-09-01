@@ -16,13 +16,21 @@ class BusinessUpdateDto {
 }
 exports.BusinessUpdateDto = BusinessUpdateDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Company name', example: 'Acme Corporation', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Company name",
+        example: "Acme Corporation",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], BusinessUpdateDto.prototype, "company_name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Subscription level (0-10)', example: 5, required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Subscription level (0-10)",
+        example: 5,
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(0),

@@ -1,8 +1,8 @@
-import { BusinessRepository } from '@/Infrastructure/Repositories/business.repository';
-import { UserRepository } from '@/Infrastructure/Repositories/user.repository';
-import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from '@/Application/DTOs';
-import { AuthorizationResponseDto } from '@/Application/DTOs/Authorization/authorization-response.dto';
-import { AuthorizationService } from './authorization.service';
+import { BusinessRepository } from "@/Infrastructure/Repositories/business.repository";
+import { UserRepository } from "@/Infrastructure/Repositories/user.repository";
+import { BusinessCreateDto, BusinessUpdateDto, BusinessResponseDto } from "@/Application/DTOs";
+import { AuthorizationResponseDto } from "@/Application/DTOs/Authorization/authorization-response.dto";
+import { AuthorizationService } from "./authorization.service";
 export declare class BusinessService {
     private readonly businessRepository;
     private readonly userRepository;

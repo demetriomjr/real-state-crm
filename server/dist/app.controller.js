@@ -22,7 +22,7 @@ let AppController = class AppController {
         this.appService = appService;
     }
     getHomePage(res) {
-        res.sendFile((0, path_1.join)(__dirname, '..', 'public', 'index.html'));
+        res.sendFile((0, path_1.join)(__dirname, "..", "public", "index.html"));
     }
     getHello() {
         return this.appService.getHello();
@@ -41,23 +41,26 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "getHomePage", null);
 __decorate([
-    (0, common_1.Get)('api'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get API welcome message' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns welcome message' }),
+    (0, common_1.Get)("api"),
+    (0, swagger_1.ApiOperation)({ summary: "Get API welcome message" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Returns welcome message" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", String)
 ], AppController.prototype, "getHello", null);
 __decorate([
-    (0, common_1.Get)('api/health'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get API health status' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns health status and timestamp' }),
+    (0, common_1.Get)("api/health"),
+    (0, swagger_1.ApiOperation)({ summary: "Get API health status" }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: "Returns health status and timestamp",
+    }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Object)
 ], AppController.prototype, "getHealth", null);
 exports.AppController = AppController = __decorate([
-    (0, swagger_1.ApiTags)('health'),
+    (0, swagger_1.ApiTags)("health"),
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [app_service_1.AppService])
 ], AppController);

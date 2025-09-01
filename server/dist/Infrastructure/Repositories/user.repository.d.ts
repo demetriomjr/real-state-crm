@@ -1,9 +1,9 @@
-import { PostgresContext } from '@/Infrastructure/Database/postgres.context';
-import { User } from '@/Domain/Users/User';
-import { CreateUserDto, UpdateUserDto } from '@/Application/DTOs';
+import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
+import { User } from "@/Domain/Users/User";
+import { CreateUserDto, UpdateUserDto } from "@/Application/DTOs";
 export declare class UserRepository {
     private readonly prisma;
-    constructor(prisma: PostgresContext);
+    constructor(prisma: MainDatabaseContext);
     findAll(page?: number, limit?: number): Promise<{
         users: User[];
         total: number;

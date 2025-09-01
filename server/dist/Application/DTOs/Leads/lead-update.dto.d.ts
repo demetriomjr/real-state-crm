@@ -1,4 +1,4 @@
-import { AddressDto, ContactDto, DocumentDto } from './lead-create.dto';
+import { AddressDto, ContactDto, DocumentDto } from "./lead-create.dto";
 export declare class LeadUpdateDto {
     full_name?: string;
     document_type?: string;

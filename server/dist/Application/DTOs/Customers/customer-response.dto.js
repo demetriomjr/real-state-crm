@@ -16,71 +16,86 @@ class CustomerResponseDto {
 }
 exports.CustomerResponseDto = CustomerResponseDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Customer ID' }),
+    (0, swagger_1.ApiProperty)({ description: "Customer ID" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Type of customer' }),
+    (0, swagger_1.ApiProperty)({ description: "Type of customer" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "customer_type", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Status of the customer' }),
+    (0, swagger_1.ApiProperty)({ description: "Status of the customer" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "customer_status", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID of the user who fidelized this customer' }),
+    (0, swagger_1.ApiProperty)({ description: "ID of the user who fidelized this customer" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "fidelized_by", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Person ID' }),
+    (0, swagger_1.ApiProperty)({ description: "Person ID" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "person_id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Full name of the person' }),
+    (0, swagger_1.ApiProperty)({ description: "Full name of the person" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "full_name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Primary document type' }),
+    (0, swagger_1.ApiProperty)({ description: "Primary document type" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "document_type", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Primary document number' }),
+    (0, swagger_1.ApiProperty)({ description: "Primary document number" }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "document_number", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional addresses', type: [lead_response_dto_1.AddressResponseDto] }),
+    (0, swagger_1.ApiProperty)({
+        description: "Additional addresses",
+        type: [lead_response_dto_1.AddressResponseDto],
+    }),
     __metadata("design:type", Array)
 ], CustomerResponseDto.prototype, "addresses", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional contacts', type: [lead_response_dto_1.ContactResponseDto] }),
+    (0, swagger_1.ApiProperty)({
+        description: "Additional contacts",
+        type: [lead_response_dto_1.ContactResponseDto],
+    }),
     __metadata("design:type", Array)
 ], CustomerResponseDto.prototype, "contacts", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional documents', type: [lead_response_dto_1.DocumentResponseDto] }),
+    (0, swagger_1.ApiProperty)({
+        description: "Additional documents",
+        type: [lead_response_dto_1.DocumentResponseDto],
+    }),
     __metadata("design:type", Array)
 ], CustomerResponseDto.prototype, "other_documents", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    (0, swagger_1.ApiProperty)({ description: "Creation timestamp" }),
     __metadata("design:type", Date)
 ], CustomerResponseDto.prototype, "created_at", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User who created this record', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "User who created this record", required: false }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "created_by", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    (0, swagger_1.ApiProperty)({ description: "Last update timestamp" }),
     __metadata("design:type", Date)
 ], CustomerResponseDto.prototype, "updated_at", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User who last updated this record', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "User who last updated this record",
+        required: false,
+    }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "updated_by", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Deletion timestamp (soft delete)', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Deletion timestamp (soft delete)",
+        required: false,
+    }),
     __metadata("design:type", Date)
 ], CustomerResponseDto.prototype, "deleted_at", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User who deleted this record', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "User who deleted this record", required: false }),
     __metadata("design:type", String)
 ], CustomerResponseDto.prototype, "deleted_by", void 0);
 //# sourceMappingURL=customer-response.dto.js.map

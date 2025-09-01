@@ -1,4 +1,4 @@
-import { IAuditBase } from '../Interfaces/IAuditBase';
+import { IAuditBase } from "../Interfaces/IAuditBase";
 
 export class Business implements IAuditBase {
   id: string;
@@ -12,8 +12,8 @@ export class Business implements IAuditBase {
   deleted_by?: string;
 
   constructor(data: Partial<Business>) {
-    this.id = data.id || '';
-    this.company_name = data.company_name || '';
+    this.id = data.id || "";
+    this.company_name = data.company_name || "";
     this.subscription = data.subscription || 0;
     this.created_at = data.created_at || new Date();
     this.created_by = data.created_by;
@@ -38,8 +38,8 @@ export class Business implements IAuditBase {
   }
 
   getSubscriptionLevel(): string {
-    if (this.subscription >= 10) return 'premium';
-    if (this.subscription >= 5) return 'standard';
-    return 'basic';
+    if (this.subscription >= 10) return "premium";
+    if (this.subscription >= 5) return "standard";
+    return "basic";
   }
 }

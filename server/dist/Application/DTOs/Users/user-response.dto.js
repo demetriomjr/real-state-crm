@@ -15,39 +15,45 @@ class UserResponseDto {
 }
 exports.UserResponseDto = UserResponseDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User ID (UUID)' }),
+    (0, swagger_1.ApiProperty)({ description: "User ID (UUID)" }),
     __metadata("design:type", String)
 ], UserResponseDto.prototype, "id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Full name of the user' }),
+    (0, swagger_1.ApiProperty)({ description: "Full name of the user" }),
     __metadata("design:type", String)
 ], UserResponseDto.prototype, "fullName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Unique username' }),
+    (0, swagger_1.ApiProperty)({ description: "Unique username" }),
     __metadata("design:type", String)
 ], UserResponseDto.prototype, "username", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    (0, swagger_1.ApiProperty)({ description: "Creation timestamp" }),
     __metadata("design:type", Date)
 ], UserResponseDto.prototype, "created_at", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User who created this record', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "User who created this record", required: false }),
     __metadata("design:type", String)
 ], UserResponseDto.prototype, "created_by", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    (0, swagger_1.ApiProperty)({ description: "Last update timestamp" }),
     __metadata("design:type", Date)
 ], UserResponseDto.prototype, "updated_at", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User who last updated this record', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "User who last updated this record",
+        required: false,
+    }),
     __metadata("design:type", String)
 ], UserResponseDto.prototype, "updated_by", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Deletion timestamp (soft delete)', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Deletion timestamp (soft delete)",
+        required: false,
+    }),
     __metadata("design:type", Date)
 ], UserResponseDto.prototype, "deleted_at", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User who deleted this record', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "User who deleted this record", required: false }),
     __metadata("design:type", String)
 ], UserResponseDto.prototype, "deleted_by", void 0);
 //# sourceMappingURL=user-response.dto.js.map

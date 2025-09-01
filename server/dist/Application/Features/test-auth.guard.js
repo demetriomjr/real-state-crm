@@ -17,23 +17,44 @@ let TestAuthGuard = class TestAuthGuard {
         this.configService = configService;
     }
     canActivate(context) {
-        const nodeEnv = this.configService.get('NODE_ENV');
-        if (nodeEnv === 'test') {
+        const nodeEnv = this.configService.get("NODE_ENV");
+        if (nodeEnv === "test") {
             const request = context.switchToHttp().getRequest();
-            let tenantId = 'test-tenant-id';
+            const authHeader = request.headers.authorization;
+            if (authHeader && authHeader.startsWith("Bearer ")) {
+                try {
+                    const jwt = require("jsonwebtoken");
+                    const token = authHeader.substring(7);
+                    const decoded = jwt.verify(token, process.env.JWT_SECRET ||
+                        "your-super-secret-jwt-key-change-in-production");
+                    request.tenantId = decoded.tenant_id;
+                    request.userId = decoded.user_id;
+                    request.userLevel = decoded.user_level;
+                    request.user = decoded;
+                    if (decoded.refresh_id) {
+                        console.log(`TestAuthGuard: Token includes refresh_id: ${decoded.refresh_id}`);
+                    }
+                    console.log(`TestAuthGuard: Using JWT token data - tenantId: ${decoded.tenant_id}, userLevel: ${decoded.user_level}`);
+                    return true;
+                }
+                catch (error) {
+                    console.log("TestAuthGuard: Invalid JWT token, using default test data");
+                }
+            }
+            let tenantId = "test-tenant-id";
             const urlParams = request.params;
             if (urlParams && urlParams.id) {
                 tenantId = urlParams.id;
             }
             request.tenantId = tenantId;
-            request.userId = 'test-user-id';
+            request.userId = "test-user-id";
             request.userLevel = 10;
             request.user = {
                 tenant_id: tenantId,
-                user_id: 'test-user-id',
+                user_id: "test-user-id",
                 user_level: 10,
             };
-            console.log(`TestAuthGuard: Allowing access in test environment with tenantId: ${tenantId}`);
+            console.log(`TestAuthGuard: Using default test data - tenantId: ${tenantId}`);
             return true;
         }
         console.log(`TestAuthGuard: Denying access in ${nodeEnv} environment`);

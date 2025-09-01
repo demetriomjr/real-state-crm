@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
-import { PostgresContext } from '@/Infrastructure/Database/postgres.context';
+import { Module } from "@nestjs/common";
+import { PostgresContext } from "./postgres.context";
+import { MainDatabaseContext } from "./main-database.context";
 
 @Module({
-  providers: [PostgresContext],
-  exports: [PostgresContext],
+  providers: [PostgresContext, MainDatabaseContext],
+  exports: [PostgresContext, MainDatabaseContext],
 })
 export class DatabaseModule {}
