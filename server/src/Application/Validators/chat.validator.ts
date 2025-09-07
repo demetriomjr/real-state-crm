@@ -13,8 +13,8 @@ export class ChatValidator {
   async validateCreate(createChatDto: CreateChatDto): Promise<void> {
     this.logger.log("Validating chat creation");
 
-    if (!createChatDto.person_id) {
-      throw new BadRequestException("Person ID is required");
+    if (!createChatDto.session_id) {
+      throw new BadRequestException("Session ID is required");
     }
 
     if (

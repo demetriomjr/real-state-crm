@@ -30,6 +30,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:integration": "jest --testPathPattern=tests/integration --verbose",
+    "test:integration:n8n": "jest --testPathPattern=tests/integration/n8n --verbose",
+    "test:integration:n8n-routes": "npx ts-node tests/integration/run-all-n8n-routes-tests.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
@@ -59,9 +62,10 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^5.0.0",
+    "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -72,7 +76,7 @@
     "@types/node": "^20.3.1",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^2.0.12",
-    "@types/uuid": "^9.0.2",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "dotenv": "^17.2.1",

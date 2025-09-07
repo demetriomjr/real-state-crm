@@ -224,12 +224,12 @@ model Customer {
 // Chat entity
 model Chat {
   id                String    @id @default(uuid())
-  person_id         String
+  person_id         String?
   contact_name      String
   contact_phone     String
   user_observations String?
   last_message_at   DateTime?
-  session_id        String?
+  session_id        String
   created_at        DateTime  @default(now())
   created_by        String?
   updated_at        DateTime  @updatedAt
@@ -238,9 +238,10 @@ model Chat {
   deleted_by        String?
 
   // Relations
-  person     Person    @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person     Person?   @relation(fields: [person_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   messages   Message[]
   feedbacks  Feedback[]
+  session    WhatsappSession @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("chats")
 }
@@ -294,11 +295,8 @@ model Feedback {
 model WhatsappSession {
   id                 String    @id @default(uuid())
   tenant_id          String
-  session_id         String    @unique // This is the session name in WAHA
   session_name       String
   status             String    @default("pending") // 'pending' | 'connected' | 'disconnected' | 'error'
-  qr_code            String?
-  qr_code_expires_at DateTime?
   phone_number       String?
   last_activity_at   DateTime?
   created_at         DateTime  @default(now())
@@ -310,6 +308,7 @@ model WhatsappSession {
 
   // Relations
   tenant Business @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  chats   Chat[]
 
   @@map("whatsapp_sessions")
 }

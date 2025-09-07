@@ -1,6 +1,10 @@
-import { IsString, IsOptional, IsDate } from "class-validator";
+import { IsString, IsOptional, IsDate, IsUUID } from "class-validator";
 
 export class ChatUpdateDto {
+  @IsOptional()
+  @IsUUID()
+  person_id?: string;
+
   @IsOptional()
   @IsString()
   contact_name?: string;

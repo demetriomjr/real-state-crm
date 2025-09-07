@@ -1,266 +1,1136 @@
 {
-  "name": "WAHA-NestJS-Integration",
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "waha-inbound"
+        "url": "http://host.docker.internal:3100/api/sessions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "all",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "1",
-      "name": "Receive WAHA Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [-500, 200]
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        -432
+      ],
+      "id": "fe77d765-8dd6-44df-b099-48692c116dc4",
+      "name": "GetWAHASessions"
     },
     {
       "parameters": {
-        "functionCode": "const data = $json;\nif (!(data.sessionId || data.session)) { throw new Error('Missing sessionId or session'); }\nif (!data.message || typeof data.message !== 'object') { throw new Error('Missing message'); }\nif (!data.message.id) { throw new Error('Missing message.id'); }\nif (!data.message.from) { throw new Error('Missing message.from'); }\nreturn [{ json: data }];"
-      },
-      "id": "8",
-      "name": "Validate WAHA Payload",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [-300, 200]
-    },
-    {
-      "parameters": {
-        "url": "http://app:3000/integrated-services/whatsapp/webhook",
         "method": "POST",
-        "jsonParameters": true,
+        "url": "http://host.docker.internal:3100/api/sessions",
         "sendBody": true,
-        "bodyParametersJson": "={{$json}}",
-        "headerParametersJson": "={ \"x-webhook-secret\": \"your-whatsapp-webhook-secret\" }"
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"default\",\n  \"start\": true,\n  \"config\": {\n    \"metadata\": {\n      \"user.id\": \"{{$('SessionManagerHook').item.json.session_id}}\",\n      },\n    \"debug\": false,\n    \"noweb\": {\n      \"store\": {\n        \"enabled\": true,\n        \"fullSync\": false\n      }\n    },\n    \"webhooks\": [\n      {\n        \"url\": \"https://fill.me/up\",\n        \"events\": [\n          \"message\",\n          \"session.status\"\n        ],\n      }\n    ]\n  }\n}",
+        "options": {}
       },
-      "id": "2",
-      "name": "Forward to NestJS",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [-100, 200]
+      "typeVersion": 4.2,
+      "position": [
+        384,
+        -400
+      ],
+      "id": "273a196c-1a59-4238-98e7-9b47f1ef4527",
+      "name": "Create Session"
     },
     {
       "parameters": {
-        "responseBody": "={{$json}}",
-        "responseCode": 200,
-        "headers": "={\"content-type\":\"application/json\"}"
+        "mode": "expression",
+        "numberOutputs": 3,
+        "output": "={{\n  $json.name === 'default' && $json.status === 'WORKING' ? 0 : \n  $json.name === 'default' ? 1 : 2\n}}"
       },
-      "id": "5",
-      "name": "Respond to WAHA",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [100, 200]
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -208,
+        -448
+      ],
+      "id": "13cd88b8-448c-454e-b5bc-bba0c4ca881a",
+      "name": "Check if exists and status",
+      "notesInFlow": true,
+      "notes": "0 == exists and started\n1 == exists and stoped\n2 == doesn't exists"
     },
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "send-message"
+        "path": "whatsapp/sendMessage",
+        "responseMode": "lastNode",
+        "options": {}
       },
-      "id": "3",
-      "name": "Receive NestJS Request",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [-500, 500]
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        128
+      ],
+      "id": "11b149b4-1ed2-4cdc-b164-413cebcdc997",
+      "name": "SendMessage",
+      "webhookId": "f540cb3d-8708-48d8-9058-4426e512558f",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "functionCode": "const { sessionId, chatId, text } = $json;\nif (!sessionId || typeof sessionId !== 'string') { throw new Error('sessionId is required'); }\nif (!chatId || typeof chatId !== 'string') { throw new Error('chatId is required'); }\nif (!text || typeof text !== 'string') { throw new Error('text is required'); }\nreturn [{ json: { sessionId, chatId, text } }];"
+        "mode": "expression",
+        "numberOutputs": 3,
+        "output": "={{\n  $json.statusCode === 422 ? 0 :\n  $json.status === 'STOPED' ? 1 : 2\n}}",
+        "looseTypeValidation": true
       },
-      "id": "9",
-      "name": "Validate NestJS Payload",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [-300, 500]
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -208,
+        112
+      ],
+      "id": "258d4a3c-10dc-4920-aeb3-37b3d806654e",
+      "name": "Switch"
     },
     {
       "parameters": {
-        "functionCode": "return [{ json: {\n  sessionId: $json.sessionId,\n  chatId: ($json.chatId && $json.chatId.endsWith('@c.us')) ? $json.chatId : `${$json.chatId}@c.us`,\n  text: $json.text,\n}}];"
+        "url": "=http://host.docker.internal:3100/api/sessions/{{$json.session_id}}",
+        "options": {}
       },
-      "id": "6",
-      "name": "Prepare WAHA Payload",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [-100, 500]
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        128
+      ],
+      "id": "56c2790e-2753-4fa6-8689-82f45e5c16d4",
+      "name": "CheckSession"
     },
     {
       "parameters": {
-        "url": "http://waha:3000/api/{{$json.sessionId}}/sendText",
         "method": "POST",
-        "jsonParameters": true,
+        "url": "http://host.docker.internal:3100/api/sendText",
         "sendBody": true,
-        "bodyParametersJson": "={\"chatId\":\"{{$json.chatId}}\",\"text\":\"{{$json.text}}\"}",
-        "headerParametersJson": "={ }"
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{$('SendMessage').item.json.contact}}@c.us\",\n  \"reply_to\": null,\n  \"text\": \"{{$('SendMessage').item.json.message}}\",\n  \"linkPreview\": false,\n  \"linkPreviewWithHighQuality\": false,\n  \"session\": \"{{$('SendMessage').item.json.session_id}}\"\n}",
+        "options": {}
       },
-      "id": "4",
-      "name": "Send to WAHA API",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [100, 500]
-    },
-    {
-      "parameters": {
-        "responseBody": "={{$json}}",
-        "responseCode": 200,
-        "headers": "={\"content-type\":\"application/json\"}"
-      },
-      "id": "7",
-      "name": "Respond to NestJS",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [300, 500]
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        144
+      ],
+      "id": "4829c7fd-878d-487c-ab37-3d922feba5a4",
+      "name": "SendText"
     },
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "session-status-update"
+        "path": "whatsapp",
+        "options": {}
       },
-      "id": "10",
-      "name": "Session Status Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [-500, 800]
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        304
+      ],
+      "id": "5d2ab4ee-edac-4805-be0b-710d774ca87c",
+      "name": "IncomingMessage",
+      "webhookId": "3ba9bcac-a334-4944-94e6-73e829aced32"
     },
     {
       "parameters": {
-        "functionCode": "const data = $json;\nif (!data.sessionId) { throw new Error('Missing sessionId'); }\nif (!data.status) { throw new Error('Missing status'); }\nreturn [{ json: data }];"
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "whatsapp_sessions",
+          "mode": "list",
+          "cachedResultName": "whatsapp_sessions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{(+new Date).toString(36).slice(-5) + Math.random().toString(36).substr(2, 5)}}",
+            "tenant_id": "={{ $('SessionManagerHook').item.json.tenant_id }}",
+            "session_id": "={{ $('SessionManagerHook').item.json.session_id }}",
+            "session_name": "={{ $json.name }}",
+            "updated_at": "={{ new Date().toISOString() }}",
+            "created_at": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_name",
+              "displayName": "session_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qr_code",
+              "displayName": "qr_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qr_code_expires_at",
+              "displayName": "qr_code_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone_number",
+              "displayName": "phone_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_activity_at",
+              "displayName": "last_activity_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_by",
+              "displayName": "updated_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "deleted_at",
+              "displayName": "deleted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "deleted_by",
+              "displayName": "deleted_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
       },
-      "id": "11",
-      "name": "Validate Status Payload",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [-300, 800]
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        576,
+        -400
+      ],
+      "id": "b7a34e5e-75e7-4301-9fcc-0cc43d1d7ced",
+      "name": "Persist session data",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ai0j2v218Uz0388D",
+          "name": "Postgres account"
+        }
+      }
     },
     {
       "parameters": {
-        "url": "http://app:3000/api/whatsapp-sessions/{{$json.sessionId}}/status",
-        "method": "PUT",
-        "jsonParameters": true,
-        "sendBody": true,
-        "bodyParametersJson": "={\"status\":\"{{$json.status}}\",\"phone_number\":\"{{$json.phoneNumber}}\"}",
-        "headerParametersJson": "={ \"Authorization\": \"Bearer {{$env.N8N_API_TOKEN}}\" }"
+        "url": "=http://host.docker.internal:3100/sessions/default/start",
+        "options": {}
       },
-      "id": "12",
-      "name": "Update Session Status",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [-100, 800]
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        -64
+      ],
+      "id": "9b862ca6-b38b-4b8f-bfd5-9c95be478c09",
+      "name": "Start Session"
     },
     {
       "parameters": {
-        "responseBody": "={{$json}}",
-        "responseCode": 200,
-        "headers": "={\"content-type\":\"application/json\"}"
+        "httpMethod": "POST",
+        "path": "whatsapp/sessions",
+        "responseMode": "lastNode",
+        "options": {}
       },
-      "id": "13",
-      "name": "Respond Status Update",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [100, 800]
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        -416
+      ],
+      "id": "5fbd995b-ed97-4e82-a037-ff0a29765a2c",
+      "name": "SessionManagerHook",
+      "webhookId": "20bcb637-1598-40d1-ac4f-22f8fee42511",
+      "alwaysOutputData": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "=whatsapp/session/start",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        -48
+      ],
+      "id": "813e6cc0-6402-491e-8460-b412e0d1b729",
+      "name": "StartSessionHook",
+      "webhookId": "0d19e6d6-5e4c-4c3d-adaa-6f42eb0144ac"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp/auth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        -224
+      ],
+      "id": "a89f3371-af45-4b00-8c30-112fcbc8290e",
+      "name": "SessionAuthHook",
+      "webhookId": "44fc4253-9ac6-456a-9495-43b4fc64208a"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        -400
+      ],
+      "id": "91edced6-09bf-4c47-8d51-a17e5861be01",
+      "name": "Wait till session starts",
+      "webhookId": "631bcdf9-88f9-4a81-9445-5275f1cbd4c5"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        48
+      ],
+      "id": "454acb82-3abd-4029-8aa1-7e852178dce2",
+      "name": "Wait Session Starts",
+      "webhookId": "b4ce354d-b8d9-4c36-940c-d0f45f1e6b6d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/webhooks/whatsapp",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('IncomingMessage') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        304
+      ],
+      "id": "5ad816df-1b65-4d9b-b675-013738f62c3a",
+      "name": "Pass Payload Forward"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bcf95a02-ebd0-4505-9205-1010f9c7b144",
+              "leftValue": "={{ $json.body.session_id }}",
+              "rightValue": "/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "b0f87a8c-ce9a-413e-86d8-09d0acd984a6",
+              "leftValue": "={{ $json.body.tenant_id }}",
+              "rightValue": "/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        -416
+      ],
+      "id": "a8fc6dd3-e2b2-4020-b5f7-026a4091e7b4",
+      "name": "Validate Session Manager Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "afad3f95-ea93-47c0-8ebb-db6dfb5934a7",
+              "leftValue": "={{ $json.body.session_id }}",
+              "rightValue": "/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        -48
+      ],
+      "id": "cd732c6e-ecb6-4a8f-a4f8-f17a68a3a42b",
+      "name": "Validate Start Session Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "74a9954c-50ac-425a-a94f-7adfca1ee608",
+              "leftValue": "={{ $json.body.session_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "07d487e8-91a8-4cc3-be12-3696cd62e4e2",
+              "leftValue": "={{ $json.body.session_id }}",
+              "rightValue": "/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "ac73eac9-342b-4529-8540-c0bd1e1c50a3",
+              "leftValue": "={{ $json.body.contact }}",
+              "rightValue": "/^\\d{12,}$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "2ca66376-2f1c-4e96-98d7-0a115bda69b4",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        128
+      ],
+      "id": "383e8a6c-21fd-40f5-adee-729a8e14fd98",
+      "name": "Validate Send Message Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "afad3f95-ea93-47c0-8ebb-db6dfb5934a7",
+              "leftValue": "={{ $json.body.session_id }}",
+              "rightValue": "/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        -224
+      ],
+      "id": "c25ba700-3adc-4c08-8288-aaf89168eaaf",
+      "name": "Validate Session Auth Data"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:3100/api/{{ $('SessionManagerHook').item.json.session_id }}/auth/qr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        -240
+      ],
+      "id": "57c8ba19-9b34-4054-9c19-2c203d7a595e",
+      "name": "Request QR code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        -64
+      ],
+      "id": "f9ec98e1-4c09-46fb-a53e-aacd50eec74d",
+      "name": "Start session delay",
+      "webhookId": "17bd55b4-3ecd-44b5-8684-5c190e85c346"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "whatsapp_sessions",
+          "mode": "list",
+          "cachedResultName": "whatsapp_sessions"
+        },
+        "limit": "={{ 1 }}",
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.session_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -416,
+        -64
+      ],
+      "id": "cf5af9fa-4b86-4728-a506-c59f9084cfef",
+      "name": "Select session",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ai0j2v218Uz0388D",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3100/api/sessions/default",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -208,
+        -64
+      ],
+      "id": "15b94284-eeda-4785-8efd-8ffea0d9a832",
+      "name": "Check WAHA session"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1858a23-53b2-4188-94d5-21521ac46db7",
+              "leftValue": "={{ $('Select session').first().json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "88f661ae-b8a7-4d4b-9245-1ff0ebade660",
+              "leftValue": "={{ $('Select session').first().json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a8951428-c1f8-4762-9924-d017c0c72a20",
+              "leftValue": "={{ $('Check WAHA session').first().json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "95bb2b7b-5adf-49f5-a16e-426717c83ed2",
+              "leftValue": "={{ $('Check WAHA session').first().json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "e4b30b7e-fa7a-41da-a347-969c8696661a",
+      "name": "Session exists in both places",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      status: 200,\n      message: 'success'\n    }\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -336
+      ],
+      "id": "98744590-a4eb-411c-ac71-617be161b3fb",
+      "name": "200 response"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      status: 404,\n      message: 'session does not exists.'\n    }\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        48
+      ],
+      "id": "8c193fdd-2a05-441d-b324-86ae2d2e251f",
+      "name": "404 response"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      status: 500,\n      message: 'either tenant_id or session_id is not a valid non-empty UUID value.'\n    }\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -160
+      ],
+      "id": "0e163794-e5f2-498a-8a52-bf3643057eaa",
+      "name": "500 response session and tenant"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      status: 500,\n      message: 'Please make sure you set session_name, contact is a valid phone number and the text is not empty.'\n    }\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        256
+      ],
+      "id": "582230a4-ded8-4ad2-bf32-afe1a20c0717",
+      "name": "500 response contact session"
     }
   ],
   "connections": {
-    "Receive WAHA Webhook": {
+    "GetWAHASessions": {
       "main": [
         [
           {
-            "node": "Validate WAHA Payload",
+            "node": "Check if exists and status",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate WAHA Payload": {
+    "Create Session": {
       "main": [
         [
           {
-            "node": "Forward to NestJS",
+            "node": "Persist session data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Forward to NestJS": {
+    "Check if exists and status": {
       "main": [
         [
           {
-            "node": "Respond to WAHA",
+            "node": "200 response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Start Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Session",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Receive NestJS Request": {
+    "SendMessage": {
       "main": [
         [
           {
-            "node": "Validate NestJS Payload",
+            "node": "Validate Send Message Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate NestJS Payload": {
+    "Switch": {
       "main": [
         [
           {
-            "node": "Prepare WAHA Payload",
+            "node": "404 response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Start Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait Session Starts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendText",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prepare WAHA Payload": {
+    "CheckSession": {
       "main": [
         [
           {
-            "node": "Send to WAHA API",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send to WAHA API": {
+    "SendText": {
+      "main": [
+        []
+      ]
+    },
+    "IncomingMessage": {
       "main": [
         [
           {
-            "node": "Respond to NestJS",
+            "node": "Pass Payload Forward",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Session Status Webhook": {
+    "Persist session data": {
       "main": [
         [
           {
-            "node": "Validate Status Payload",
+            "node": "Wait till session starts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Start Session",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate Status Payload": {
+    "Start Session": {
       "main": [
         [
           {
-            "node": "Update Session Status",
+            "node": "Start session delay",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Update Session Status": {
+    "SessionManagerHook": {
       "main": [
         [
           {
-            "node": "Respond Status Update",
+            "node": "Validate Session Manager Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "StartSessionHook": {
+      "main": [
+        [
+          {
+            "node": "Validate Start Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SessionAuthHook": {
+      "main": [
+        [
+          {
+            "node": "Validate Session Auth Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait till session starts": {
+      "main": [
+        [
+          {
+            "node": "Request QR code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Session Starts": {
+      "main": [
+        [
+          {
+            "node": "SendText",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Session Manager Data": {
+      "main": [
+        [
+          {
+            "node": "GetWAHASessions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "500 response session and tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Start Session Data": {
+      "main": [
+        [
+          {
+            "node": "Select session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "500 response session and tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Send Message Data": {
+      "main": [
+        [
+          {
+            "node": "CheckSession",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "500 response contact session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Session Auth Data": {
+      "main": [
+        [
+          {
+            "node": "Request QR code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "500 response session and tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request QR code": {
+      "main": [
+        []
+      ]
+    },
+    "Start session delay": {
+      "main": [
+        []
+      ]
+    },
+    "Select session": {
+      "main": [
+        [
+          {
+            "node": "Check WAHA session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check WAHA session": {
+      "main": [
+        [
+          {
+            "node": "Session exists in both places",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session exists in both places": {
+      "main": [
+        [
+          {
+            "node": "Start Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "404 response",
             "type": "main",
             "index": 0
           }
@@ -268,7 +1138,56 @@
       ]
     }
   },
-  "active": true,
-  "settings": {},
-  "id": "WAHA-NestJS-Integration"
+  "pinData": {
+    "Create Session": [
+      {
+        "name": "default",
+        "status": "STOPPED",
+        "config": {
+          "metadata": {
+            "user.id": "123",
+            "user.email": "email@example.com"
+          },
+          "proxy": null,
+          "debug": false,
+          "ignore": {
+            "status": null,
+            "groups": null,
+            "channels": null
+          },
+          "noweb": {
+            "store": {
+              "enabled": true,
+              "fullSync": false
+            }
+          },
+          "webjs": {
+            "tagsEventsOn": false
+          },
+          "webhooks": [
+            {
+              "url": "https://webhook.site/11111111-1111-1111-1111-11111111",
+              "events": [
+                "message",
+                "session.status"
+              ],
+              "hmac": null,
+              "retries": null,
+              "customHeaders": null
+            }
+          ]
+        }
+      }
+    ],
+    "Request QR code": [
+      {
+        "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        "status": "success"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "24244a7ca6362e76452ee411b37e8e6c628079ab99ee8394b7942b1605960a75"
+  }
 }

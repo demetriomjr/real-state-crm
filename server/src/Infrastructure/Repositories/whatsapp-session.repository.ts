@@ -1,7 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
 import { WhatsappSession } from "@/Domain/WhatsappSession/WhatsappSession";
-import { WhatsappSessionCreateDto, WhatsappSessionUpdateDto } from "@/Application/DTOs/WhatsappSession";
+import {
+  WhatsappSessionCreateDto,
+  WhatsappSessionUpdateDto,
+} from "@/Application/DTOs/WhatsappSession";
 
 @Injectable()
 export class WhatsappSessionRepository {
@@ -17,10 +20,17 @@ export class WhatsappSessionRepository {
         created_at: "desc",
       },
     });
-    return sessions.map((session) => new WhatsappSession({
-      ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
-    }));
+    return sessions.map(
+      (session) =>
+        new WhatsappSession({
+          ...session,
+          status: session.status as
+            | "pending"
+            | "connected"
+            | "disconnected"
+            | "error",
+        }),
+    );
   }
 
   async findOne(id: string): Promise<WhatsappSession | null> {
@@ -30,44 +40,45 @@ export class WhatsappSessionRepository {
         deleted_at: null,
       },
     });
-    return session ? new WhatsappSession({
-      ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
-    }) : null;
+    return session
+      ? new WhatsappSession({
+          ...session,
+          status: session.status as
+            | "pending"
+            | "connected"
+            | "disconnected"
+            | "error",
+        })
+      : null;
   }
 
-  async findBySessionId(sessionId: string): Promise<WhatsappSession | null> {
+  async findByName(sessionName: string): Promise<WhatsappSession | null> {
     const session = await this.prisma.whatsappSession.findFirst({
       where: {
-        session_id: sessionId,
+        session_name: sessionName,
         deleted_at: null,
       },
     });
-    return session ? new WhatsappSession({
-      ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
-    }) : null;
+    return session
+      ? new WhatsappSession({
+          ...session,
+          status: session.status as
+            | "pending"
+            | "connected"
+            | "disconnected"
+            | "error",
+        })
+      : null;
   }
 
-  async findByTenantAndSessionId(tenantId: string, sessionId: string): Promise<WhatsappSession | null> {
-    const session = await this.prisma.whatsappSession.findFirst({
-      where: {
-        tenant_id: tenantId,
-        session_id: sessionId,
-        deleted_at: null,
-      },
-    });
-    return session ? new WhatsappSession({
-      ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
-    }) : null;
-  }
 
-  async create(createSessionDto: WhatsappSessionCreateDto): Promise<WhatsappSession> {
+
+  async create(
+    createSessionDto: WhatsappSessionCreateDto,
+  ): Promise<WhatsappSession> {
     const session = await this.prisma.whatsappSession.create({
       data: {
         tenant_id: createSessionDto.tenant_id,
-        session_id: createSessionDto.session_name.toLowerCase().replace(/\s+/g, "-"),
         session_name: createSessionDto.session_name,
         phone_number: createSessionDto.phone_number,
         status: "pending",
@@ -75,11 +86,18 @@ export class WhatsappSessionRepository {
     });
     return new WhatsappSession({
       ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
+      status: session.status as
+        | "pending"
+        | "connected"
+        | "disconnected"
+        | "error",
     });
   }
 
-  async update(id: string, updateSessionDto: WhatsappSessionUpdateDto): Promise<WhatsappSession> {
+  async update(
+    id: string,
+    updateSessionDto: WhatsappSessionUpdateDto,
+  ): Promise<WhatsappSession> {
     const session = await this.prisma.whatsappSession.update({
       where: { id },
       data: {
@@ -92,12 +110,7 @@ export class WhatsappSessionRepository {
         ...(updateSessionDto.status && {
           status: updateSessionDto.status,
         }),
-        ...(updateSessionDto.qr_code && {
-          qr_code: updateSessionDto.qr_code,
-        }),
-        ...(updateSessionDto.qr_code_expires_at && {
-          qr_code_expires_at: updateSessionDto.qr_code_expires_at,
-        }),
+
         ...(updateSessionDto.last_activity_at && {
           last_activity_at: updateSessionDto.last_activity_at,
         }),
@@ -105,7 +118,11 @@ export class WhatsappSessionRepository {
     });
     return new WhatsappSession({
       ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
+      status: session.status as
+        | "pending"
+        | "connected"
+        | "disconnected"
+        | "error",
     });
   }
 
@@ -118,20 +135,7 @@ export class WhatsappSessionRepository {
     });
   }
 
-  async updateQRCode(id: string, qrCode: string, expiresAt: Date): Promise<WhatsappSession> {
-    const session = await this.prisma.whatsappSession.update({
-      where: { id },
-      data: {
-        qr_code: qrCode,
-        qr_code_expires_at: expiresAt,
-        status: "pending",
-      },
-    });
-    return new WhatsappSession({
-      ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
-    });
-  }
+
 
   async updateStatus(id: string, status: string): Promise<WhatsappSession> {
     const session = await this.prisma.whatsappSession.update({
@@ -143,11 +147,18 @@ export class WhatsappSessionRepository {
     });
     return new WhatsappSession({
       ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
+      status: session.status as
+        | "pending"
+        | "connected"
+        | "disconnected"
+        | "error",
     });
   }
 
-  async updatePhoneNumber(id: string, phoneNumber: string): Promise<WhatsappSession> {
+  async updatePhoneNumber(
+    id: string,
+    phoneNumber: string,
+  ): Promise<WhatsappSession> {
     const session = await this.prisma.whatsappSession.update({
       where: { id },
       data: {
@@ -157,7 +168,11 @@ export class WhatsappSessionRepository {
     });
     return new WhatsappSession({
       ...session,
-      status: session.status as "pending" | "connected" | "disconnected" | "error"
+      status: session.status as
+        | "pending"
+        | "connected"
+        | "disconnected"
+        | "error",
     });
   }
 }

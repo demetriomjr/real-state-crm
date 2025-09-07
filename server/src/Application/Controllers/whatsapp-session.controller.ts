@@ -1,127 +1,178 @@
 import {
   Controller,
-  Get,
   Post,
-  Put,
-  Delete,
   Body,
-  Param,
-  UseGuards,
-  Logger,
   HttpStatus,
   HttpCode,
+  Logger,
+  BadRequestException,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from "@nestjs/swagger";
-import { WhatsappSessionService } from "@/Application/Services/whatsapp-session.service";
-import { WhatsappSessionCreateDto, WhatsappSessionUpdateDto, WhatsappSessionResponseDto } from "@/Application/DTOs/WhatsappSession";
-import { JwtAuthGuard } from "@/Application/Features/auth.guard";
-import { TenantId } from "@/Application/Features/auth.guard";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+} from "@nestjs/swagger";
+import { N8NWhatsappService } from "@/Application/Services/n8n-whatsapp.service";
 
-@ApiTags("WhatsApp Sessions")
-@Controller("whatsapp-sessions")
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiTags("WhatsApp Session Management")
+@Controller("whatsapp")
 export class WhatsappSessionController {
   private readonly logger = new Logger(WhatsappSessionController.name);
 
-  constructor(private readonly whatsappSessionService: WhatsappSessionService) {}
+  constructor(private readonly n8nWhatsappService: N8NWhatsappService) {}
 
-  @Get()
+  @Post("session")
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: "Get all WhatsApp sessions",
-    description: "Retrieve all WhatsApp sessions for the current tenant.",
+    summary: "Create WhatsApp Session",
+    description: "Creates a session if not exists, starts it if exists. Returns QR code for validation if not yet authenticated.",
   })
-  @ApiResponse({ status: 200, description: "Sessions retrieved successfully.", type: [WhatsappSessionResponseDto] })
-  async findAll(@TenantId() tenantId: string): Promise<WhatsappSessionResponseDto[]> {
-    this.logger.log(`Getting all WhatsApp sessions for tenant: ${tenantId}`);
-    return this.whatsappSessionService.findAll(tenantId);
-  }
-
-  @Get(":id")
-  @ApiOperation({
-    summary: "Get WhatsApp session by ID",
-    description: "Retrieve a specific WhatsApp session by its ID.",
+  @ApiBody({
+    description: "Session creation data",
+    schema: {
+      type: "object",
+      properties: {
+        session_id: { type: "string", example: "GUID" },
+        tenant_id: { type: "string", example: "GUID" },
+      },
+      required: ["session_id", "tenant_id"],
+    },
   })
-  @ApiResponse({ status: 200, description: "Session retrieved successfully.", type: WhatsappSessionResponseDto })
-  @ApiResponse({ status: 404, description: "Session not found." })
-  async findOne(@Param("id") id: string, @TenantId() tenantId: string): Promise<WhatsappSessionResponseDto> {
-    this.logger.log(`Getting WhatsApp session: ${id} for tenant: ${tenantId}`);
-    return this.whatsappSessionService.findOne(id, tenantId);
-  }
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: "Create WhatsApp session",
-    description: "Create a new WhatsApp session and generate QR code for authentication.",
-  })
-  @ApiBody({ type: WhatsappSessionCreateDto })
-  @ApiResponse({ status: 201, description: "Session created successfully.", type: WhatsappSessionResponseDto })
+  @ApiResponse({ status: 200, description: "Session created/started successfully." })
   @ApiResponse({ status: 400, description: "Invalid session data." })
-  async create(
-    @Body() createSessionDto: WhatsappSessionCreateDto,
-    @TenantId() tenantId: string,
-  ): Promise<WhatsappSessionResponseDto> {
-    this.logger.log(`Creating WhatsApp session: ${createSessionDto.session_name} for tenant: ${tenantId}`);
-    
-    // Override tenant_id from JWT
-    createSessionDto.tenant_id = tenantId;
-    
-    return this.whatsappSessionService.create(createSessionDto);
+  async createSession(
+    @Body() sessionData: { session_id: string; tenant_id: string },
+  ) {
+    this.logger.log(`Creating WhatsApp session: ${sessionData.session_id}`);
+
+    if (!sessionData.session_id || !sessionData.tenant_id) {
+      throw new BadRequestException("session_id and tenant_id are required");
+    }
+
+    try {
+      const result = await this.n8nWhatsappService.createSession(
+        sessionData.session_id,
+        sessionData.tenant_id,
+      );
+      return result;
+    } catch (error: any) {
+      this.logger.error(`Error creating session: ${error.message}`);
+      throw new BadRequestException(`Failed to create session: ${error.message}`);
+    }
   }
 
-  @Put(":id")
+  @Post("auth")
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: "Update WhatsApp session",
-    description: "Update an existing WhatsApp session.",
+    summary: "Get WhatsApp Auth QR Code",
+    description: "Gets QR code for phone validation for an existing session.",
   })
-  @ApiBody({ type: WhatsappSessionUpdateDto })
-  @ApiResponse({ status: 200, description: "Session updated successfully.", type: WhatsappSessionResponseDto })
-  @ApiResponse({ status: 404, description: "Session not found." })
-  async update(
-    @Param("id") id: string,
-    @Body() updateSessionDto: WhatsappSessionUpdateDto,
-    @TenantId() tenantId: string,
-  ): Promise<WhatsappSessionResponseDto> {
-    this.logger.log(`Updating WhatsApp session: ${id} for tenant: ${tenantId}`);
-    return this.whatsappSessionService.update(id, updateSessionDto, tenantId);
+  @ApiBody({
+    description: "Session authentication data",
+    schema: {
+      type: "object",
+      properties: {
+        session_id: { type: "string", example: "GUID" },
+      },
+      required: ["session_id"],
+    },
+  })
+  @ApiResponse({ status: 200, description: "QR code retrieved successfully." })
+  @ApiResponse({ status: 400, description: "Invalid session data." })
+  async getAuthQRCode(
+    @Body() authData: { session_id: string },
+  ) {
+    this.logger.log(`Getting QR code for session: ${authData.session_id}`);
+
+    if (!authData.session_id) {
+      throw new BadRequestException("session_id is required");
+    }
+
+    try {
+      const result = await this.n8nWhatsappService.getAuthQRCode(authData.session_id);
+      return result;
+    } catch (error: any) {
+      this.logger.error(`Error getting QR code: ${error.message}`);
+      throw new BadRequestException(`Failed to get QR code: ${error.message}`);
+    }
   }
 
-  @Delete(":id")
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post("session/start")
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: "Delete WhatsApp session",
-    description: "Delete a WhatsApp session and remove it from WAHA.",
+    summary: "Start WhatsApp Session",
+    description: "Starts an existing session. Session must exist in database before calling this route.",
   })
-  @ApiResponse({ status: 204, description: "Session deleted successfully." })
-  @ApiResponse({ status: 404, description: "Session not found." })
-  async delete(@Param("id") id: string, @TenantId() tenantId: string): Promise<void> {
-    this.logger.log(`Deleting WhatsApp session: ${id} for tenant: ${tenantId}`);
-    await this.whatsappSessionService.delete(id, tenantId);
+  @ApiBody({
+    description: "Session start data",
+    schema: {
+      type: "object",
+      properties: {
+        session_id: { type: "string", example: "GUID" },
+      },
+      required: ["session_id"],
+    },
+  })
+  @ApiResponse({ status: 200, description: "Session started successfully." })
+  @ApiResponse({ status: 400, description: "Invalid session data." })
+  async startSession(
+    @Body() sessionData: { session_id: string },
+  ) {
+    this.logger.log(`Starting WhatsApp session: ${sessionData.session_id}`);
+
+    if (!sessionData.session_id) {
+      throw new BadRequestException("session_id is required");
+    }
+
+    try {
+      const result = await this.n8nWhatsappService.startSession(sessionData.session_id);
+      return result;
+    } catch (error: any) {
+      this.logger.error(`Error starting session: ${error.message}`);
+      throw new BadRequestException(`Failed to start session: ${error.message}`);
+    }
   }
 
-  @Post(":id/refresh-qr")
+  @Post("sendMessage")
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: "Refresh QR code",
-    description: "Generate a new QR code for a pending WhatsApp session.",
+    summary: "Send WhatsApp Message",
+    description: "Sends a message via WhatsApp using the specified session.",
   })
-  @ApiResponse({ status: 200, description: "QR code refreshed successfully.", type: WhatsappSessionResponseDto })
-  @ApiResponse({ status: 400, description: "Cannot refresh QR code for connected session." })
-  @ApiResponse({ status: 404, description: "Session not found." })
-  async refreshQRCode(@Param("id") id: string, @TenantId() tenantId: string): Promise<WhatsappSessionResponseDto> {
-    this.logger.log(`Refreshing QR code for WhatsApp session: ${id} for tenant: ${tenantId}`);
-    return this.whatsappSessionService.refreshQRCode(id, tenantId);
-  }
+  @ApiBody({
+    description: "Message data",
+    schema: {
+      type: "object",
+      properties: {
+        session_id: { type: "string", example: "GUID" },
+        contact: { type: "string", example: "11111111111" },
+        message: { type: "string", example: "Hello!" },
+      },
+      required: ["session_id", "contact", "message"],
+    },
+  })
+  @ApiResponse({ status: 200, description: "Message sent successfully." })
+  @ApiResponse({ status: 400, description: "Invalid message data." })
+  async sendMessage(
+    @Body() messageData: { session_id: string; contact: string; message: string },
+  ) {
+    this.logger.log(`Sending WhatsApp message to ${messageData.contact}`);
 
-  @Get(":id/state")
-  @ApiOperation({
-    summary: "Get session state",
-    description: "Get the current state of a WhatsApp session from WAHA.",
-  })
-  @ApiResponse({ status: 200, description: "Session state retrieved successfully." })
-  @ApiResponse({ status: 404, description: "Session not found." })
-  async getSessionState(@Param("id") id: string, @TenantId() tenantId: string): Promise<any> {
-    this.logger.log(`Getting state for WhatsApp session: ${id} for tenant: ${tenantId}`);
-    return this.whatsappSessionService.getSessionState(id, tenantId);
+    if (!messageData.session_id || !messageData.contact || !messageData.message) {
+      throw new BadRequestException("session_id, contact, and message are required");
+    }
+
+    try {
+      const result = await this.n8nWhatsappService.sendMessage(
+        messageData.session_id,
+        messageData.contact,
+        messageData.message,
+      );
+      return result;
+    } catch (error: any) {
+      this.logger.error(`Error sending message: ${error.message}`);
+      throw new BadRequestException(`Failed to send message: ${error.message}`);
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Logger } from "@nestjs/common";
 import { ChatRepository } from "@/Infrastructure/Repositories/chat.repository";
 import { MessageRepository } from "@/Infrastructure/Repositories/message.repository";
+import { WhatsappSessionRepository } from "@/Infrastructure/Repositories/whatsapp-session.repository";
 import { Chat } from "@/Domain/Chat/Chat";
 import { Message } from "@/Domain/Chat/Message";
 import {
@@ -11,6 +12,7 @@ import {
   UpdateMessageDto,
   MessageResponseDto,
 } from "@/Application/DTOs";
+import { N8NWhatsappService } from "./n8n-whatsapp.service";
 
 @Injectable()
 export class ChatService {
@@ -19,6 +21,8 @@ export class ChatService {
   constructor(
     private readonly chatRepository: ChatRepository,
     private readonly messageRepository: MessageRepository,
+    private readonly whatsappSessionRepository: WhatsappSessionRepository,
+    private readonly n8nWhatsappService: N8NWhatsappService,
   ) {}
 
   async findAll(
@@ -162,13 +166,9 @@ export class ChatService {
     // Update chat's last_message_at
     await this.chatRepository.updateLastMessageAt(createMessageDto.chat_id);
 
-    // If it's a sent message, send it via WhatsApp
-    // TODO: Implement WhatsApp integration
+    // If it's a sent message, send it via WhatsApp via n8n
     if (createMessageDto.message_direction === "sent") {
-      // await this.whatsappService.sendMessage(createMessageDto);
-      this.logger.log(
-        `Message would be sent via WhatsApp: ${createMessageDto.message_id}`,
-      );
+      await this.sendMessageToN8N(createMessageDto, chat);
     }
 
     this.logger.log(`Message created successfully with ID: ${message.id}`);
@@ -190,16 +190,15 @@ export class ChatService {
       await this.chatRepository.updateLastMessageAt(chatId);
     }
 
-    // Send sent messages via WhatsApp
-    // TODO: Implement WhatsApp integration
+    // Send sent messages via WhatsApp via n8n
     const sentMessages = createMessageDtos.filter(
       (dto) => dto.message_direction === "sent",
     );
     for (const messageDto of sentMessages) {
-      // await this.whatsappService.sendMessage(messageDto);
-      this.logger.log(
-        `Message would be sent via WhatsApp: ${messageDto.message_id}`,
-      );
+      const chat = await this.chatRepository.findOne(messageDto.chat_id);
+      if (chat) {
+        await this.sendMessageToN8N(messageDto, chat);
+      }
     }
 
     this.logger.log(`${messages.length} messages created successfully`);
@@ -272,7 +271,7 @@ export class ChatService {
       contact_name: chat.contact_name,
       contact_phone: chat.contact_phone,
       user_observations: chat.user_observations,
-      session_id: (chat as any).session_id,
+      session_id: chat.session_id,
       last_message_at: chat.last_message_at,
       created_at: chat.created_at,
       updated_at: chat.updated_at,
@@ -291,5 +290,37 @@ export class ChatService {
       created_at: message.created_at,
       updated_at: message.updated_at,
     };
+  }
+
+  private async sendMessageToN8N(
+    messageDto: CreateMessageDto,
+    chat: Chat,
+  ): Promise<void> {
+    try {
+      const whatsappSession = await this.whatsappSessionRepository.findOne(
+        chat.session_id,
+      );
+      if (!whatsappSession) {
+        this.logger.warn(
+          `WhatsappSession not found for session ID: ${chat.session_id}`,
+        );
+        return;
+      }
+
+      await this.n8nWhatsappService.sendMessage(
+        whatsappSession.session_name,
+        chat.contact_phone,
+        messageDto.message_content,
+      );
+
+      this.logger.log(
+        `Message sent to n8n successfully: ${messageDto.message_id}`,
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `Error sending message to n8n: ${error.message}`,
+        error.stack,
+      );
+    }
   }
 }

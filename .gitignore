@@ -1,3 +1,0 @@
-# Ignore documentation context files anywhere in the repo
-.gitignore
-.documentation-context.md

@@ -77,14 +77,11 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/real_state_crm
       - SSE_TIMEOUT_MINUTES=5
       - WHATSAPP_WEBHOOK_SECRET=your-whatsapp-webhook-secret
+      - JWT_SECRET=your-jwt-secret-key-for-production
     depends_on:
       - postgres
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
     networks:
       - real-state-network
-    command: npm run start:prod
 
 volumes:
   postgres_data:

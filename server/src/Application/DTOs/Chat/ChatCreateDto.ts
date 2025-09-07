@@ -1,8 +1,12 @@
-import { IsString, IsOptional, IsUUID } from "class-validator";
+import { IsString, IsOptional, IsUUID, IsBoolean, IsArray } from "class-validator";
 
 export class ChatCreateDto {
+  @IsOptional()
   @IsUUID()
-  person_id: string;
+  person_id?: string;
+
+  @IsString()
+  session_id: string;
 
   @IsString()
   contact_name: string;
@@ -14,7 +18,6 @@ export class ChatCreateDto {
   @IsString()
   user_observations?: string;
 
-  @IsOptional()
-  @IsString()
-  session_id?: string;
+
+
 }

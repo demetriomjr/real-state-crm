@@ -81,10 +81,10 @@ export class ChatRepository {
     const chat = await this.prisma.chat.create({
       data: {
         person_id: createChatDto.person_id,
+        session_id: createChatDto.session_id,
         contact_name: createChatDto.contact_name,
         contact_phone: createChatDto.contact_phone,
         user_observations: createChatDto.user_observations,
-        session_id: createChatDto.session_id,
         last_message_at: new Date(),
       },
     });
@@ -96,6 +96,12 @@ export class ChatRepository {
     const chat = await this.prisma.chat.update({
       where: { id },
       data: {
+        ...(updateChatDto.person_id !== undefined && {
+          person_id: updateChatDto.person_id,
+        }),
+        ...(updateChatDto.session_id && {
+          session_id: updateChatDto.session_id,
+        }),
         ...(updateChatDto.contact_name && {
           contact_name: updateChatDto.contact_name,
         }),

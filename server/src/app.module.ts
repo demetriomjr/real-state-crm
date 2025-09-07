@@ -10,7 +10,7 @@ import { LeadModule } from "./Application/Modules/lead.module";
 import { CustomerModule } from "./Application/Modules/customer.module";
 import { ChatModule } from "./Application/Modules/chat.module";
 import { FeedbackModule } from "./Application/Modules/feedback.module";
-import { IntegratedServicesModule } from "./Application/Modules/integrated-services.module";
+import { WebhooksModule } from "./Application/Modules/webhooks.module";
 import { WhatsappSessionModule } from "./Application/Modules/whatsapp-session.module";
 import { SSEChatModule } from "./Application/Modules/sse-chat.module";
 import { TenantValidationMiddleware } from "./Application/Features/tenant-validation.middleware";
@@ -29,7 +29,7 @@ import { TenantValidationMiddleware } from "./Application/Features/tenant-valida
     CustomerModule,
     ChatModule,
     FeedbackModule,
-    IntegratedServicesModule,
+    WebhooksModule,
     WhatsappSessionModule,
     SSEChatModule,
   ],

@@ -18,6 +18,45 @@ export class TenantValidationMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    const path = req.path;
+    const method = req.method;
+    const host = req.get("host");
+    const origin = req.get("origin");
+    const userAgent = req.get("user-agent");
+
+    // Debug logging to see what we're getting
+    this.logger.log(
+      `DEBUG: Request from IP: ${req.ip}, Host: ${host}, Origin: ${origin}, UserAgent: ${userAgent}, Path: ${path}`,
+    );
+
+    // Skip ALL validation for requests from host.docker.internal (n8n webhooks)
+    const isFromDockerInternal = 
+      host === "host.docker.internal" || 
+      origin?.includes("host.docker.internal") ||
+      userAgent?.includes("n8n") ||
+      req.ip === "172.17.0.1" || // Docker bridge IP
+      req.ip === "172.18.0.1" || // Docker compose network gateway
+      req.ip === "172.18.0.4" || // n8n container IP
+      req.ip === "172.18.0.5" || // WAHA container IP
+      req.ip?.startsWith("172.18.0.") || // Docker compose network range
+      req.ip === "172.19.0.1" || // Alternative Docker network IP
+      req.ip === "172.20.0.1"; // Alternative Docker network IP
+
+    if (isFromDockerInternal) {
+      this.logger.log(
+        `Skipping ALL tenant validation for request from Docker internal: ${req.ip} (host: ${host})`,
+      );
+      return next();
+    }
+
+    // Skip validation for n8n inbound webhook (additional safety check)
+    if (method === "POST" && path === "/api/webhooks/whatsapp") {
+      this.logger.log(
+        "Skipping tenant validation for WhatsApp inbound webhook",
+      );
+      return next();
+    }
+
     const tenantId = req["tenantId"];
     const userLevel = req["userLevel"];
     const isDevelopment =
@@ -31,22 +70,9 @@ export class TenantValidationMiddleware implements NestMiddleware {
     }
 
     // Skip validation for endpoints that don't require authentication
-    const path = req.path;
-    const method = req.method;
     if (method === "POST" && path === "/api/businesses") {
       this.logger.log(
         "Skipping tenant validation for business creation endpoint",
-      );
-      return next();
-    }
-
-    // Skip validation for n8n inbound webhook
-    if (
-      method === "POST" &&
-      path === "/integrated-services/whatsapp/webhook"
-    ) {
-      this.logger.log(
-        "Skipping tenant validation for WhatsApp inbound webhook",
       );
       return next();
     }

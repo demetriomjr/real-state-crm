@@ -13,13 +13,7 @@ export class WhatsappSessionUpdateDto {
   @IsEnum(["pending", "connected", "disconnected", "error"])
   status?: "pending" | "connected" | "disconnected" | "error";
 
-  @IsOptional()
-  @IsString()
-  qr_code?: string;
 
-  @IsOptional()
-  @IsDate()
-  qr_code_expires_at?: Date;
 
   @IsOptional()
   @IsDate()
