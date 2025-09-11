@@ -118,7 +118,7 @@ const Business: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [activeTab, setActiveTab] = useState(0);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Removed hasChanges state - buttons are always enabled
   const [saving, setSaving] = useState(false);
 
   // In the new structure, addresses, contacts, and documents are directly on businessData
@@ -126,7 +126,7 @@ const Business: React.FC = () => {
 
   useEffect(() => {
     fetchBusinessData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchBusinessData = async () => {
     try {
@@ -137,7 +137,7 @@ const Business: React.FC = () => {
         company_name: response.company_name,
         full_name: response.full_name,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMessage = handleError(
         err,
         user?.user_level || 1,
@@ -161,13 +161,12 @@ const Business: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
-    
-    setHasChanges(true);
+
     if (error) setError('');
     if (success) setSuccess('');
   };
@@ -194,10 +193,9 @@ const Business: React.FC = () => {
     try {
       const response = await apiService.put<BusinessData>('/businesses/me', formData);
       setBusinessData(response);
-      setHasChanges(false);
       setSuccess(t('business.updateSuccess'));
       toast.success(t('business.updateSuccess'));
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMessage = handleError(
         err,
         user?.user_level || 1,
@@ -226,7 +224,6 @@ const Business: React.FC = () => {
         full_name: businessData.full_name,
       });
     }
-    setHasChanges(false);
     setError('');
     setSuccess('');
   };
@@ -298,57 +295,41 @@ const Business: React.FC = () => {
     <Box sx={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100%',
-      position: 'relative',
-      // Ensure proper scrolling for the entire page
-      overflow: 'hidden',
-      // Set page width and centering - this controls both data container and button panel
-      maxWidth: { xs: '100%', md: 1200 },
-      mx: 'auto',
-      width: '100%'
+      height: '100%', // Full available height from Layout
+      position: 'relative'
     }}>
-      {/* Header - Now part of scrollable content */}
+      {/* Content Container - Fixed height to avoid overlap with button panel */}
       <Box sx={{
-        p: { xs: 2, sm: 3 },
-        pb: { xs: 1, sm: 2 },
-        flexShrink: 0,
-        backgroundColor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider'
+        height: { xs: 'calc(100% - 80px)', sm: 'calc(100% - 100px)' }, // Subtract button panel height only
+        width: '100%',
+        overflowY: 'auto' // Scrollbar appears within Layout boundaries
       }}>
+        {/* Inner Content - Constrained width, centered */}
+        <Box sx={{
+          maxWidth: { xs: '100%', md: 1200 },
+          mx: 'auto',
+          width: '100%',
+          px: { xs: 2, sm: 3 },
+          pt: { xs: 2, sm: 3 },
+          minHeight: '100%',
+          // Ensure proper spacing
+          '& .MuiCard-root': {
+            mb: { xs: 2, sm: 3 }
+          }
+        }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <PageHeader
-            title={t('business.title')}
-            subtitle={t('business.subtitle')}
-          />
-        </motion.div>
-      </Box>
+          {/* Page Header - Integrated into scrollable content */}
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            <PageHeader
+              title={t('business.title')}
+              subtitle={t('business.subtitle')}
+            />
+          </Box>
 
-      {/* Main Content - Scrollable area */}
-      <Box sx={{
-        flex: 1,
-        px: { xs: 2, sm: 3 },
-        pt: { xs: 2, sm: 3 }, // Add padding top below header
-        pb: 0,
-        // Reserve space for the sticky button panel (height + padding)
-        paddingBottom: { xs: '100px', sm: '120px' },
-        minHeight: 0,
-        // Ensure proper scrolling
-        overflowY: 'auto',
-        // Ensure proper spacing on mobile
-        '& .MuiCard-root': {
-          mb: { xs: 2, sm: 3 }
-        }
-      }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -363,7 +344,6 @@ const Business: React.FC = () => {
 
           {/* Row container: Info (left) and Business Status (right) */}
           <Box sx={{
-            width: '100%', // Full width of parent container
             mb: { xs: 2, sm: 3 },
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
@@ -431,7 +411,6 @@ const Business: React.FC = () => {
 
           {/* Tabs for Sub-entities */}
           <Card sx={{
-            width: '100%', // Full width of parent container
             mb: { xs: 2, sm: 3 } // Reduce bottom margin to prevent overflow
           }}>
             <Tabs
@@ -506,31 +485,16 @@ const Business: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
-      </Box>
+        </Box> {/* Close Inner Content */}
+      </Box> {/* Close Content Container */}
 
-      {/* Fixed Bottom Action Buttons - Centered with page content */}
-      <Box sx={{
-        position: 'fixed',
-        bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: 'background.paper',
-        borderTop: '1px solid',
-        borderColor: 'divider',
-        zIndex: 1000,
-        // Match page width constraints
-        width: { xs: '100%', md: 1200 },
-        maxWidth: '100%',
-        px: { xs: 2, sm: 3 }
-      }}>
-        <EditPageButtonPanel
-          hasChanges={hasChanges}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          saving={saving}
-          savingText={t('business.saving')}
-        />
-      </Box>
+      {/* Button Panel - All styling handled by component */}
+      <EditPageButtonPanel
+        onSave={handleSave}
+        onCancel={handleCancel}
+        saving={saving}
+        savingText={t('business.saving')}
+      />
     </Box>
   );
 };
