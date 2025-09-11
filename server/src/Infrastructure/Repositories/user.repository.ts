@@ -57,7 +57,7 @@ export class UserRepository {
     const user = await this.prisma.user.create({
       data: {
         fullName: createUserDto.fullName,
-        username: createUserDto.username,
+        username: createUserDto.username.toLowerCase(),
         password: createUserDto.password,
         user_level: createUserDto.user_level || 1,
         tenant_id: createUserDto.tenant_id,
@@ -72,7 +72,9 @@ export class UserRepository {
       where: { id },
       data: {
         ...(updateUserDto.fullName && { fullName: updateUserDto.fullName }),
-        ...(updateUserDto.username && { username: updateUserDto.username }),
+        ...(updateUserDto.username && {
+          username: updateUserDto.username.toLowerCase(),
+        }),
         ...(updateUserDto.password && { password: updateUserDto.password }),
         ...(updateUserDto.user_level && {
           user_level: updateUserDto.user_level,

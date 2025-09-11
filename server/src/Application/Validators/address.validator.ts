@@ -119,6 +119,11 @@ export class AddressValidator {
       throw new BadRequestException("is_primary must be a boolean");
     }
 
+    // Validate is_default (optional)
+    if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
+      throw new BadRequestException("is_default must be a boolean");
+    }
+
     this.logger.log("Address creation data validation passed");
   }
 
@@ -241,6 +246,11 @@ export class AddressValidator {
     // Validate is_primary if provided
     if (data.is_primary !== undefined && typeof data.is_primary !== "boolean") {
       throw new BadRequestException("is_primary must be a boolean");
+    }
+
+    // Validate is_default if provided
+    if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
+      throw new BadRequestException("is_default must be a boolean");
     }
 
     this.logger.log("Address update data validation passed");

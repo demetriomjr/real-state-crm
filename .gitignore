@@ -1,0 +1,12 @@
+# Ignore documentation context files anywhere in the repo
+.documentation-context.md
+server/node_modules/
+server/dist
+server/tests/results/
+
+#root
+.env
+
+# Keep markdown linting config files
+!.markdownlint.json
+!.vscode/settings.json

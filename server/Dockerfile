@@ -37,6 +37,7 @@ RUN npm ci --only=production
 # Copy built application from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /usr/src/app/prisma ./prisma
 
 # Expose port
 EXPOSE 3000

@@ -55,7 +55,7 @@ export class UserService {
       `Creating new user with username: ${createUserDto.username}`,
     );
 
-    // Check if username already exists
+    // Check if username already exists in the same tenant
     const existingUser = await this.userRepository.findByUsername(
       createUserDto.username,
     );
@@ -91,7 +91,7 @@ export class UserService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    // If username is being updated, check for conflicts
+    // If username is being updated, check for conflicts in the same tenant
     if (
       updateUserDto.username &&
       updateUserDto.username !== existingUser.username
@@ -99,7 +99,7 @@ export class UserService {
       const userWithUsername = await this.userRepository.findByUsername(
         updateUserDto.username,
       );
-      if (userWithUsername) {
+      if (userWithUsername && userWithUsername.id !== id) {
         this.logger.warn(
           `Username already exists during update: ${updateUserDto.username}`,
         );
@@ -204,12 +204,6 @@ export class UserService {
       id: user.id,
       fullName: user.fullName,
       username: user.username,
-      created_at: user.created_at,
-      created_by: user.created_by,
-      updated_at: user.updated_at,
-      updated_by: user.updated_by,
-      deleted_at: user.deleted_at,
-      deleted_by: user.deleted_by,
     };
   }
 }

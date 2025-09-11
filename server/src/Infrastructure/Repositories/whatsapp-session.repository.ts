@@ -71,8 +71,6 @@ export class WhatsappSessionRepository {
       : null;
   }
 
-
-
   async create(
     createSessionDto: WhatsappSessionCreateDto,
   ): Promise<WhatsappSession> {
@@ -134,8 +132,6 @@ export class WhatsappSessionRepository {
       },
     });
   }
-
-
 
   async updateStatus(id: string, status: string): Promise<WhatsappSession> {
     const session = await this.prisma.whatsappSession.update({

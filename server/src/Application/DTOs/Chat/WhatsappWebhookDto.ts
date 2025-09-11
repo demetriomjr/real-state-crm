@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsObject, IsArray } from "class-validator";
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  IsObject,
+  IsArray,
+} from "class-validator";
 
 export class WhatsappWebhookMediaDto {
   @IsOptional()

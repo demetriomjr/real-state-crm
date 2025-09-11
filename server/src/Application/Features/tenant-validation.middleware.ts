@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { BusinessService } from "@/Application/Services/business.service";
+import { UserSecretCacheService } from "@/Application/Services/user-secret-cache.service";
 import { ConfigService } from "@nestjs/config";
 
 @Injectable()
@@ -15,6 +16,7 @@ export class TenantValidationMiddleware implements NestMiddleware {
   constructor(
     private readonly businessService: BusinessService,
     private readonly configService: ConfigService,
+    private readonly userSecretCache: UserSecretCacheService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -30,8 +32,8 @@ export class TenantValidationMiddleware implements NestMiddleware {
     );
 
     // Skip ALL validation for requests from host.docker.internal (n8n webhooks)
-    const isFromDockerInternal = 
-      host === "host.docker.internal" || 
+    const isFromDockerInternal =
+      host === "host.docker.internal" ||
       origin?.includes("host.docker.internal") ||
       userAgent?.includes("n8n") ||
       req.ip === "172.17.0.1" || // Docker bridge IP
@@ -70,10 +72,21 @@ export class TenantValidationMiddleware implements NestMiddleware {
     }
 
     // Skip validation for endpoints that don't require authentication
-    if (method === "POST" && path === "/api/businesses") {
+    // Check for business creation endpoint (handles both /api/businesses and /businesses paths)
+    if (method === "POST" && (path.includes("businesses") || path === "/")) {
       this.logger.log(
         "Skipping tenant validation for business creation endpoint",
       );
+      return next();
+    }
+
+    // Skip validation for auth endpoints
+    if (
+      path.includes("auth") ||
+      path.includes("login") ||
+      path.includes("logout")
+    ) {
+      this.logger.log("Skipping tenant validation for auth endpoint");
       return next();
     }
 
@@ -81,6 +94,30 @@ export class TenantValidationMiddleware implements NestMiddleware {
     if (!tenantId || userLevel === undefined) {
       this.logger.warn("Missing tenant_id or user_level in request");
       throw new UnauthorizedException("Missing tenant_id or user_level");
+    }
+
+    // Validate userSecret if provided
+    const userSecret = req.headers["x-user-secret"] as string;
+    if (userSecret) {
+      const userSecretData = this.userSecretCache.getUserBySecret(userSecret);
+      if (!userSecretData) {
+        this.logger.warn(`Invalid or expired userSecret: ${userSecret}`);
+        throw new UnauthorizedException("Invalid or expired userSecret");
+      }
+
+      // Verify userSecret matches the JWT payload
+      if (
+        userSecretData.user_id !== req["user_id"] ||
+        userSecretData.tenant_id !== tenantId ||
+        userSecretData.user_level !== userLevel
+      ) {
+        this.logger.warn(`UserSecret mismatch for user: ${req["user_id"]}`);
+        throw new UnauthorizedException("UserSecret validation failed");
+      }
+
+      this.logger.log(
+        `UserSecret validated for user: ${userSecretData.user_id}`,
+      );
     }
 
     // In development, allow null/empty tenant_id for user_level 10 (admin)

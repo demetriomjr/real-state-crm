@@ -1,5 +1,6 @@
-import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { DatabaseModule } from "./Infrastructure/Database/database.module";
@@ -13,7 +14,7 @@ import { FeedbackModule } from "./Application/Modules/feedback.module";
 import { WebhooksModule } from "./Application/Modules/webhooks.module";
 import { WhatsappSessionModule } from "./Application/Modules/whatsapp-session.module";
 import { SSEChatModule } from "./Application/Modules/sse-chat.module";
-import { TenantValidationMiddleware } from "./Application/Features/tenant-validation.middleware";
+import { TenantValidationInterceptor } from "./Application/Features/tenant-validation.interceptor";
 
 @Module({
   imports: [
@@ -34,10 +35,12 @@ import { TenantValidationMiddleware } from "./Application/Features/tenant-valida
     SSEChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantValidationInterceptor,
+    },
+  ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantValidationMiddleware).forRoutes("*"); // Apply to all routes
-  }
-}
+export class AppModule {}

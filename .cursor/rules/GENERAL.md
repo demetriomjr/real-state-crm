@@ -1,3 +1,4 @@
+*** IMPORTANT: USE WINDOWS POWERSHELL COMMANDS PATTERN ***
 # Base instructions for LLMs.
 - These instructions are used as a base for all other instructions.
 - LLMs should follow the architectural rules defined in the project.

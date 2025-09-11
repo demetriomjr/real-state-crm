@@ -85,7 +85,9 @@ export class ChatMessagingService {
       const messageCreateDto = {
         chat_id: chat.id,
         message_id: webhookData.payload.id,
-        message_direction: (webhookData.payload.fromMe ? "sent" : "received") as "sent" | "received",
+        message_direction: (webhookData.payload.fromMe
+          ? "sent"
+          : "received") as "sent" | "received",
         message_type: messageType,
         message_content: this.formatMessageContent(
           webhookData.payload,
@@ -112,7 +114,6 @@ export class ChatMessagingService {
           messageType: messageType,
         },
       });
-
     } catch (error: any) {
       this.logger.error(
         `Error processing WhatsApp webhook: ${error.message}`,

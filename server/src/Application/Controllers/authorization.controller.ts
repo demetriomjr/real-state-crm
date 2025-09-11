@@ -36,18 +36,20 @@ export class AuthorizationController {
   ): Promise<AuthorizationResponseDto> {
     this.logger.log(`Login attempt for username: ${authRequest.username}`);
 
-    const user = await this.authorizationService.validateUser(
+    const result = await this.authorizationService.validateUser(
       authRequest.username,
       authRequest.password,
     );
 
-    if (!user) {
-      this.logger.warn(`Login failed for username: ${authRequest.username}`);
-      throw new UnauthorizedException("Invalid credentials");
+    if (!result.user) {
+      this.logger.warn(
+        `Login failed for username: ${authRequest.username} - ${result.error}`,
+      );
+      throw new UnauthorizedException(result.error || "Invalid credentials");
     }
 
     this.logger.log(`Login successful for username: ${authRequest.username}`);
-    return this.authorizationService.createToken(user);
+    return this.authorizationService.createToken(result.user);
   }
 
   @Post("logout")
@@ -58,9 +60,17 @@ export class AuthorizationController {
     description: "Bearer token",
     required: true,
   })
+  @ApiHeader({
+    name: "X-User-Secret",
+    description: "User secret for additional validation",
+    required: false,
+  })
   @ApiResponse({ status: 200, description: "Logout successful" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  async logout(@Headers("authorization") authHeader: string) {
+  async logout(
+    @Headers("authorization") authHeader: string,
+    @Headers("x-user-secret") userSecret?: string,
+  ) {
     this.logger.log("Logout attempt");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -73,7 +83,7 @@ export class AuthorizationController {
     try {
       // Validate token before invalidating
       await this.authorizationService.validateToken(token);
-      this.authorizationService.invalidateToken(token);
+      await this.authorizationService.logout(token, userSecret);
 
       this.logger.log("Logout successful");
       return { message: "Logout successful" };

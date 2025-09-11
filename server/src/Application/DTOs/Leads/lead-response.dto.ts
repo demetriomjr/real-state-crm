@@ -29,29 +29,7 @@ export class AddressResponseDto {
   @ApiProperty({ description: "Whether this is the primary address" })
   is_primary: boolean;
 
-  @ApiProperty({ description: "Creation timestamp" })
-  created_at: Date;
-
-  @ApiProperty({ description: "User who created this record", required: false })
-  created_by?: string;
-
-  @ApiProperty({ description: "Last update timestamp" })
-  updated_at: Date;
-
-  @ApiProperty({
-    description: "User who last updated this record",
-    required: false,
-  })
-  updated_by?: string;
-
-  @ApiProperty({
-    description: "Deletion timestamp (soft delete)",
-    required: false,
-  })
-  deleted_at?: Date;
-
-  @ApiProperty({ description: "User who deleted this record", required: false })
-  deleted_by?: string;
+  // Note: person_id and all audit fields are concealed for security reasons
 }
 
 export class ContactResponseDto {
@@ -67,29 +45,7 @@ export class ContactResponseDto {
   @ApiProperty({ description: "Whether this is the primary contact" })
   is_primary: boolean;
 
-  @ApiProperty({ description: "Creation timestamp" })
-  created_at: Date;
-
-  @ApiProperty({ description: "User who created this record", required: false })
-  created_by?: string;
-
-  @ApiProperty({ description: "Last update timestamp" })
-  updated_at: Date;
-
-  @ApiProperty({
-    description: "User who last updated this record",
-    required: false,
-  })
-  updated_by?: string;
-
-  @ApiProperty({
-    description: "Deletion timestamp (soft delete)",
-    required: false,
-  })
-  deleted_at?: Date;
-
-  @ApiProperty({ description: "User who deleted this record", required: false })
-  deleted_by?: string;
+  // Note: person_id and all audit fields are concealed for security reasons
 }
 
 export class DocumentResponseDto {
@@ -105,29 +61,7 @@ export class DocumentResponseDto {
   @ApiProperty({ description: "Whether this is the primary document" })
   is_primary: boolean;
 
-  @ApiProperty({ description: "Creation timestamp" })
-  created_at: Date;
-
-  @ApiProperty({ description: "User who created this record", required: false })
-  created_by?: string;
-
-  @ApiProperty({ description: "Last update timestamp" })
-  updated_at: Date;
-
-  @ApiProperty({
-    description: "User who last updated this record",
-    required: false,
-  })
-  updated_by?: string;
-
-  @ApiProperty({
-    description: "Deletion timestamp (soft delete)",
-    required: false,
-  })
-  deleted_at?: Date;
-
-  @ApiProperty({ description: "User who deleted this record", required: false })
-  deleted_by?: string;
+  // Note: person_id and all audit fields are concealed for security reasons
 }
 
 export class LeadResponseDto {
@@ -156,10 +90,7 @@ export class LeadResponseDto {
   @ApiProperty({ description: "ID of the user who first contacted this lead" })
   first_contacted_by: string;
 
-  // Person data
-  @ApiProperty({ description: "Person ID" })
-  person_id: string;
-
+  // Person data (flattened)
   @ApiProperty({ description: "Full name of the person" })
   full_name: string;
 
@@ -188,28 +119,5 @@ export class LeadResponseDto {
   })
   other_documents: DocumentResponseDto[];
 
-  // Audit fields
-  @ApiProperty({ description: "Creation timestamp" })
-  created_at: Date;
-
-  @ApiProperty({ description: "User who created this record", required: false })
-  created_by?: string;
-
-  @ApiProperty({ description: "Last update timestamp" })
-  updated_at: Date;
-
-  @ApiProperty({
-    description: "User who last updated this record",
-    required: false,
-  })
-  updated_by?: string;
-
-  @ApiProperty({
-    description: "Deletion timestamp (soft delete)",
-    required: false,
-  })
-  deleted_at?: Date;
-
-  @ApiProperty({ description: "User who deleted this record", required: false })
-  deleted_by?: string;
+  // Note: person_id and all audit fields are concealed for security reasons
 }

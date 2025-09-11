@@ -3,9 +3,9 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcryptjs";
 import { UserService } from "./user.service";
+import { UserSecretCacheService } from "./user-secret-cache.service";
 import {
   AuthorizationResponseDto,
-  AuthorizationRequestDto,
   JwtPayload,
 } from "@/Application/DTOs/Authorization";
 
@@ -19,31 +19,51 @@ export class AuthorizationService {
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly configService: ConfigService,
+    private readonly userSecretCache: UserSecretCacheService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<{ user: any | null; error: string | null }> {
     try {
-      const user = await this.userService.findByUsername(username);
+      // Find user by username (case-insensitive)
+      const user = await this.userService.findByUsername(
+        username.toLowerCase(),
+      );
       if (!user) {
-        return null;
+        this.logger.warn(`User ${username} not found`);
+        return {
+          user: null,
+          error: `Username '${username}' not found. Please check your credentials.`,
+        };
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        return null;
+        this.logger.warn(`Invalid password for user ${username}`);
+        return {
+          user: null,
+          error: "Invalid password. Please check your password and try again.",
+        };
       }
 
-      return user;
+      return { user, error: null };
     } catch (error) {
-      return null;
+      this.logger.error(`Error validating user ${username}:`, error);
+      return {
+        user: null,
+        error: "An error occurred during authentication. Please try again.",
+      };
     }
   }
 
-  async createToken(
-    user: any,
-    isRefresh: boolean = false,
-  ): Promise<AuthorizationResponseDto> {
+  async createToken(user: any): Promise<AuthorizationResponseDto> {
     this.logger.log(`Creating token for user: ${user.username}`);
+
+    // Generate userSecret for this session
+    const userSecret = this.userSecretCache.generateUserSecret();
+
     const payload: JwtPayload = {
       tenant_id: user.tenant_id,
       user_id: user.id,
@@ -64,9 +84,26 @@ export class AuthorizationService {
       secret: this.configService.get<string>("JWT_SECRET"),
     });
 
+    // Store userSecret in cache with user data
+    this.userSecretCache.storeUserSecret(
+      userSecret,
+      user.id,
+      user.tenant_id,
+      user.user_level,
+      30, // 30 minutes expiration
+    );
+
     return {
       token,
+      userSecret,
       expires_at: expiresAt,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        username: user.username,
+        user_level: user.user_level,
+        tenant_id: user.tenant_id,
+      },
     };
   }
 
@@ -168,9 +205,18 @@ export class AuthorizationService {
     }
   }
 
-  async logout(token: string): Promise<{ message: string }> {
+  async logout(
+    token: string,
+    userSecret?: string,
+  ): Promise<{ message: string }> {
     this.logger.log("User logout requested");
     this.invalidateToken(token);
+
+    // Also remove userSecret from cache if provided
+    if (userSecret) {
+      this.userSecretCache.removeUserSecret(userSecret);
+    }
+
     return { message: "Logged out successfully" };
   }
 

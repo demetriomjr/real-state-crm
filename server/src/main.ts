@@ -15,7 +15,7 @@ async function bootstrap() {
   app.enableCors();
 
   // Trust proxy to get real client IP
-  app.set('trust proxy', true);
+  app.set("trust proxy", true);
 
   // Serve static files
   app.useStaticAssets(join(__dirname, "..", "public"));

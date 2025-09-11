@@ -1,16 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
-import { Business } from "@/Domain/Business/Business";
 import { BusinessCreateDto, BusinessUpdateDto } from "@/Application/DTOs";
 
 @Injectable()
 export class BusinessRepository {
   constructor(private readonly prisma: MainDatabaseContext) {}
 
+  private getSubscriptionLevel(subscription: number): string {
+    if (subscription >= 10) return "premium";
+    if (subscription >= 5) return "standard";
+    return "basic";
+  }
+
   async findAll(
     page: number = 1,
     limit: number = 10,
-  ): Promise<{ businesses: Business[]; total: number }> {
+  ): Promise<{ businesses: any[]; total: number }> {
     const skip = (page - 1) * limit;
 
     const [businesses, total] = await Promise.all([
@@ -26,12 +31,15 @@ export class BusinessRepository {
     ]);
 
     return {
-      businesses: businesses.map((business) => new Business(business)),
+      businesses: businesses.map((business) => ({
+        ...business,
+        subscription_level: this.getSubscriptionLevel(business.subscription),
+      })),
       total,
     };
   }
 
-  async findOne(id: string): Promise<Business | null> {
+  async findOne(id: string): Promise<any | null> {
     const business = await this.prisma.business.findFirst({
       where: {
         id,
@@ -39,10 +47,46 @@ export class BusinessRepository {
       },
     });
 
-    return business ? new Business(business) : null;
+    return business;
   }
 
-  async create(businessData: BusinessCreateDto): Promise<Business> {
+  async findOneWithRelations(id: string): Promise<any | null> {
+    const business = await this.prisma.business.findFirst({
+      where: {
+        id,
+        deleted_at: null,
+      },
+      include: {
+        users: {
+          where: { deleted_at: null },
+          include: {
+            person: {
+              include: {
+                contacts: {
+                  where: { deleted_at: null },
+                },
+                documents: {
+                  where: { deleted_at: null },
+                },
+                addresses: {
+                  where: { deleted_at: null },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!business) {
+      return null;
+    }
+
+    // Return the raw business entity with relations - Service layer will handle DTO mapping
+    return business;
+  }
+
+  async create(businessData: BusinessCreateDto): Promise<any> {
     const business = await this.prisma.business.create({
       data: {
         company_name: businessData.company_name,
@@ -50,13 +94,14 @@ export class BusinessRepository {
       },
     });
 
-    return new Business(business);
+    // Return the raw business entity - Service layer will handle DTO mapping
+    return business;
   }
 
   async update(
     id: string,
     updateBusinessDto: BusinessUpdateDto,
-  ): Promise<Business> {
+  ): Promise<any> {
     const business = await this.prisma.business.update({
       where: { id },
       data: {
@@ -69,7 +114,8 @@ export class BusinessRepository {
       },
     });
 
-    return new Business(business);
+    // Return the raw business entity - Service layer will handle DTO mapping
+    return business;
   }
 
   async remove(id: string): Promise<void> {

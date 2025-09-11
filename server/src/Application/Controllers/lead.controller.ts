@@ -64,12 +64,11 @@ export class LeadController {
       documents: other_documents,
     };
 
-    const createdLead = await this.leadService.createLead(
+    return await this.leadService.createLead(
       leadData,
       personData,
       userId,
     );
-    return createdLead;
   }
 
   @Get()
@@ -86,18 +85,12 @@ export class LeadController {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    const result = await this.leadService.getAllLeads(pageNum, limitNum);
-
-    return {
-      ...result,
-      leads: result.leads,
-    };
+    return await this.leadService.getAllLeads(pageNum, limitNum);
   }
 
   @Get(":id")
   async getLeadById(@Param("id") id: string): Promise<LeadResponseDto> {
-    const lead = await this.leadService.getLeadById(id);
-    return lead;
+    return await this.leadService.getLeadById(id);
   }
 
   @Put(":id")
@@ -144,13 +137,12 @@ export class LeadController {
       documents: other_documents,
     };
 
-    const updatedLead = await this.leadService.updateLead(
+    return await this.leadService.updateLead(
       id,
       leadData,
       personData,
       userId,
     );
-    return updatedLead;
   }
 
   @Delete(":id")

@@ -8,8 +8,10 @@ export class TestAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const nodeEnv = this.configService.get<string>("NODE_ENV");
 
-    // In test environment, always allow access
-    if (nodeEnv === "test") {
+    console.log(`TestAuthGuard: Checking access for NODE_ENV: ${nodeEnv}`);
+
+    // In test or development environment, always allow access
+    if (nodeEnv === "test" || nodeEnv === "development") {
       const request = context.switchToHttp().getRequest();
 
       // For tenant isolation tests, we need to respect the actual tenant ID from the JWT token
@@ -49,8 +51,8 @@ export class TestAuthGuard implements CanActivate {
         }
       }
 
-      // Fallback to default test data
-      let tenantId = "test-tenant-id";
+      // Fallback to default test data (use existing business ID from logs)
+      let tenantId = "0f476fcf-c9a5-4a3d-adfe-61cdd4106651";
       const urlParams = request.params;
       if (urlParams && urlParams.id) {
         tenantId = urlParams.id;
@@ -73,7 +75,7 @@ export class TestAuthGuard implements CanActivate {
     }
 
     console.log(`TestAuthGuard: Denying access in ${nodeEnv} environment`);
-    // In non-test environments, deny access (this guard should not be used in production)
+    // In non-test/development environments, deny access (this guard should not be used in production)
     return false;
   }
 }

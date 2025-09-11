@@ -6,10 +6,8 @@ import { Address } from "./Address";
 export class Person implements IAudit {
   id: string;
   full_name: string;
-  document_type: string;
-  document_number: string;
   tenant_id: string;
-  other_documents: Document[];
+  documents: Document[];
   contacts: Contact[];
   addresses: Address[];
   created_at: Date;
@@ -22,10 +20,8 @@ export class Person implements IAudit {
   constructor(data: Partial<Person>) {
     this.id = data.id || "";
     this.full_name = data.full_name || "";
-    this.document_type = data.document_type || "";
-    this.document_number = data.document_number || "";
     this.tenant_id = data.tenant_id || "";
-    this.other_documents = data.other_documents || [];
+    this.documents = data.documents || [];
     this.contacts = data.contacts || [];
     this.addresses = data.addresses || [];
     this.created_at = data.created_at || new Date();

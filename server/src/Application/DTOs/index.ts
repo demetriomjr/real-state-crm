@@ -12,6 +12,17 @@ export {
   CustomerResponseDto,
 } from "./Customers";
 export {
+  ContactCreateDto,
+  ContactUpdateDto,
+  ContactResponseDto,
+  DocumentCreateDto,
+  DocumentUpdateDto,
+  DocumentResponseDto,
+  AddressCreateDto,
+  AddressUpdateDto,
+  AddressResponseDto,
+} from "./People";
+export {
   ChatCreateDto,
   ChatUpdateDto,
   ChatResponseDto,

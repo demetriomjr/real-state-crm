@@ -7,12 +7,7 @@ import {
   Logger,
   BadRequestException,
 } from "@nestjs/common";
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-} from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
 import { N8NWhatsappService } from "@/Application/Services/n8n-whatsapp.service";
 
 @ApiTags("WhatsApp Session Management")
@@ -26,7 +21,8 @@ export class WhatsappSessionController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Create WhatsApp Session",
-    description: "Creates a session if not exists, starts it if exists. Returns QR code for validation if not yet authenticated.",
+    description:
+      "Creates a session if not exists, starts it if exists. Returns QR code for validation if not yet authenticated.",
   })
   @ApiBody({
     description: "Session creation data",
@@ -39,7 +35,10 @@ export class WhatsappSessionController {
       required: ["session_id", "tenant_id"],
     },
   })
-  @ApiResponse({ status: 200, description: "Session created/started successfully." })
+  @ApiResponse({
+    status: 200,
+    description: "Session created/started successfully.",
+  })
   @ApiResponse({ status: 400, description: "Invalid session data." })
   async createSession(
     @Body() sessionData: { session_id: string; tenant_id: string },
@@ -58,7 +57,9 @@ export class WhatsappSessionController {
       return result;
     } catch (error: any) {
       this.logger.error(`Error creating session: ${error.message}`);
-      throw new BadRequestException(`Failed to create session: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create session: ${error.message}`,
+      );
     }
   }
 
@@ -80,9 +81,7 @@ export class WhatsappSessionController {
   })
   @ApiResponse({ status: 200, description: "QR code retrieved successfully." })
   @ApiResponse({ status: 400, description: "Invalid session data." })
-  async getAuthQRCode(
-    @Body() authData: { session_id: string },
-  ) {
+  async getAuthQRCode(@Body() authData: { session_id: string }) {
     this.logger.log(`Getting QR code for session: ${authData.session_id}`);
 
     if (!authData.session_id) {
@@ -90,7 +89,9 @@ export class WhatsappSessionController {
     }
 
     try {
-      const result = await this.n8nWhatsappService.getAuthQRCode(authData.session_id);
+      const result = await this.n8nWhatsappService.getAuthQRCode(
+        authData.session_id,
+      );
       return result;
     } catch (error: any) {
       this.logger.error(`Error getting QR code: ${error.message}`);
@@ -102,7 +103,8 @@ export class WhatsappSessionController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Start WhatsApp Session",
-    description: "Starts an existing session. Session must exist in database before calling this route.",
+    description:
+      "Starts an existing session. Session must exist in database before calling this route.",
   })
   @ApiBody({
     description: "Session start data",
@@ -116,9 +118,7 @@ export class WhatsappSessionController {
   })
   @ApiResponse({ status: 200, description: "Session started successfully." })
   @ApiResponse({ status: 400, description: "Invalid session data." })
-  async startSession(
-    @Body() sessionData: { session_id: string },
-  ) {
+  async startSession(@Body() sessionData: { session_id: string }) {
     this.logger.log(`Starting WhatsApp session: ${sessionData.session_id}`);
 
     if (!sessionData.session_id) {
@@ -126,11 +126,15 @@ export class WhatsappSessionController {
     }
 
     try {
-      const result = await this.n8nWhatsappService.startSession(sessionData.session_id);
+      const result = await this.n8nWhatsappService.startSession(
+        sessionData.session_id,
+      );
       return result;
     } catch (error: any) {
       this.logger.error(`Error starting session: ${error.message}`);
-      throw new BadRequestException(`Failed to start session: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to start session: ${error.message}`,
+      );
     }
   }
 
@@ -155,12 +159,23 @@ export class WhatsappSessionController {
   @ApiResponse({ status: 200, description: "Message sent successfully." })
   @ApiResponse({ status: 400, description: "Invalid message data." })
   async sendMessage(
-    @Body() messageData: { session_id: string; contact: string; message: string },
+    @Body()
+    messageData: {
+      session_id: string;
+      contact: string;
+      message: string;
+    },
   ) {
     this.logger.log(`Sending WhatsApp message to ${messageData.contact}`);
 
-    if (!messageData.session_id || !messageData.contact || !messageData.message) {
-      throw new BadRequestException("session_id, contact, and message are required");
+    if (
+      !messageData.session_id ||
+      !messageData.contact ||
+      !messageData.message
+    ) {
+      throw new BadRequestException(
+        "session_id, contact, and message are required",
+      );
     }
 
     try {

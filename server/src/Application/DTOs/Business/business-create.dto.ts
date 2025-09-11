@@ -41,4 +41,23 @@ export class BusinessCreateDto {
   @IsString()
   @IsNotEmpty()
   master_user_password: string;
+
+  // Contact Information (will be created as contacts in person entity if provided)
+  @ApiProperty({
+    description: "Master user email",
+    example: "john@example.com",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  master_user_email?: string;
+
+  @ApiProperty({
+    description: "Master user phone",
+    example: "+5511999999999",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  master_user_phone?: string;
 }

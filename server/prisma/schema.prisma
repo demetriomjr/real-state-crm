@@ -46,6 +46,8 @@ model User {
   messages  Message[]
   tenant_id String?
   business  Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  person_id String?
+  person    Person?   @relation(fields: [person_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("users")
 }
@@ -92,8 +94,7 @@ model Business {
 model Person {
   id              String   @id @default(uuid())
   full_name       String
-  document_type   String
-  document_number String
+  tenant_id       String?
   created_at      DateTime @default(now())
   created_by      String?
   updated_at      DateTime @updatedAt
@@ -108,6 +109,7 @@ model Person {
   leads     Lead[]
   customers Customer[]
   chats     Chat[]
+  users     User[]
 
   @@map("people")
 }
@@ -115,14 +117,13 @@ model Person {
 // Address entity
 model Address {
   id            String   @id @default(uuid())
-  address_line_1 String
-  address_line_2 String?
+  street        String
   city          String
   state         String
+  postal_code   String
   country       String
-  zip_code      String
-  district      String?
   is_primary    Boolean  @default(false)
+  is_default    Boolean? @default(false)
   created_at    DateTime @default(now())
   created_by    String?
   updated_at    DateTime @updatedAt
@@ -143,6 +144,7 @@ model Contact {
   contact_type  String
   contact_value String
   is_primary    Boolean  @default(false)
+  is_default    Boolean? @default(false)
   created_at    DateTime @default(now())
   created_by    String?
   updated_at    DateTime @updatedAt
@@ -163,6 +165,7 @@ model Document {
   document_type   String
   document_number String
   is_primary      Boolean  @default(false)
+  is_default      Boolean? @default(false)
   created_at      DateTime @default(now())
   created_by      String?
   updated_at      DateTime @updatedAt

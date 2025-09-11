@@ -11,6 +11,7 @@ export class Address implements IAuditBase {
   district: string;
   person_id: string;
   is_primary: boolean;
+  is_default?: boolean;
   created_at: Date;
   created_by?: string;
   updated_at: Date;
@@ -29,6 +30,7 @@ export class Address implements IAuditBase {
     this.district = data.district || "";
     this.person_id = data.person_id || "";
     this.is_primary = data.is_primary || false;
+    this.is_default = data.is_default || false;
     this.created_at = data.created_at || new Date();
     this.created_by = data.created_by;
     this.updated_at = data.updated_at || new Date();

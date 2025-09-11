@@ -37,8 +37,6 @@ import { AuthorizationService } from "@/Application/Services/authorization.servi
 
 @ApiTags("users")
 @Controller("users")
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class UserController {
   private readonly logger = new Logger(UserController.name);
 
@@ -49,7 +47,36 @@ export class UserController {
     private readonly authorizationService: AuthorizationService,
   ) {}
 
+  @Get("check-username/:username")
+  @ApiOperation({ summary: "Check if username is available" })
+  @ApiParam({ name: "username", description: "Username to check" })
+  @ApiResponse({
+    status: 200,
+    description: "Username availability checked",
+    schema: {
+      type: "object",
+      properties: {
+        available: { type: "boolean" },
+        message: { type: "string" },
+      },
+    },
+  })
+  async checkUsername(@Param("username") username: string): Promise<{
+    available: boolean;
+    message: string;
+  }> {
+    const existingUser = await this.userService.findByUsername(username);
+    return {
+      available: !existingUser,
+      message: existingUser
+        ? "Nome de usuário já está em uso"
+        : "Nome de usuário disponível",
+    };
+  }
+
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get all users with pagination (Admin Only)" })
   @ApiQuery({
     name: "page",
@@ -75,7 +102,12 @@ export class UserController {
     @Query("page") page = 1,
     @Query("limit") limit = 10,
     @Request() req: any,
-  ) {
+  ): Promise<{
+    users: UserResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const tenantId = req.tenantId;
     const userLevel = req.userLevel;
 
@@ -93,10 +125,18 @@ export class UserController {
       );
     }
 
-    return this.userService.findByTenant(tenantId);
+    const users = await this.userService.findByTenant(tenantId);
+    return {
+      users,
+      total: users.length,
+      page,
+      limit,
+    };
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get user by ID" })
   @ApiParam({ name: "id", description: "User ID (UUID)" })
   @ApiResponse({
@@ -110,7 +150,7 @@ export class UserController {
     description: "Access denied - Insufficient user level",
   })
   @ApiResponse({ status: 404, description: "User not found" })
-  async findOne(@Param("id") id: string, @Request() req: any) {
+  async findOne(@Param("id") id: string, @Request() req: any): Promise<UserResponseDto> {
     const userLevel = req.userLevel;
 
     // Get the user to check their level
@@ -131,6 +171,8 @@ export class UserController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Create a new user" })
   @ApiResponse({
@@ -142,12 +184,14 @@ export class UserController {
     status: 400,
     description: "Validation error or username already exists",
   })
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
     await this.userValidator.validateCreate(createUserDto);
     return this.userService.create(createUserDto);
   }
 
   @Put(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Update user by ID" })
   @ApiParam({ name: "id", description: "User ID (UUID)" })
   @ApiResponse({
@@ -165,7 +209,7 @@ export class UserController {
     @Param("id") id: string,
     @Body() updateUserDto: UpdateUserDto,
     @Request() req: any,
-  ) {
+  ): Promise<UserResponseDto> {
     const tenantId = req.tenantId;
     if (!tenantId) {
       throw new UnauthorizedException("Tenant ID is required");
@@ -186,6 +230,8 @@ export class UserController {
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Soft delete user by ID" })
   @ApiParam({ name: "id", description: "User ID (UUID)" })
@@ -196,7 +242,7 @@ export class UserController {
     status: 403,
     description: "Cannot delete master user (level 9)",
   })
-  async remove(@Param("id") id: string, @Request() req: any) {
+  async remove(@Param("id") id: string, @Request() req: any): Promise<void> {
     const tenantId = req.tenantId;
     if (!tenantId) {
       throw new UnauthorizedException("Tenant ID is required");

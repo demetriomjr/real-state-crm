@@ -7,14 +7,12 @@ import {
 } from "@nestjs/common";
 import { BusinessRepository } from "@/Infrastructure/Repositories/business.repository";
 import { UserRepository } from "@/Infrastructure/Repositories/user.repository";
-import { Business } from "@/Domain/Business/Business";
+import { BusinessValidator } from "@/Application/Validators/business.validator";
 import {
   BusinessCreateDto,
   BusinessUpdateDto,
   BusinessResponseDto,
 } from "@/Application/DTOs";
-import { AuthorizationResponseDto } from "@/Application/DTOs/Authorization/authorization-response.dto";
-import { AuthorizationService } from "./authorization.service";
 import * as bcrypt from "bcryptjs";
 
 @Injectable()
@@ -24,7 +22,7 @@ export class BusinessService {
   constructor(
     private readonly businessRepository: BusinessRepository,
     private readonly userRepository: UserRepository,
-    private readonly authorizationService: AuthorizationService,
+    private readonly businessValidator: BusinessValidator,
   ) {}
 
   private get prisma() {
@@ -40,6 +38,7 @@ export class BusinessService {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
   }> {
     this.logger.log(
       `Fetching businesses with pagination: page=${page}, limit=${limit}`,
@@ -63,6 +62,7 @@ export class BusinessService {
       total: result.total,
       page,
       limit,
+      totalPages: Math.ceil(result.total / limit),
     };
   }
 
@@ -78,19 +78,11 @@ export class BusinessService {
 
   async create(
     createBusinessDto: BusinessCreateDto,
-  ): Promise<AuthorizationResponseDto> {
+  ): Promise<{ business: BusinessResponseDto; masterUser: any }> {
     this.logger.log(`Creating new business: ${createBusinessDto.company_name}`);
 
-    // Check if master user username already exists
-    const existingUser = await this.userRepository.findByUsername(
-      createBusinessDto.master_user_username,
-    );
-    if (existingUser) {
-      this.logger.warn(
-        `Master user username already exists: ${createBusinessDto.master_user_username}`,
-      );
-      throw new ConflictException("Master user username already exists");
-    }
+    // Validate business data
+    await this.businessValidator.validateCreate(createBusinessDto);
 
     // Start transaction
     const result = await this.prisma.$transaction(async (prisma) => {
@@ -109,18 +101,71 @@ export class BusinessService {
           10,
         );
 
-        // Create master user with business.id as tenant_id
-        const masterUser = await prisma.user.create({
+        // Create person for the master user
+        const person = await prisma.person.create({
           data: {
-            fullName: createBusinessDto.master_user_fullName,
-            username: createBusinessDto.master_user_username,
-            password: hashedPassword,
-            user_level: 9, // Master user level
-            tenant_id: business.id, // Use business.id as tenant_id
+            full_name: createBusinessDto.master_user_fullName,
+            tenant_id: business.id,
           },
         });
 
-        return { business: new Business(business), masterUser };
+        // Create contacts for the person (email and phone) - only if provided
+        const contacts = [];
+
+        if (createBusinessDto.master_user_email) {
+          contacts.push(
+            prisma.contact.create({
+              data: {
+                contact_type: "email",
+                contact_value:
+                  createBusinessDto.master_user_email.toLowerCase(),
+                person_id: person.id,
+                is_primary: true,
+                is_default: true,
+              },
+            }),
+          );
+        }
+
+        if (createBusinessDto.master_user_phone) {
+          contacts.push(
+            prisma.contact.create({
+              data: {
+                contact_type: "phone",
+                contact_value: createBusinessDto.master_user_phone,
+                person_id: person.id,
+                is_primary: true,
+                is_default: true,
+              },
+            }),
+          );
+        }
+
+        if (contacts.length > 0) {
+          await Promise.all(contacts);
+        }
+
+        // Create master user with business.id as tenant_id and person.id
+        const masterUser = await prisma.user.create({
+          data: {
+            fullName: createBusinessDto.master_user_fullName,
+            username: createBusinessDto.master_user_username.toLowerCase(),
+            password: hashedPassword,
+            user_level: 9, // Master user level
+            tenant_id: business.id, // Use business.id as tenant_id
+            person_id: person.id, // Link to person
+          },
+        });
+
+        return {
+          business: {
+            ...business,
+            subscription_level: this.getSubscriptionLevel(business.subscription),
+          },
+          masterUser,
+          person,
+          contacts,
+        };
       } catch (error) {
         this.logger.error(`Transaction failed: ${error.message}`);
         throw new BadRequestException(
@@ -129,16 +174,14 @@ export class BusinessService {
       }
     });
 
-    // Create JWT token for the master user
-    const authToken = await this.authorizationService.createToken(
-      result.masterUser,
-    );
-
     this.logger.log(
       `Business created successfully: ${result.business.company_name} with master user: ${result.masterUser.username}`,
     );
 
-    return authToken;
+    return {
+      business: this.mapToResponseDto(result.business),
+      masterUser: result.masterUser,
+    };
   }
 
   async update(
@@ -147,6 +190,9 @@ export class BusinessService {
   ): Promise<BusinessResponseDto> {
     this.logger.log(`Updating business with ID: ${id}`);
 
+    // Validate business data
+    await this.businessValidator.validateUpdate(updateBusinessDto);
+
     // Check if business exists
     const existingBusiness = await this.businessRepository.findOne(id);
     if (!existingBusiness) {
@@ -154,12 +200,25 @@ export class BusinessService {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
+
     const business = await this.businessRepository.update(
       id,
       updateBusinessDto,
     );
     this.logger.log(`Business updated successfully with ID: ${business.id}`);
     return this.mapToResponseDto(business);
+  }
+
+  async findOneWithRelations(id: string): Promise<BusinessResponseDto> {
+    this.logger.log(`Fetching business with relations for ID: ${id}`);
+
+    const business = await this.businessRepository.findOneWithRelations(id);
+    if (!business) {
+      this.logger.warn(`Business with ID ${id} not found`);
+      throw new NotFoundException(`Business with ID ${id} not found`);
+    }
+
+    return this.mapToResponseDtoWithRelations(business);
   }
 
   async remove(id: string): Promise<void> {
@@ -201,7 +260,7 @@ export class BusinessService {
     const tenantId = existingBusiness.id;
 
     // Start transaction to ensure all related data is purged atomically
-    await this.prisma.$transaction(async (prisma) => {
+    await this.prisma.$transaction(async () => {
       // 1. Purge all user roles for users in this tenant
       const users = await this.userRepository.findByTenant(tenantId);
       for (const user of users) {
@@ -220,17 +279,73 @@ export class BusinessService {
     );
   }
 
-  private mapToResponseDto(business: Business): BusinessResponseDto {
+  private getSubscriptionLevel(subscription: number): string {
+    if (subscription >= 10) return "premium";
+    if (subscription >= 5) return "standard";
+    return "basic";
+  }
+
+  private mapToResponseDto(business: any): BusinessResponseDto {
     return {
+      id: business.id,
       company_name: business.company_name,
-      subscription: business.subscription,
-      subscription_level: business.getSubscriptionLevel(),
+      subscription_level: this.getSubscriptionLevel(business.subscription),
       created_at: business.created_at,
-      created_by: business.created_by,
-      updated_at: business.updated_at,
-      updated_by: business.updated_by,
-      deleted_at: business.deleted_at,
-      deleted_by: business.deleted_by,
+      // Flattened Person data
+      full_name: business.full_name,
+      // Person-related data as Business properties (addresses, contacts, documents)
+      addresses: [],
+      contacts: [],
+      documents: [],
+    };
+  }
+
+  private mapToResponseDtoWithRelations(business: any): BusinessResponseDto {
+    // Find the master user (level 9) or fallback to first user
+    const masterUser = business.users?.find((user: any) => user.user_level === 9) || business.users?.[0];
+    const masterPerson = masterUser?.person;
+
+    // Map addresses to clean DTO format (exclude audit fields and foreign IDs)
+    const addresses = masterPerson?.addresses?.map((addr: any) => ({
+      id: addr.id,
+      street: addr.street,
+      city: addr.city,
+      state: addr.state,
+      postal_code: addr.postal_code,
+      country: addr.country,
+      is_primary: addr.is_primary,
+      is_default: addr.is_default
+    })) || [];
+
+    // Map contacts to clean DTO format (exclude audit fields and foreign IDs)
+    const contacts = masterPerson?.contacts?.map((contact: any) => ({
+      id: contact.id,
+      contact_type: contact.contact_type,
+      contact_value: contact.contact_value,
+      is_primary: contact.is_primary,
+      is_default: contact.is_default
+    })) || [];
+
+    // Map documents to clean DTO format (exclude audit fields and foreign IDs)
+    const documents = masterPerson?.documents?.map((doc: any) => ({
+      id: doc.id,
+      document_type: doc.document_type,
+      document_number: doc.document_number,
+      is_primary: doc.is_primary,
+      is_default: doc.is_default
+    })) || [];
+
+    return {
+      id: business.id,
+      company_name: business.company_name,
+      subscription_level: this.getSubscriptionLevel(business.subscription),
+      created_at: business.created_at,
+      // Flattened Person data (without audit fields or foreign IDs)
+      full_name: masterPerson?.full_name,
+      // Person-related data as Business properties (addresses, contacts, documents)
+      addresses,
+      contacts,
+      documents,
     };
   }
 }

@@ -267,14 +267,11 @@ export class ChatService {
   private mapChatToResponseDto(chat: Chat): ChatResponseDto {
     return {
       id: chat.id,
-      person_id: chat.person_id,
       contact_name: chat.contact_name,
       contact_phone: chat.contact_phone,
       user_observations: chat.user_observations,
       session_id: chat.session_id,
       last_message_at: chat.last_message_at,
-      created_at: chat.created_at,
-      updated_at: chat.updated_at,
     };
   }
 

@@ -1,0 +1,245 @@
+{
+  "app": {
+    "name": "FlexSuite CRM para imobiliárias",
+    "tagline": "Sistema de gestão para imobiliárias"
+  },
+  "auth": {
+    "login": {
+      "title": "Bem-vindo de volta",
+      "subtitle": "Entre na sua conta FlexSuite CRM",
+      "username": "Nome de usuário",
+      "usernameHelp": "Digite seu nome de usuário",
+      "password": "Senha",
+      "signIn": "Entrar",
+      "noAccount": "Não tem uma conta? Cadastre-se",
+      "loginFailed": "Falha no login. Tente novamente.",
+      "signingIn": "Entrando...",
+      "loginSuccess": "Login realizado com sucesso!"
+    },
+    "register": {
+      "title": "Criar Conta",
+      "subtitle": "Junte-se ao FlexSuite CRM para gerenciar seu negócio",
+      "companyName": "Nome da Empresa",
+      "domain": "Domínio da Empresa",
+      "domainHelp": "6-16 caracteres, apenas letras e números",
+      "fullName": "Nome completo",
+      "username": "Nome de usuário",
+      "usernameHelp": "Apenas letras e números",
+      "password": "Senha",
+      "confirmPassword": "Confirmar senha",
+      "createAccount": "Criar Conta",
+      "hasAccount": "Já tem uma conta? Entrar",
+      "success": "Empresa e conta criadas com sucesso! Você pode entrar agora.",
+      "passwordsNotMatch": "As senhas não coincidem",
+      "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+      "companyNameRequired": "Nome da empresa é obrigatório",
+      "domainRequired": "Domínio da empresa é obrigatório",
+      "domainLength": "Domínio deve ter entre 6 e 16 caracteres",
+      "registrationFailed": "Falha no cadastro. Tente novamente.",
+      "creatingAccount": "Criando conta...",
+      "redirecting": "Redirecionando...",
+      "successTitle": "Conta Criada com Sucesso!",
+      "successMessage": "Sua empresa e conta foram criadas com sucesso! Você já está logado e pode começar a usar o FlexSuite CRM.",
+      "continue": "Continuar",
+      "usernameNotAvailable": "Nome de usuário não disponível",
+      "usernameAvailable": "Nome de usuário disponível",
+      "checkingUsername": "Verificando disponibilidade...",
+      "validatingUsername": "Aguarde a validação do nome de usuário",
+      "email": "E-mail",
+      "emailHelp": "Digite um e-mail válido",
+      "phone": "Telefone",
+      "phoneHelp": "Digite um telefone válido (ex: +5511999999999)"
+    }
+  },
+  "navigation": {
+    "home": "Início",
+    "leads": "Leads",
+    "customers": "Clientes",
+    "business": "Negócios",
+    "chat": "Chat",
+    "settings": "Configurações"
+  },
+  "home": {
+    "welcome": "Bem-vindo de volta, {{name}}!",
+    "subtitle": "Aqui está uma visão geral do seu painel FlexSuite CRM.",
+    "stats": {
+      "totalLeads": "Total de Leads",
+      "customers": "Clientes",
+      "ordersAndOffers": "Pedidos e Ofertas",
+      "activeChats": "Chats Ativos"
+    },
+    "recentActivity": "Atividade Recente",
+    "noActivity": "Nenhuma atividade recente para exibir. Comece adicionando alguns leads ou clientes para ver a atividade aqui.",
+    "quickActions": "Ações Rápidas",
+    "quickActionsDesc": "Botões de ação rápida serão adicionados aqui para tarefas comuns como adicionar novos leads ou clientes."
+  },
+  "header": {
+    "userMenu": {
+      "settings": "Configurações",
+      "logout": "Sair"
+    }
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar"
+  },
+  "footer": {
+    "developedBy": "Desenvolvido com ❤️ por",
+    "developer": "Demetrio M. Jr.",
+    "allRightsReserved": "Todos os direitos reservados"
+  },
+  "business": {
+    "title": "Minha Empresa",
+    "subtitle": "Gerencie as informações da sua empresa",
+    "information": "Informações da Empresa",
+    "status": "Status da Empresa",
+    "companyName": "Nome da Empresa",
+    "subscription": "Nível de Assinatura",
+    "subscriptionLevel": "Nível de Assinatura",
+    "createdAt": "Criado em",
+    "lastUpdated": "Última atualização",
+    "edit": "Editar",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "loading": "Carregando informações da empresa...",
+    "saving": "Salvando alterações...",
+    "loadError": "Erro ao carregar informações da empresa",
+    "updateError": "Erro ao atualizar informações da empresa",
+    "updateSuccess": "Informações da empresa atualizadas com sucesso!",
+    "companyNameRequired": "Nome da empresa é obrigatório",
+    "subscriptionRange": "Nível de assinatura deve estar entre 0 e 10",
+    "businessInfo": "Informações do Negócio",
+    "businessStatus": "Status do Negócio",
+    "dateOfCreation": "Data de Criação",
+    "subscriptionLevels": {
+      "basic": "Básico",
+      "standard": "Padrão", 
+      "premium": "Premium"
+    }
+  },
+  "phone": {
+    "label": "Número de Telefone",
+    "country": "País",
+    "invalidFormat": "Formato de número de telefone inválido",
+    "masks": {
+      "brazil": "Brasil (+55)",
+      "unitedStates": "Estados Unidos (+1)",
+      "international": "Internacional"
+    },
+    "placeholders": {
+      "brazil": "(11) 99999-9999",
+      "unitedStates": "(555) 123-4567",
+      "international": "+1 555 123 4567"
+    }
+  },
+  "pages": {
+    "comingSoon": "Página em breve"
+  },
+  "contact": {
+    "manager": {
+      "title": "Gerenciar Contatos",
+      "addContact": "Adicionar Contato",
+      "editContact": "Editar Contato"
+    },
+    "actions": {
+      "edit": "Editar contato",
+      "delete": "Excluir contato"
+    },
+    "types": {
+      "email": "E-mail",
+      "phone": "Telefone",
+      "whatsapp": "WhatsApp",
+      "cellphone": "Celular"
+    },
+    "type": "Tipo de Contato",
+    "value": "Valor do Contato",
+    "primary": "Primário",
+    "default": "Padrão",
+    "validation": {
+      "typeRequired": "Tipo de contato é obrigatório",
+      "valueRequired": "Valor do contato é obrigatório"
+    },
+    "help": {
+      "email": "Digite um e-mail válido",
+      "phone": "Digite um telefone válido",
+      "whatsapp": "Digite um número do WhatsApp válido",
+      "cellphone": "Digite um número de celular válido"
+    }
+  },
+  "document": {
+    "manager": {
+      "title": "Gerenciar Documentos",
+      "addDocument": "Adicionar Documento",
+      "editDocument": "Editar Documento"
+    },
+    "actions": {
+      "edit": "Editar documento",
+      "delete": "Excluir documento"
+    },
+    "types": {
+      "cpf": "CPF",
+      "cnpj": "CNPJ",
+      "rg": "RG",
+      "passport": "Passaporte",
+      "driver_license": "CNH"
+    },
+    "type": "Tipo de Documento",
+    "number": "Número do Documento",
+    "primary": "Primário",
+    "default": "Padrão",
+    "validation": {
+      "typeRequired": "Tipo de documento é obrigatório",
+      "numberRequired": "Número do documento é obrigatório"
+    },
+    "help": {
+      "number": "Digite o número do documento"
+    }
+  },
+  "address": {
+    "manager": {
+      "title": "Gerenciar Endereços",
+      "addAddress": "Adicionar Endereço",
+      "editAddress": "Editar Endereço"
+    },
+    "actions": {
+      "edit": "Editar endereço",
+      "delete": "Excluir endereço"
+    },
+    "street": "Rua",
+    "city": "Cidade",
+    "state": "Estado",
+    "postalCode": "CEP",
+    "country": "País",
+    "primary": "Primário",
+    "default": "Padrão",
+    "validation": {
+      "streetRequired": "Rua é obrigatória",
+      "cityRequired": "Cidade é obrigatória",
+      "stateRequired": "Estado é obrigatório",
+      "postalCodeRequired": "CEP é obrigatório",
+      "countryRequired": "País é obrigatório"
+    }
+  },
+  "person": {
+    "information": "Informações da Pessoa",
+    "fullName": "Nome Completo",
+    "fullNameRequired": "Nome completo é obrigatório",
+    "createdAt": "Criado em",
+    "updatedAt": "Atualizado em"
+  },
+  "tabs": {
+    "contacts": "Contatos",
+    "documents": "Documentos",
+    "addresses": "Endereços"
+  }
+}

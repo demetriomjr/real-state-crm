@@ -49,7 +49,9 @@ export class WebhooksController {
     @Body() webhookData: WhatsappWebhookDto,
     @Headers("x-webhook-secret") webhookSecret?: string,
   ) {
-    this.logger.log(`WhatsApp webhook received - Event: ${webhookData.event}, Session: ${webhookData.session}`);
+    this.logger.log(
+      `WhatsApp webhook received - Event: ${webhookData.event}, Session: ${webhookData.session}`,
+    );
 
     const expectedSecret = process.env.WHATSAPP_WEBHOOK_SECRET;
     if (expectedSecret && webhookSecret !== expectedSecret) {

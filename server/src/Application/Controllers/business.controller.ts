@@ -23,6 +23,7 @@ import {
   ApiBearerAuth,
 } from "@nestjs/swagger";
 import { BusinessService } from "@/Application/Services/business.service";
+import { AuthorizationService } from "@/Application/Services/authorization.service";
 import {
   BusinessCreateDto,
   BusinessUpdateDto,
@@ -31,7 +32,6 @@ import {
 import { AuthorizationResponseDto } from "@/Application/DTOs/Authorization/authorization-response.dto";
 import { JwtAuthGuard } from "@/Application/Features/auth.guard";
 import { TestAuthGuard } from "@/Application/Features/test-auth.guard";
-import { AuthorizationService } from "@/Application/Services/authorization.service";
 
 @ApiTags("businesses")
 @Controller("businesses")
@@ -44,7 +44,7 @@ export class BusinessController {
   ) {}
 
   @Get()
-  @UseGuards(process.env.NODE_ENV === "test" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get all businesses with pagination (Developer Only)",
@@ -64,7 +64,19 @@ export class BusinessController {
   @ApiResponse({
     status: 200,
     description: "Returns paginated list of businesses",
-    type: [BusinessResponseDto],
+    schema: {
+      type: "object",
+      properties: {
+        businesses: {
+          type: "array",
+          items: { $ref: "#/components/schemas/BusinessResponseDto" }
+        },
+        total: { type: "number" },
+        page: { type: "number" },
+        limit: { type: "number" },
+        totalPages: { type: "number" }
+      }
+    }
   })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
@@ -75,7 +87,13 @@ export class BusinessController {
     @Query("page") page = 1,
     @Query("limit") limit = 10,
     @Request() req: any,
-  ) {
+  ): Promise<{
+    businesses: BusinessResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     const userLevel = req.userLevel;
 
     // Check user clearance - only developers (level 10) can access findAll
@@ -91,8 +109,35 @@ export class BusinessController {
     return this.businessService.findAll(page, limit, userLevel);
   }
 
+  @Get("me")
+  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Get current user's business",
+    description:
+      "Retrieves the business information for the currently authenticated user.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Business retrieved successfully",
+    type: BusinessResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Business not found",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized - Invalid or missing JWT token",
+  })
+  async findMyBusiness(@Request() req: any): Promise<BusinessResponseDto> {
+    const tenantId = req.tenantId;
+    this.logger.log(`Fetching business for tenant: ${tenantId}`);
+    return this.businessService.findOneWithRelations(tenantId);
+  }
+
   @Get(":id")
-  @UseGuards(process.env.NODE_ENV === "test" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get business by ID (Admin Only)",
@@ -111,7 +156,7 @@ export class BusinessController {
     description: "Access denied - Admin level required",
   })
   @ApiResponse({ status: 404, description: "Business not found" })
-  async findOne(@Param("id") id: string, @Request() req: any) {
+  async findOne(@Param("id") id: string, @Request() req: any): Promise<BusinessResponseDto> {
     const userLevel = req.userLevel;
     const userTenantId = req.tenantId;
 
@@ -155,11 +200,49 @@ export class BusinessController {
     @Body() createBusinessDto: BusinessCreateDto,
   ): Promise<AuthorizationResponseDto> {
     // TODO: Add confirmation step to create user - implement user creation confirmation logic
-    return this.businessService.create(createBusinessDto);
+    const result = await this.businessService.create(createBusinessDto);
+
+    // Create JWT token for the master user
+    const authToken = await this.authorizationService.createToken(
+      result.masterUser,
+    );
+
+    return authToken;
+  }
+
+  @Put("me")
+  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Update current user's business",
+    description:
+      "Updates the business information for the currently authenticated user.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Business updated successfully",
+    type: BusinessResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Business not found",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized - Invalid or missing JWT token",
+  })
+  @ApiResponse({ status: 400, description: "Validation error" })
+  async updateMyBusiness(
+    @Body() updateBusinessDto: BusinessUpdateDto,
+    @Request() req: any,
+  ): Promise<BusinessResponseDto> {
+    const tenantId = req.tenantId;
+    this.logger.log(`Updating business for tenant: ${tenantId}`);
+    return this.businessService.update(tenantId, updateBusinessDto);
   }
 
   @Put(":id")
-  @UseGuards(process.env.NODE_ENV === "test" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Update business by ID (Admin Only)",
@@ -183,7 +266,7 @@ export class BusinessController {
     @Param("id") id: string,
     @Body() updateBusinessDto: BusinessUpdateDto,
     @Request() req: any,
-  ) {
+  ): Promise<BusinessResponseDto> {
     const userLevel = req.userLevel;
     const userTenantId = req.tenantId;
 
@@ -204,7 +287,7 @@ export class BusinessController {
   }
 
   @Delete(":id")
-  @UseGuards(process.env.NODE_ENV === "test" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
