@@ -1,0 +1,37 @@
+# Auth Middleware
+- Create a middleware that validates JWT.
+    - Once valid token is found, extract the tenantId from the token.
+    - If contains tenantId, inject the tenantId into the request object.
+    - catch any errors and return a 401 error.
+- Alter User files to ask for tenantId at FindAll.
+    - Verify tenantId for Update and Delete.
+    - If tenantId is not found, return a 401 error.
+
+- Check folder structure and file naming of previous "user" related files to maintain consistency creating new ones.
+- Create the following DTOs at `Application/DTOs/Authorization`:
+    - AuthorizationRequest
+        - username : string
+        - password : string
+    - AuthorizationResponse
+        - token : string
+        - expires_at : DateTime
+- Create AuthorizationController at controllers folder. This controller follows different non-RESTFUL design patterns.
+    - create the route `/auth/login` to handle the login request.
+        - Receives AuthorizationRequest
+        - Returns AuthorizationResponse
+    - create the route `/auth/logout` to handle the logout request.
+        - Receives bearer token from request header
+        - Returns http statuss to either success or unauthorized.
+    - create the route `/auth/refresh` to handle the refresh request.
+        - Receives bearer token from request header
+        - Returns AuthorizationResponse
+- Create AuthorizationService at services folder.
+    - Create a method to create containg the standard properties, plus tentant_id.
+        - The Token has a 30 minutes expiration, set by the .env file.
+    - Create a method to validate and return tenant_id if valid.
+    - Create a method to consume the previous validation and refresh the token, creating a new AuthorizationResponse.
+- Create local cache to dump expired tokens.    
+    - Once cache count reaches 100, remove the oldest token.
+    - Make sure validator is checking the cache before validating the token.
+- Create logic to respond but ignore validation if it is development environment.
+- Make sure to document openAPI swagger this additions.

@@ -1,0 +1,317 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Base model for audit fields
+model AuditBase {
+  id         String    @id @default(uuid())
+  created_at DateTime  @default(now())
+  created_by String?
+  updated_at DateTime  @updatedAt
+  updated_by String?
+  deleted_at DateTime?
+  deleted_by String?
+
+  @@map("audit_base")
+}
+
+// User entity
+model User {
+  id         String    @id @default(uuid())
+  fullName   String
+  username   String    @unique
+  password   String
+  user_level Int       @default(1)
+  created_at DateTime  @default(now())
+  created_by String?
+  updated_at DateTime  @updatedAt
+  updated_by String?
+  deleted_at DateTime?
+  deleted_by String?
+
+  // Relations
+  userRoles UserRole[]
+  messages  Message[]
+  tenant_id String?
+  business  Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  person_id String?
+  person    Person?   @relation(fields: [person_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("users")
+}
+
+// UserRole entity
+model UserRole {
+  id         String @id @default(uuid())
+  user_id    String
+  role       String
+  is_allowed Boolean @default(true)
+  created_at DateTime @default(now())
+  created_by String?
+  updated_at DateTime @updatedAt
+  updated_by String?
+  deleted_at DateTime?
+  deleted_by String?
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("user_roles")
+}
+
+// Business entity
+model Business {
+  id           String   @id @default(uuid())
+  company_name String
+  subscription Int
+  created_at   DateTime @default(now())
+  created_by   String?
+  updated_at   DateTime @updatedAt
+  updated_by   String?
+  deleted_at   DateTime?
+  deleted_by   String?
+
+  // Relations
+  users User[]
+  whatsappSessions WhatsappSession[]
+
+  @@map("businesses")
+}
+
+// Person entity
+model Person {
+  id              String   @id @default(uuid())
+  full_name       String
+  tenant_id       String?
+  created_at      DateTime @default(now())
+  created_by      String?
+  updated_at      DateTime @updatedAt
+  updated_by      String?
+  deleted_at      DateTime?
+  deleted_by      String?
+
+  // Relations
+  addresses Address[]
+  contacts  Contact[]
+  documents Document[]
+  leads     Lead[]
+  customers Customer[]
+  chats     Chat[]
+  users     User[]
+
+  @@map("people")
+}
+
+// Address entity
+model Address {
+  id            String   @id @default(uuid())
+  street        String
+  city          String
+  state         String
+  postal_code   String
+  country       String
+  is_primary    Boolean  @default(false)
+  is_default    Boolean? @default(false)
+  created_at    DateTime @default(now())
+  created_by    String?
+  updated_at    DateTime @updatedAt
+  updated_by    String?
+  deleted_at    DateTime?
+  deleted_by    String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("addresses")
+}
+
+// Contact entity
+model Contact {
+  id            String   @id @default(uuid())
+  contact_type  String
+  contact_value String
+  is_primary    Boolean  @default(false)
+  is_default    Boolean? @default(false)
+  created_at    DateTime @default(now())
+  created_by    String?
+  updated_at    DateTime @updatedAt
+  updated_by    String?
+  deleted_at    DateTime?
+  deleted_by    String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("contacts")
+}
+
+// Document entity
+model Document {
+  id              String   @id @default(uuid())
+  document_type   String
+  document_number String
+  is_primary      Boolean  @default(false)
+  is_default      Boolean? @default(false)
+  created_at      DateTime @default(now())
+  created_by      String?
+  updated_at      DateTime @updatedAt
+  updated_by      String?
+  deleted_at      DateTime?
+  deleted_by      String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("documents")
+}
+
+// Lead entity
+model Lead {
+  id                  String   @id @default(uuid())
+  lead_type           String
+  lead_status         String
+  lead_temperature    String
+  lead_origin         String
+  lead_description    String
+  lead_notes          String[]
+  first_contacted_by  String
+  created_at          DateTime @default(now())
+  created_by          String?
+  updated_at          DateTime @updatedAt
+  updated_by          String?
+  deleted_at          DateTime?
+  deleted_by          String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("leads")
+}
+
+// Customer entity
+model Customer {
+  id             String   @id @default(uuid())
+  customer_type  String
+  customer_status String
+  fidelized_by   String?
+  created_at     DateTime @default(now())
+  created_by     String?
+  updated_at     DateTime @updatedAt
+  updated_by     String?
+  deleted_at     DateTime?
+  deleted_by     String?
+
+  // Relations
+  person_id String
+  person   Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("customers")
+}
+
+// Chat entity
+model Chat {
+  id                String    @id @default(uuid())
+  person_id         String?
+  contact_name      String
+  contact_phone     String
+  user_observations String?
+  last_message_at   DateTime?
+  session_id        String
+  created_at        DateTime  @default(now())
+  created_by        String?
+  updated_at        DateTime  @updatedAt
+  updated_by        String?
+  deleted_at        DateTime?
+  deleted_by        String?
+
+  // Relations
+  person     Person?   @relation(fields: [person_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  messages   Message[]
+  feedbacks  Feedback[]
+  session    WhatsappSession @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("chats")
+}
+
+// Message entity
+model Message {
+  id                String   @id @default(uuid())
+  chat_id           String
+  user_id           String?
+  message_id        String   @unique
+  message_direction String   // 'received' | 'sent'
+  message_type      String   // 'text' | 'image' | 'audio' | 'video' | 'file'
+  message_content   String
+  created_at        DateTime @default(now())
+  created_by        String?
+  updated_at        DateTime @updatedAt
+  updated_by        String?
+  deleted_at        DateTime?
+  deleted_by        String?
+
+  // Relations
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user User?  @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("messages")
+}
+
+// Feedback entity
+model Feedback {
+  id                String   @id @default(uuid())
+  chat_id           String
+  user_id           String
+  feedback_type     String   // 'positive' | 'negative' | 'neutral'
+  generation_type   String   // 'user_prompt' | 'ai_suggestion'
+  user_prompt       String?
+  feedback_content  String
+  created_at        DateTime @default(now())
+  created_by        String?
+  updated_at        DateTime @updatedAt
+  updated_by        String?
+  deleted_at        DateTime?
+  deleted_by        String?
+
+  // Relations
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("feedbacks")
+}
+
+// WhatsappSession entity
+model WhatsappSession {
+  id                 String    @id @default(uuid())
+  tenant_id          String
+  session_name       String
+  status             String    @default("pending") // 'pending' | 'connected' | 'disconnected' | 'error'
+  phone_number       String?
+  last_activity_at   DateTime?
+  created_at         DateTime  @default(now())
+  created_by         String?
+  updated_at         DateTime  @updatedAt
+  updated_by         String?
+  deleted_at         DateTime?
+  deleted_by         String?
+
+  // Relations
+  tenant Business @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  chats   Chat[]
+
+  @@map("whatsapp_sessions")
+}

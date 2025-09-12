@@ -1,0 +1,31 @@
+{
+  "markdownlint.config": {
+    "default": false
+  },
+  "markdownlint.ignore": [
+    "**/*.md"
+  ],
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.markdownlint": "never"
+    }
+  },
+  "extensions.recommendations": [
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    "bierner.markdown-mermaid",
+    "shd101wyy.markdown-preview-enhanced",
+    "bierner.markdown-emoji",
+    "bierner.markdown-footnotes",
+    "bierner.markdown-preview-github-styles"
+  ],
+  "markdown.preview.breaks": true,
+  "markdown.preview.linkify": true,
+  "markdown.preview.typographer": true,
+  "markdown.extension.toc.levels": "1..6",
+  "markdown.extension.toc.updateOnSave": true,
+  "markdown.extension.toc.orderedList": false,
+  "markdown.extension.toc.plaintext": false,
+  "markdown.extension.toc.slugifyMode": "github"
+}
