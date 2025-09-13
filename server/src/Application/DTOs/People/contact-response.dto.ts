@@ -5,17 +5,27 @@ export class ContactResponseDto {
   id: string;
 
   @ApiProperty({
+    description: "Contact name/label",
+    example: "Work Email",
+    required: false,
+  })
+  contact_name?: string;
+
+  @ApiProperty({
     description: "Contact type",
     example: "email",
-    enum: ["email", "phone", "whatsapp", "cellphone"],
+    enum: ["email", "phone", "cellphone"],
   })
   contact_type: string;
 
   @ApiProperty({ description: "Contact value", example: "john@example.com" })
   contact_value: string;
 
-  @ApiProperty({ description: "Is primary contact", example: true })
-  is_primary: boolean;
+  @ApiProperty({
+    description: "Is WhatsApp contact (only for phone/cellphone)",
+    example: false,
+  })
+  is_whatsapp: boolean;
 
   @ApiProperty({
     description: "Is default contact for this type",

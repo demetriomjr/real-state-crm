@@ -20,8 +20,6 @@ export class AddressResponseDto {
   country: string;
 
   @ApiProperty({ description: "Is primary address", example: true })
-  is_primary: boolean;
-
   @ApiProperty({ description: "Is default address", example: true })
   is_default: boolean;
 

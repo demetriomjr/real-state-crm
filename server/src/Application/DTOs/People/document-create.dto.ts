@@ -36,8 +36,6 @@ export class DocumentCreateDto {
   })
   @IsOptional()
   @IsBoolean()
-  is_primary?: boolean;
-
   @ApiProperty({
     description: "Is default document for this type",
     example: true,

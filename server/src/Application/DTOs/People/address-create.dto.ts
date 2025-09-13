@@ -40,8 +40,6 @@ export class AddressCreateDto {
   })
   @IsOptional()
   @IsBoolean()
-  is_primary?: boolean;
-
   @ApiProperty({
     description: "Is default address",
     example: true,

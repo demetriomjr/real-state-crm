@@ -120,7 +120,6 @@ export class BusinessService {
                 contact_value:
                   createBusinessDto.master_user_email.toLowerCase(),
                 person_id: person.id,
-                is_primary: true,
                 is_default: true,
               },
             }),
@@ -134,7 +133,6 @@ export class BusinessService {
                 contact_type: "phone",
                 contact_value: createBusinessDto.master_user_phone,
                 person_id: person.id,
-                is_primary: true,
                 is_default: true,
               },
             }),
@@ -160,7 +158,9 @@ export class BusinessService {
         return {
           business: {
             ...business,
-            subscription_level: this.getSubscriptionLevel(business.subscription),
+            subscription_level: this.getSubscriptionLevel(
+              business.subscription,
+            ),
           },
           masterUser,
           person,
@@ -200,13 +200,43 @@ export class BusinessService {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
+    // Separate business data from person data and sub-entities
+    const {
+      company_name,
+      subscription,
+      full_name,
+      contacts,
+      documents,
+      addresses,
+    } = updateBusinessDto;
+
+    const businessData = {
+      company_name,
+      subscription,
+    };
+
+    const personData = {
+      full_name,
+    };
+
+    const subEntitiesData = {
+      contacts,
+      documents,
+      addresses,
+    };
 
     const business = await this.businessRepository.update(
       id,
-      updateBusinessDto,
+      businessData,
+      personData,
+      subEntitiesData,
     );
     this.logger.log(`Business updated successfully with ID: ${business.id}`);
-    return this.mapToResponseDto(business);
+
+    // Fetch the updated business with relations to return complete data
+    const updatedBusiness =
+      await this.businessRepository.findOneWithRelations(id);
+    return this.mapToResponseDtoWithRelations(updatedBusiness);
   }
 
   async findOneWithRelations(id: string): Promise<BusinessResponseDto> {
@@ -302,38 +332,40 @@ export class BusinessService {
 
   private mapToResponseDtoWithRelations(business: any): BusinessResponseDto {
     // Find the master user (level 9) or fallback to first user
-    const masterUser = business.users?.find((user: any) => user.user_level === 9) || business.users?.[0];
+    const masterUser =
+      business.users?.find((user: any) => user.user_level === 9) ||
+      business.users?.[0];
     const masterPerson = masterUser?.person;
 
     // Map addresses to clean DTO format (exclude audit fields and foreign IDs)
-    const addresses = masterPerson?.addresses?.map((addr: any) => ({
-      id: addr.id,
-      street: addr.street,
-      city: addr.city,
-      state: addr.state,
-      postal_code: addr.postal_code,
-      country: addr.country,
-      is_primary: addr.is_primary,
-      is_default: addr.is_default
-    })) || [];
+    const addresses =
+      masterPerson?.addresses?.map((addr: any) => ({
+        id: addr.id,
+        street: addr.street,
+        city: addr.city,
+        state: addr.state,
+        postal_code: addr.postal_code,
+        country: addr.country,
+        is_default: addr.is_default,
+      })) || [];
 
     // Map contacts to clean DTO format (exclude audit fields and foreign IDs)
-    const contacts = masterPerson?.contacts?.map((contact: any) => ({
-      id: contact.id,
-      contact_type: contact.contact_type,
-      contact_value: contact.contact_value,
-      is_primary: contact.is_primary,
-      is_default: contact.is_default
-    })) || [];
+    const contacts =
+      masterPerson?.contacts?.map((contact: any) => ({
+        id: contact.id,
+        contact_type: contact.contact_type,
+        contact_value: contact.contact_value,
+        is_default: contact.is_default,
+      })) || [];
 
     // Map documents to clean DTO format (exclude audit fields and foreign IDs)
-    const documents = masterPerson?.documents?.map((doc: any) => ({
-      id: doc.id,
-      document_type: doc.document_type,
-      document_number: doc.document_number,
-      is_primary: doc.is_primary,
-      is_default: doc.is_default
-    })) || [];
+    const documents =
+      masterPerson?.documents?.map((doc: any) => ({
+        id: doc.id,
+        document_type: doc.document_type,
+        document_number: doc.document_number,
+        is_default: doc.is_default,
+      })) || [];
 
     return {
       id: business.id,

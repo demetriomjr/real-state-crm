@@ -1,0 +1,648 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Typography,
+  Divider,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from '@mui/material';
+import {
+  Business as BusinessIcon,
+  ContactPhone as ContactIcon,
+  Description as DocumentIcon,
+  LocationOn as AddressIcon,
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useLoading } from '../hooks/useLoading';
+import { handleError } from '../utils/errorHandler';
+import { useAuth } from '../hooks/useAuth';
+import ContactManager from '../components/ContactManager';
+import DocumentManager from '../components/DocumentManager';
+import AddressManager from '../components/AddressManager';
+import EditPageButtonPanel from '../components/EditPageButtonPanel';
+import apiService from '../services/api';
+
+interface Contact {
+  id?: string;
+  contact_name?: string;
+  contact_type: "email" | "phone" | "cellphone";
+  contact_value: string;
+  is_whatsapp?: boolean;
+  is_default: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+interface Document {
+  id?: string;
+  document_type: string;
+  document_number: string;
+  is_default: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+interface Address {
+  id?: string;
+  street: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+interface User {
+  id: string;
+  fullName: string;
+  username: string;
+  user_level: number;
+  tenant_id: string;
+  person_id: string;
+  person: {
+    id: string;
+    full_name: string;
+    tenant_id: string;
+    contacts: Contact[];
+    documents: Document[];
+    addresses: Address[];
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+interface BusinessData {
+  id: string;
+  company_name: string;
+  subscription_level: string;
+  created_at: string;
+  // Flattened Person data
+  full_name: string;
+  // Person-related data (addresses, contacts, documents as Business properties)
+  addresses: Address[];
+  contacts: Contact[];
+  documents: Document[];
+  // Keep users for backward compatibility (though not used in new structure)
+  users?: User[];
+}
+
+interface BusinessFormData {
+  company_name: string;
+  full_name: string;
+  contacts?: Contact[];
+  documents?: Document[];
+  addresses?: Address[];
+}
+
+const Business: React.FC = () => {
+  const { t } = useTranslation();
+  const { setLoading } = useLoading();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const [businessData, setBusinessData] = useState<BusinessData | null>(null);
+  const [formData, setFormData] = useState<BusinessFormData>({
+    company_name: '',
+    full_name: '',
+  });
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [activeTab, setActiveTab] = useState(0);
+  // Removed hasChanges state - buttons are always enabled
+  const [saving, setSaving] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // In the new structure, addresses, contacts, and documents are directly on businessData
+  // No need for masterUser/masterPerson logic anymore
+
+  useEffect(() => {
+    fetchBusinessData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchBusinessData = async () => {
+    try {
+      setLoading(true, t('business.loading'));
+      const response = await apiService.get<BusinessData>('/businesses/me');
+      setBusinessData(response);
+      setFormData({
+        company_name: response.company_name,
+        full_name: response.full_name,
+      });
+    } catch (err: unknown) {
+      const errorMessage = handleError(
+        err,
+        user?.user_level || 1,
+        () => {
+          // Redirect to login handled by error handler
+          window.location.href = '/login';
+        },
+        (message, type) => {
+          if (type === 'error') {
+            toast.error(message);
+          } else {
+            toast.warning(message);
+          }
+        }
+      );
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    if (error) setError('');
+    if (success) setSuccess('');
+  };
+
+  const validateForm = (): boolean => {
+    const errors: { [key: string]: string } = {};
+    
+    if (!formData.company_name.trim()) {
+      errors.company_name = t('business.companyNameRequired');
+    }
+    if (!formData.full_name.trim()) {
+      errors.full_name = t('person.fullNameRequired');
+    }
+    
+    setFieldErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      toast.error(t('business.validationError'));
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
+    
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    setFieldErrors({});
+
+    try {
+      // Prepare the complete data to send
+      const completeFormData = {
+        ...formData,
+        contacts: businessData?.contacts || [],
+        documents: businessData?.documents || [],
+        addresses: businessData?.addresses || [],
+      };
+
+      const response = await apiService.put<BusinessData>('/businesses/me', completeFormData);
+      setBusinessData(response);
+      setSuccess(t('business.updateSuccess'));
+      
+      // Show success modal instead of toast
+      setShowSuccessModal(true);
+    } catch (err: unknown) {
+      const errorMessage = handleError(
+        err,
+        user?.user_level || 1,
+        () => {
+          // Redirect to login handled by error handler
+          window.location.href = '/login';
+        },
+        (message, type) => {
+          if (type === 'error') {
+            toast.error(message);
+          } else {
+            toast.warning(message);
+          }
+        }
+      );
+      setError(errorMessage);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (businessData) {
+      setFormData({
+        company_name: businessData.company_name,
+        full_name: businessData.full_name,
+      });
+    }
+    setError('');
+    setSuccess('');
+    setFieldErrors({});
+    
+    // Redirect to home after cancel
+    navigate('/');
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/');
+  };
+
+  const handleContactsChange = (contacts: Contact[]) => {
+    if (businessData) {
+      setBusinessData(prev => ({
+        ...prev!,
+        contacts: contacts
+      }));
+    }
+  };
+
+  const handleDocumentsChange = (documents: Document[]) => {
+    if (businessData) {
+      setBusinessData(prev => ({
+        ...prev!,
+        documents: documents
+      }));
+    }
+  };
+
+  const handleAddressesChange = (addresses: Address[]) => {
+    if (businessData) {
+      setBusinessData(prev => ({
+        ...prev!,
+        addresses: addresses
+      }));
+    }
+  };
+
+
+  const getSubscriptionLevelText = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'premium': return t('business.subscriptionLevels.premium');
+      case 'standard': return t('business.subscriptionLevels.standard');
+      default: return t('business.subscriptionLevels.basic');
+    }
+  };
+
+
+  if (!businessData) {
+    return (
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%'
+      }}>
+        <Typography variant="h6">{t('business.loading')}</Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%', // Full available height from Layout
+      position: 'relative',
+      minHeight: '100%' // Ensure it takes full height
+    }}>
+      {/* Content Container - Fixed height to avoid overlap with button panel */}
+      <Box sx={{
+        flex: 1, // Take all available space
+        width: '100%',
+        overflowY: 'auto', // Scrollbar appears within Layout boundaries
+        minHeight: 0 // Allow flex to work properly
+      }}>
+        {/* Inner Content - Full width container */}
+        <Box sx={{
+          width: '100%',
+          minHeight: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          // Spacing controlled by container margins
+        }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100%'
+          }}
+        >
+          {/* Content wrapper with same width as button panel */}
+          <Box sx={{
+            maxWidth: { xs: '100%', md: 1200 },
+            mx: 'auto',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1
+          }}>
+          {/* Simple Title with Icon */}
+          <Box sx={{ 
+            mb: 1.875, // 15px
+            mt: { xs: 3, sm: 4 },
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <Typography 
+              variant="h3" 
+              component="h1"
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                fontWeight: 600,
+                color: 'text.primary',
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+              }}
+            >
+              <BusinessIcon sx={{ mr: 1, color: 'primary.main', fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' } }} />
+              {t('business.title')}
+            </Typography>
+          </Box>
+
+
+          {/* Row container: Info (left) and Business Status (right) */}
+          <Box sx={{
+            mb: 1.875, // 15px
+            mt: 0, // No top margin since title already has bottom margin
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 1.875 // 15px
+          }}>
+            {/* Left: Business Information */}
+            <Card sx={{ flex: { md: '2 1 0%' } }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6">
+                    {t('business.information')}
+                  </Typography>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label={t('business.companyName')}
+                    name="company_name"
+                    value={formData.company_name}
+                    onChange={handleChange}
+                    variant="outlined"
+                    error={!!fieldErrors.company_name}
+                    helperText={fieldErrors.company_name}
+                  />
+                  <TextField
+                    fullWidth
+                    label={t('person.fullName')}
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    variant="outlined"
+                    error={!!fieldErrors.full_name}
+                    helperText={fieldErrors.full_name}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Right: Business Status */}
+            <Card sx={{ flex: { md: '1 1 0%' } }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">
+                    {t('business.businessStatus')}
+                  </Typography>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label={t('business.subscriptionLevel')}
+                    value={getSubscriptionLevelText(businessData.subscription_level)}
+                    disabled
+                    variant="filled"
+                  />
+                  <TextField
+                    fullWidth
+                    label={t('business.dateOfCreation')}
+                    value={new Date(businessData.created_at).toLocaleDateString()}
+                    disabled
+                    variant="filled"
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Tabs for Sub-entities */}
+          <Box sx={{ 
+            flex: 1, 
+            display: 'flex', 
+            flexDirection: 'column',
+            mt: 0 // No top margin since row container already has bottom margin
+          }}>
+            <Card sx={{
+              flex: 1, // Take remaining space
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+            <Tabs
+              value={activeTab}
+              onChange={(_, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab
+                icon={<ContactIcon />}
+                label={t('tabs.contacts')}
+                iconPosition="start"
+              />
+              <Tab
+                icon={<DocumentIcon />}
+                label={t('tabs.documents')}
+                iconPosition="start"
+              />
+              <Tab
+                icon={<AddressIcon />}
+                label={t('tabs.addresses')}
+                iconPosition="start"
+              />
+            </Tabs>
+
+            <CardContent sx={{ 
+              pb: 6,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0
+            }}>
+              {/* Tab Content */}
+              {activeTab === 0 && businessData && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0
+                  }}
+                >
+                  <ContactManager
+                    contacts={businessData.contacts}
+                    onContactsChange={handleContactsChange}
+                    disabled={false}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 1 && businessData && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0
+                  }}
+                >
+                  <DocumentManager
+                    documents={businessData.documents}
+                    onDocumentsChange={handleDocumentsChange}
+                    disabled={false}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 2 && businessData && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <AddressManager
+                    addresses={businessData.addresses}
+                    onAddressesChange={handleAddressesChange}
+                    disabled={false}
+                  />
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+          </Box> {/* Close Tabs Container */}
+          </Box> {/* Close Content wrapper */}
+        </motion.div>
+        </Box> {/* Close Inner Content */}
+      </Box> {/* Close Content Container */}
+
+      {/* Button Panel - Wrapped in Box with padding */}
+      <Box sx={{
+        width: '100%',
+        height: 'auto',
+        flexShrink: 0, // Shrink behavior - only grows as needed
+        pt: 1.875, // 15px top padding
+        pb: 1.875, // 15px bottom padding
+        maxWidth: { xs: '100%', md: 1200 }, // Same max width as content
+        mx: 'auto', // Center the content
+      }}>
+        <EditPageButtonPanel
+          onSave={handleSave}
+          onCancel={handleCancel}
+          saving={saving}
+          savingText={t('business.saving')}
+        />
+      </Box>
+
+      {/* Success Modal */}
+      <Dialog
+        open={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            maxWidth: 400, // Smaller modal width
+            borderRadius: 2
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          backgroundColor: '#4caf50',
+          color: 'white',
+          fontWeight: 600,
+          textAlign: 'center',
+          py: 1.5, // Further reduced padding
+          fontSize: '1.1rem' // Smaller title
+        }}>
+          {t('business.success')}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, textAlign: 'center', pt: 2 }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mt: 2, // Added margin-top to center between header and button
+              mb: 2,
+              fontSize: '1rem', // Smaller font
+              fontWeight: 400,
+              color: 'text.primary',
+              lineHeight: 1.5
+            }}
+          >
+            {t('business.successMessage')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, justifyContent: 'center', pt: 1 }}>
+          <Button
+            ref={(el) => el?.focus()} // Auto-focus on button
+            onClick={handleSuccessModalClose}
+            variant="contained"
+            size="medium"
+            autoFocus // HTML auto-focus attribute
+            sx={{
+              backgroundColor: '#4caf50',
+              fontSize: '0.95rem',
+              px: 3,
+              py: 1,
+              minWidth: 100,
+              '&:hover': {
+                backgroundColor: '#45a049',
+              },
+            }}
+          >
+            {t('common.ok')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default Business;

@@ -6,6 +6,7 @@ import {
   IsArray,
   ValidateNested,
   IsUUID,
+  IsBoolean,
 } from "class-validator";
 import { Type } from "class-transformer";
 
@@ -46,9 +47,10 @@ export class AddressDto {
   @IsString()
   district?: string;
 
-  @ApiProperty({ description: "Whether this is the primary address" })
+  @ApiProperty({ description: "Whether this is the default address" })
   @IsOptional()
-  is_primary?: boolean;
+  @IsBoolean()
+  is_default?: boolean;
 }
 
 export class ContactDto {
@@ -72,9 +74,10 @@ export class ContactDto {
   @IsString()
   contact_value: string;
 
-  @ApiProperty({ description: "Whether this is the primary contact" })
+  @ApiProperty({ description: "Whether this is the default contact" })
   @IsOptional()
-  is_primary?: boolean;
+  @IsBoolean()
+  is_default?: boolean;
 }
 
 export class DocumentDto {
@@ -114,9 +117,10 @@ export class DocumentDto {
   @IsString()
   document_number: string;
 
-  @ApiProperty({ description: "Whether this is the primary document" })
+  @ApiProperty({ description: "Whether this is the default document" })
   @IsOptional()
-  is_primary?: boolean;
+  @IsBoolean()
+  is_default?: boolean;
 }
 
 export class LeadCreateDto {

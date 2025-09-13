@@ -23,19 +23,19 @@ export class BusinessResponseDto {
   // Person-related data (addresses, contacts, documents as Business properties)
   @ApiProperty({
     description: "Business addresses",
-    type: [AddressResponseDto]
+    type: [AddressResponseDto],
   })
   addresses: AddressResponseDto[];
 
   @ApiProperty({
     description: "Business contacts",
-    type: [ContactResponseDto]
+    type: [ContactResponseDto],
   })
   contacts: ContactResponseDto[];
 
   @ApiProperty({
     description: "Business documents",
-    type: [DocumentResponseDto]
+    type: [DocumentResponseDto],
   })
   documents: DocumentResponseDto[];
 

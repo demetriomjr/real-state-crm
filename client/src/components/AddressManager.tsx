@@ -11,6 +11,7 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
+import EditDialog from './common/EditDialog';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -19,6 +20,11 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  validateCEP, 
+  formatCEP, 
+  fetchAddressByCEP
+} from '../utils/validation';
 
 interface Address {
   id?: string;
@@ -27,8 +33,6 @@ interface Address {
   state: string;
   postal_code: string;
   country: string;
-  person_id: string;
-  is_primary: boolean;
   is_default: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -36,14 +40,12 @@ interface Address {
 
 interface AddressManagerProps {
   addresses: Address[];
-  personId: string;
   onAddressesChange: (addresses: Address[]) => void;
   disabled?: boolean;
 }
 
 const AddressManager: React.FC<AddressManagerProps> = ({
   addresses,
-  personId,
   onAddressesChange,
   disabled = false,
 }) => {
@@ -69,6 +71,8 @@ const AddressManager: React.FC<AddressManagerProps> = ({
 
     if (!address.postal_code.trim()) {
       newErrors.postal_code = t('address.validation.postalCodeRequired');
+    } else if (!validateCEP(address.postal_code)) {
+      newErrors.postal_code = t('address.validation.invalidCEP');
     }
 
     if (!address.country.trim()) {
@@ -86,8 +90,6 @@ const AddressManager: React.FC<AddressManagerProps> = ({
       state: '',
       postal_code: '',
       country: 'Brazil',
-      person_id: personId,
-      is_primary: false,
       is_default: false,
     };
     setEditingAddress(newAddress);
@@ -113,6 +115,12 @@ const AddressManager: React.FC<AddressManagerProps> = ({
         ...editingAddress,
         id: `temp_${Date.now()}`,
       };
+      
+      // If this is the first address and user didn't explicitly set it, make it default automatically
+      if (addresses.length === 0 && !editingAddress.is_default) {
+        newAddress.is_default = true;
+      }
+      
       updatedAddresses = [...addresses, newAddress];
     } else {
       updatedAddresses = addresses.map(address =>
@@ -120,11 +128,28 @@ const AddressManager: React.FC<AddressManagerProps> = ({
       );
     }
 
-    // Handle default logic - only one default address
+    // Handle default logic - ensure only one default address
+    // If the current address is being set as default, unset all others first
     if (editingAddress.is_default) {
       updatedAddresses = updatedAddresses.map(address => {
-        if (address.id !== editingAddress.id) {
-          return { ...address, is_default: false };
+        // For new addresses, compare by position in the array
+        // For existing addresses, compare by ID
+        if (isAdding) {
+          // If adding, unset all existing addresses
+          return address.id?.startsWith('temp_') ? address : { ...address, is_default: false };
+        } else {
+          // If editing, unset all others except the current one
+          return address.id !== editingAddress.id ? { ...address, is_default: false } : address;
+        }
+      });
+    }
+    
+    // If no default exists, make the first one default
+    const defaultAddresses = updatedAddresses.filter(a => a.is_default);
+    if (defaultAddresses.length === 0 && updatedAddresses.length > 0) {
+      updatedAddresses = updatedAddresses.map((address, index) => {
+        if (index === 0) {
+          return { ...address, is_default: true };
         }
         return address;
       });
@@ -137,7 +162,24 @@ const AddressManager: React.FC<AddressManagerProps> = ({
   };
 
   const handleDeleteAddress = (addressId: string) => {
+    const addressToDelete = addresses.find(a => a.id === addressId);
+    if (!addressToDelete) return;
+    
     const updatedAddresses = addresses.filter(address => address.id !== addressId);
+    
+    // If we deleted the default address, make another one default
+    if (addressToDelete.is_default && updatedAddresses.length > 0) {
+      // Make the first remaining address default
+      const updatedAddressesWithNewDefault = updatedAddresses.map((address, index) => {
+        if (index === 0) {
+          return { ...address, is_default: true };
+        }
+        return address;
+      });
+      onAddressesChange(updatedAddressesWithNewDefault);
+      return;
+    }
+    
     onAddressesChange(updatedAddresses);
   };
 
@@ -147,12 +189,24 @@ const AddressManager: React.FC<AddressManagerProps> = ({
     setErrors({});
   };
 
-  const handleFieldChange = (field: keyof Address, value: any) => {
+  const handleFieldChange = (field: keyof Address, value: string | boolean) => {
     if (!editingAddress) return;
+
+    let processedValue = value;
+    
+    // Format CEP and trigger address lookup
+    if (field === 'postal_code' && typeof value === 'string') {
+      processedValue = formatCEP(value);
+      
+      // Trigger ViaCEP lookup when CEP is complete
+      if (validateCEP(processedValue)) {
+        handleCEPLookup(processedValue);
+      }
+    }
 
     setEditingAddress(prev => ({
       ...prev!,
-      [field]: value,
+      [field]: processedValue,
     }));
 
     if (errors[field]) {
@@ -163,20 +217,42 @@ const AddressManager: React.FC<AddressManagerProps> = ({
     }
   };
 
+  const handleCEPLookup = async (cep: string) => {
+    if (!editingAddress) return;
+    
+    try {
+      const addressData = await fetchAddressByCEP(cep);
+      if (addressData) {
+        setEditingAddress(prev => ({
+          ...prev!,
+          street: addressData.logradouro || prev!.street,
+          city: addressData.localidade || prev!.city,
+          state: addressData.uf || prev!.state,
+          country: 'Brazil', // Default to Brazil for ViaCEP
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching address from ViaCEP:', error);
+    }
+  };
+
   const formatAddress = (address: Address) => {
-    return `${address.street}, ${address.city}, ${address.state} ${address.postal_code}, ${address.country}`;
+    return `${address.street}, ${address.city}, ${address.state} ${formatCEP(address.postal_code)}, ${address.country}`;
   };
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">{t('address.manager.title')}</Typography>
+        <Typography variant="h6" sx={{ display: { xs: 'none', sm: 'block' } }}>
+          {t('address.manager.title')}
+        </Typography>
         {!disabled && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddAddress}
             size="small"
+            sx={{ ml: { xs: 'auto', sm: 0 } }}
           >
             {t('address.manager.addAddress')}
           </Button>
@@ -209,9 +285,6 @@ const AddressManager: React.FC<AddressManagerProps> = ({
                       {address.is_default && (
                         <Chip label={t('address.default')} size="small" color="primary" />
                       )}
-                      {address.is_primary && (
-                        <Chip label={t('address.primary')} size="small" color="secondary" />
-                      )}
                       {!disabled && (
                         <>
                           <IconButton
@@ -242,104 +315,99 @@ const AddressManager: React.FC<AddressManagerProps> = ({
         </AnimatePresence>
       </Box>
 
-      {/* Add/Edit Form */}
-      {editingAddress && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-        >
-          <Card variant="outlined" sx={{ border: '2px solid', borderColor: 'primary.main' }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                {isAdding ? t('address.manager.addAddress') : t('address.manager.editAddress')}
+      {/* Edit Dialog */}
+      <EditDialog
+        open={!!editingAddress}
+        onClose={handleCancel}
+        onSave={handleSaveAddress}
+        title={isAdding ? t('address.manager.addAddress') : t('address.manager.editAddress')}
+        saveDisabled={false}
+        saveText={isAdding ? t('common.add') : t('common.save')}
+      >
+        {editingAddress && (
+          <>
+            {/* ZIP Code Row - Top Priority */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2, alignItems: { sm: 'flex-end' } }}>
+              <TextField
+                fullWidth
+                label={t('address.postalCode')}
+                value={editingAddress.postal_code}
+                onChange={(e) => handleFieldChange('postal_code', e.target.value)}
+                error={!!errors.postal_code}
+                helperText={errors.postal_code}
+                sx={{ flex: { sm: '0 0 200px' } }}
+              />
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                sx={{ 
+                  flex: 1,
+                  fontSize: '0.875rem',
+                  lineHeight: 1.4,
+                  mt: { xs: 0, sm: 1 }
+                }}
+              >
+                {t('address.zipCodeHelp')}
               </Typography>
+            </Box>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label={t('address.street')}
-                  value={editingAddress.street}
-                  onChange={(e) => handleFieldChange('street', e.target.value)}
-                  error={!!errors.street}
-                  helperText={errors.street}
+            <TextField
+              fullWidth
+              label={t('address.street')}
+              value={editingAddress.street}
+              onChange={(e) => handleFieldChange('street', e.target.value)}
+              error={!!errors.street}
+              helperText={errors.street}
+              sx={{ mb: 2 }}
+            />
+
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+              <TextField
+                fullWidth
+                label={t('address.city')}
+                value={editingAddress.city}
+                onChange={(e) => handleFieldChange('city', e.target.value)}
+                error={!!errors.city}
+                helperText={errors.city}
+              />
+              <TextField
+                fullWidth
+                label={t('address.state')}
+                value={editingAddress.state}
+                onChange={(e) => handleFieldChange('state', e.target.value)}
+                error={!!errors.state}
+                helperText={errors.state}
+              />
+            </Box>
+
+            <TextField
+              fullWidth
+              label={t('address.country')}
+              value={editingAddress.country}
+              onChange={(e) => handleFieldChange('country', e.target.value)}
+              error={!!errors.country}
+              helperText={errors.country}
+              sx={{ mb: 2 }}
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={editingAddress.is_default}
+                  onChange={(e) => handleFieldChange('is_default', e.target.checked)}
+                  disabled={
+                    !isAdding && 
+                    editingAddress.is_default && 
+                    addresses.filter(a => a.is_default).length === 1
+                  }
                 />
-
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                  <TextField
-                    fullWidth
-                    label={t('address.city')}
-                    value={editingAddress.city}
-                    onChange={(e) => handleFieldChange('city', e.target.value)}
-                    error={!!errors.city}
-                    helperText={errors.city}
-                  />
-                  <TextField
-                    fullWidth
-                    label={t('address.state')}
-                    value={editingAddress.state}
-                    onChange={(e) => handleFieldChange('state', e.target.value)}
-                    error={!!errors.state}
-                    helperText={errors.state}
-                  />
-                </Box>
-
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                  <TextField
-                    fullWidth
-                    label={t('address.postalCode')}
-                    value={editingAddress.postal_code}
-                    onChange={(e) => handleFieldChange('postal_code', e.target.value)}
-                    error={!!errors.postal_code}
-                    helperText={errors.postal_code}
-                  />
-                  <TextField
-                    fullWidth
-                    label={t('address.country')}
-                    value={editingAddress.country}
-                    onChange={(e) => handleFieldChange('country', e.target.value)}
-                    error={!!errors.country}
-                    helperText={errors.country}
-                  />
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={editingAddress.is_primary}
-                        onChange={(e) => handleFieldChange('is_primary', e.target.checked)}
-                      />
-                    }
-                    label={t('address.primary')}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={editingAddress.is_default}
-                        onChange={(e) => handleFieldChange('is_default', e.target.checked)}
-                      />
-                    }
-                    label={t('address.default')}
-                  />
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button onClick={handleCancel}>
-                    {t('common.cancel')}
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={handleSaveAddress}
-                  >
-                    {isAdding ? t('common.add') : t('common.save')}
-                  </Button>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+              }
+              label={t('address.default')}
+              sx={{ display: 'block', mt: 1 }}
+            />
+          </>
+        )}
+      </EditDialog>
     </Box>
   );
 };

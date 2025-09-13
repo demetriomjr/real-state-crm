@@ -3,14 +3,23 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class ContactUpdateDto {
   @ApiProperty({
-    description: "Contact type",
-    example: "email",
-    enum: ["email", "phone", "whatsapp", "cellphone"],
+    description: "Contact name/label",
+    example: "Work Email",
     required: false,
   })
   @IsOptional()
   @IsString()
-  @IsIn(["email", "phone", "whatsapp", "cellphone"])
+  contact_name?: string;
+
+  @ApiProperty({
+    description: "Contact type",
+    example: "email",
+    enum: ["email", "phone", "cellphone"],
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(["email", "phone", "cellphone"])
   contact_type?: string;
 
   @ApiProperty({
@@ -23,13 +32,13 @@ export class ContactUpdateDto {
   contact_value?: string;
 
   @ApiProperty({
-    description: "Is primary contact",
-    example: true,
+    description: "Is WhatsApp contact (only for phone/cellphone)",
+    example: false,
     required: false,
   })
   @IsOptional()
   @IsBoolean()
-  is_primary?: boolean;
+  is_whatsapp?: boolean;
 
   @ApiProperty({
     description: "Is default contact for this type",

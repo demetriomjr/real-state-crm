@@ -14,10 +14,11 @@ import {
   Menu as MenuIcon,
   AccountCircle,
   Logout,
-  Settings,
+  Person,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -28,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -36,6 +38,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleUserDataClick = () => {
+    handleMenuClose();
+    navigate('/my-data');
   };
 
   const handleLogout = async () => {
@@ -54,12 +61,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <AppBar 
-      position="fixed" 
+      position="static" 
       sx={{ 
         zIndex: theme.zIndex.drawer + 1,
         backgroundColor: '#C1BAA1',
         color: 'text.primary',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        width: '100%'
       }}
     >
       <Toolbar>
@@ -123,29 +131,29 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </IconButton>
         </Box>
 
-        <Menu
-          anchorEl={anchorEl}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          keepMounted
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={handleMenuClose}>
-            <Settings sx={{ mr: 1 }} />
-            {t('header.userMenu.settings')}
-          </MenuItem>
-          <MenuItem onClick={handleLogout}>
-            <Logout sx={{ mr: 1 }} />
-            {t('header.userMenu.logout')}
-          </MenuItem>
-        </Menu>
+         <Menu
+           anchorEl={anchorEl}
+           anchorOrigin={{
+             vertical: 'bottom',
+             horizontal: 'right',
+           }}
+           keepMounted
+           transformOrigin={{
+             vertical: 'top',
+             horizontal: 'right',
+           }}
+           open={Boolean(anchorEl)}
+           onClose={handleMenuClose}
+         >
+           <MenuItem onClick={handleUserDataClick}>
+             <Person sx={{ mr: 1 }} />
+             {t('header.userMenu.userData')}
+           </MenuItem>
+           <MenuItem onClick={handleLogout}>
+             <Logout sx={{ mr: 1 }} />
+             {t('header.userMenu.logout')}
+           </MenuItem>
+         </Menu>
       </Toolbar>
     </AppBar>
   );

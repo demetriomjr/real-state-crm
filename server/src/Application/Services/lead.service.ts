@@ -218,11 +218,9 @@ export class LeadService {
       await this.prisma.address.updateMany({
         where: {
           person_id: personId,
-          is_primary: true,
           deleted_at: null,
         },
         data: {
-          is_primary: false,
         },
       });
       this.logger.log(`Unset other primary addresses for person ${personId}`);
@@ -246,14 +244,12 @@ export class LeadService {
     for (const address of addresses) {
       const isPrimary = await this.handleAddressPrimaryFlag(
         personId,
-        address.is_primary,
       );
 
       const createdAddress = await this.prisma.address.create({
         data: {
           ...address,
           person_id: personId,
-          is_primary: isPrimary,
           created_by: userId,
           updated_by: userId,
         },
@@ -276,16 +272,14 @@ export class LeadService {
 
     for (const address of addresses) {
       if (address.id) {
-        const isPrimary =
-          address.is_primary === true
+        const isPrimary = address.is_default
             ? await this.handleAddressPrimaryFlag(personId, true)
-            : address.is_primary;
+            : false;
 
         const updatedAddress = await this.prisma.address.update({
           where: { id: address.id },
           data: {
             ...address,
-            is_primary: isPrimary,
             updated_by: userId,
           },
         });
@@ -294,14 +288,12 @@ export class LeadService {
       } else {
         const isPrimary = await this.handleAddressPrimaryFlag(
           personId,
-          address.is_primary,
         );
 
         const createdAddress = await this.prisma.address.create({
           data: {
             ...address,
             person_id: personId,
-            is_primary: isPrimary,
             created_by: userId,
             updated_by: userId,
           },
@@ -339,11 +331,9 @@ export class LeadService {
       await this.prisma.contact.updateMany({
         where: {
           person_id: personId,
-          is_primary: true,
           deleted_at: null,
         },
         data: {
-          is_primary: false,
         },
       });
       this.logger.log(`Unset other primary contacts for person ${personId}`);
@@ -367,14 +357,12 @@ export class LeadService {
     for (const contact of contacts) {
       const isPrimary = await this.handleContactPrimaryFlag(
         personId,
-        contact.is_primary,
       );
 
       const createdContact = await this.prisma.contact.create({
         data: {
           ...contact,
           person_id: personId,
-          is_primary: isPrimary,
           created_by: userId,
           updated_by: userId,
         },
@@ -397,16 +385,14 @@ export class LeadService {
 
     for (const contact of contacts) {
       if (contact.id) {
-        const isPrimary =
-          contact.is_primary === true
+        const isPrimary = contact.is_default
             ? await this.handleContactPrimaryFlag(personId, true)
-            : contact.is_primary;
+            : false;
 
         const updatedContact = await this.prisma.contact.update({
           where: { id: contact.id },
           data: {
             ...contact,
-            is_primary: isPrimary,
             updated_by: userId,
           },
         });
@@ -415,14 +401,12 @@ export class LeadService {
       } else {
         const isPrimary = await this.handleContactPrimaryFlag(
           personId,
-          contact.is_primary,
         );
 
         const createdContact = await this.prisma.contact.create({
           data: {
             ...contact,
             person_id: personId,
-            is_primary: isPrimary,
             created_by: userId,
             updated_by: userId,
           },
@@ -460,11 +444,9 @@ export class LeadService {
       await this.prisma.document.updateMany({
         where: {
           person_id: personId,
-          is_primary: true,
           deleted_at: null,
         },
         data: {
-          is_primary: false,
         },
       });
       this.logger.log(`Unset other primary documents for person ${personId}`);
@@ -488,14 +470,12 @@ export class LeadService {
     for (const document of documents) {
       const isPrimary = await this.handleDocumentPrimaryFlag(
         personId,
-        document.is_primary,
       );
 
       const createdDocument = await this.prisma.document.create({
         data: {
           ...document,
           person_id: personId,
-          is_primary: isPrimary,
           created_by: userId,
           updated_by: userId,
         },
@@ -518,16 +498,14 @@ export class LeadService {
 
     for (const document of documents) {
       if (document.id) {
-        const isPrimary =
-          document.is_primary === true
+        const isPrimary = document.is_default
             ? await this.handleDocumentPrimaryFlag(personId, true)
-            : document.is_primary;
+            : false;
 
         const updatedDocument = await this.prisma.document.update({
           where: { id: document.id },
           data: {
             ...document,
-            is_primary: isPrimary,
             updated_by: userId,
           },
         });
@@ -536,14 +514,12 @@ export class LeadService {
       } else {
         const isPrimary = await this.handleDocumentPrimaryFlag(
           personId,
-          document.is_primary,
         );
 
         const createdDocument = await this.prisma.document.create({
           data: {
             ...document,
             person_id: personId,
-            is_primary: isPrimary,
             created_by: userId,
             updated_by: userId,
           },

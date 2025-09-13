@@ -44,7 +44,11 @@ export class BusinessController {
   ) {}
 
   @Get()
-  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(
+    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+      ? TestAuthGuard
+      : JwtAuthGuard,
+  )
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get all businesses with pagination (Developer Only)",
@@ -69,14 +73,14 @@ export class BusinessController {
       properties: {
         businesses: {
           type: "array",
-          items: { $ref: "#/components/schemas/BusinessResponseDto" }
+          items: { $ref: "#/components/schemas/BusinessResponseDto" },
         },
         total: { type: "number" },
         page: { type: "number" },
         limit: { type: "number" },
-        totalPages: { type: "number" }
-      }
-    }
+        totalPages: { type: "number" },
+      },
+    },
   })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
@@ -110,7 +114,11 @@ export class BusinessController {
   }
 
   @Get("me")
-  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(
+    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+      ? TestAuthGuard
+      : JwtAuthGuard,
+  )
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get current user's business",
@@ -137,7 +145,11 @@ export class BusinessController {
   }
 
   @Get(":id")
-  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(
+    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+      ? TestAuthGuard
+      : JwtAuthGuard,
+  )
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get business by ID (Admin Only)",
@@ -156,7 +168,10 @@ export class BusinessController {
     description: "Access denied - Admin level required",
   })
   @ApiResponse({ status: 404, description: "Business not found" })
-  async findOne(@Param("id") id: string, @Request() req: any): Promise<BusinessResponseDto> {
+  async findOne(
+    @Param("id") id: string,
+    @Request() req: any,
+  ): Promise<BusinessResponseDto> {
     const userLevel = req.userLevel;
     const userTenantId = req.tenantId;
 
@@ -211,7 +226,11 @@ export class BusinessController {
   }
 
   @Put("me")
-  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(
+    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+      ? TestAuthGuard
+      : JwtAuthGuard,
+  )
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Update current user's business",
@@ -242,7 +261,11 @@ export class BusinessController {
   }
 
   @Put(":id")
-  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(
+    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+      ? TestAuthGuard
+      : JwtAuthGuard,
+  )
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Update business by ID (Admin Only)",
@@ -287,7 +310,11 @@ export class BusinessController {
   }
 
   @Delete(":id")
-  @UseGuards(process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? TestAuthGuard : JwtAuthGuard)
+  @UseGuards(
+    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+      ? TestAuthGuard
+      : JwtAuthGuard,
+  )
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({

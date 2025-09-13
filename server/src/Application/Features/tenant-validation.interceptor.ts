@@ -30,7 +30,9 @@ export class TenantValidationInterceptor implements NestInterceptor {
     const isTest = this.configService.get<string>("NODE_ENV") === "test";
 
     if (isDevelopment || isTest) {
-      this.logger.log("Development/Test environment: Skipping tenant validation");
+      this.logger.log(
+        "Development/Test environment: Skipping tenant validation",
+      );
       return next.handle();
     }
 
@@ -56,7 +58,9 @@ export class TenantValidationInterceptor implements NestInterceptor {
 
     // Skip validation for business creation endpoint
     if (method === "POST" && (path.includes("businesses") || path === "/")) {
-      this.logger.log("Skipping tenant validation for business creation endpoint");
+      this.logger.log(
+        "Skipping tenant validation for business creation endpoint",
+      );
       return next.handle();
     }
 

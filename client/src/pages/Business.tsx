@@ -5,10 +5,14 @@ import {
   CardContent,
   TextField,
   Typography,
-  Alert,
   Divider,
   Tabs,
   Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import {
   Business as BusinessIcon,
@@ -18,11 +22,11 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useLoading } from '../hooks/useLoading';
 import { handleError } from '../utils/errorHandler';
-import { useAuth, useI18nReady } from '../hooks/useAuth';
-import PageHeader from '../components/PageHeader';
+import { useAuth } from '../hooks/useAuth';
 import ContactManager from '../components/ContactManager';
 import DocumentManager from '../components/DocumentManager';
 import AddressManager from '../components/AddressManager';
@@ -31,10 +35,10 @@ import apiService from '../services/api';
 
 interface Contact {
   id?: string;
-  contact_type: "email" | "phone" | "whatsapp" | "cellphone";
+  contact_name?: string;
+  contact_type: "email" | "phone" | "cellphone";
   contact_value: string;
-  person_id: string;
-  is_primary: boolean;
+  is_whatsapp?: boolean;
   is_default: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -44,8 +48,6 @@ interface Document {
   id?: string;
   document_type: string;
   document_number: string;
-  person_id: string;
-  is_primary: boolean;
   is_default: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -58,8 +60,6 @@ interface Address {
   state: string;
   postal_code: string;
   country: string;
-  person_id: string;
-  is_primary: boolean;
   is_default: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -102,13 +102,16 @@ interface BusinessData {
 interface BusinessFormData {
   company_name: string;
   full_name: string;
+  contacts?: Contact[];
+  documents?: Document[];
+  addresses?: Address[];
 }
 
 const Business: React.FC = () => {
   const { t } = useTranslation();
   const { setLoading } = useLoading();
   const { user } = useAuth();
-  const isI18nReady = useI18nReady();
+  const navigate = useNavigate();
   
   const [businessData, setBusinessData] = useState<BusinessData | null>(null);
   const [formData, setFormData] = useState<BusinessFormData>({
@@ -117,9 +120,11 @@ const Business: React.FC = () => {
   });
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState(0);
   // Removed hasChanges state - buttons are always enabled
   const [saving, setSaving] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // In the new structure, addresses, contacts, and documents are directly on businessData
   // No need for masterUser/masterPerson logic anymore
@@ -167,19 +172,36 @@ const Business: React.FC = () => {
       [name]: value,
     }));
 
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
     if (error) setError('');
     if (success) setSuccess('');
   };
 
   const validateForm = (): boolean => {
+    const errors: { [key: string]: string } = {};
+    
     if (!formData.company_name.trim()) {
-      setError(t('business.companyNameRequired'));
-      return false;
+      errors.company_name = t('business.companyNameRequired');
     }
     if (!formData.full_name.trim()) {
-      setError(t('person.fullNameRequired'));
+      errors.full_name = t('person.fullNameRequired');
+    }
+    
+    setFieldErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      toast.error(t('business.validationError'));
       return false;
     }
+    
     return true;
   };
 
@@ -189,12 +211,23 @@ const Business: React.FC = () => {
     setSaving(true);
     setError('');
     setSuccess('');
+    setFieldErrors({});
 
     try {
-      const response = await apiService.put<BusinessData>('/businesses/me', formData);
+      // Prepare the complete data to send
+      const completeFormData = {
+        ...formData,
+        contacts: businessData?.contacts || [],
+        documents: businessData?.documents || [],
+        addresses: businessData?.addresses || [],
+      };
+
+      const response = await apiService.put<BusinessData>('/businesses/me', completeFormData);
       setBusinessData(response);
       setSuccess(t('business.updateSuccess'));
-      toast.success(t('business.updateSuccess'));
+      
+      // Show success modal instead of toast
+      setShowSuccessModal(true);
     } catch (err: unknown) {
       const errorMessage = handleError(
         err,
@@ -226,6 +259,15 @@ const Business: React.FC = () => {
     }
     setError('');
     setSuccess('');
+    setFieldErrors({});
+    
+    // Redirect to home after cancel
+    navigate('/');
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/');
   };
 
   const handleContactsChange = (contacts: Contact[]) => {
@@ -264,19 +306,6 @@ const Business: React.FC = () => {
     }
   };
 
-  // Wait for i18n to be ready before rendering
-  if (!isI18nReady) {
-    return (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh'
-      }}>
-        <Typography variant="h6">Carregando...</Typography>
-      </Box>
-    );
-  }
 
   if (!businessData) {
     return (
@@ -284,7 +313,7 @@ const Business: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh'
+        height: '100%'
       }}>
         <Typography variant="h6">{t('business.loading')}</Typography>
       </Box>
@@ -296,58 +325,73 @@ const Business: React.FC = () => {
       display: 'flex',
       flexDirection: 'column',
       height: '100%', // Full available height from Layout
-      position: 'relative'
+      position: 'relative',
+      minHeight: '100%' // Ensure it takes full height
     }}>
       {/* Content Container - Fixed height to avoid overlap with button panel */}
       <Box sx={{
-        height: { xs: 'calc(100% - 80px)', sm: 'calc(100% - 100px)' }, // Subtract button panel height only
+        flex: 1, // Take all available space
         width: '100%',
-        overflowY: 'auto' // Scrollbar appears within Layout boundaries
+        overflowY: 'auto', // Scrollbar appears within Layout boundaries
+        minHeight: 0 // Allow flex to work properly
       }}>
-        {/* Inner Content - Constrained width, centered */}
+        {/* Inner Content - Full width container */}
         <Box sx={{
-          maxWidth: { xs: '100%', md: 1200 },
-          mx: 'auto',
           width: '100%',
-          px: { xs: 2, sm: 3 },
-          pt: { xs: 2, sm: 3 },
           minHeight: '100%',
-          // Ensure proper spacing
-          '& .MuiCard-root': {
-            mb: { xs: 2, sm: 3 }
-          }
+          display: 'flex',
+          flexDirection: 'column',
+          // Spacing controlled by container margins
         }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100%'
+          }}
         >
-          {/* Page Header - Integrated into scrollable content */}
-          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-            <PageHeader
-              title={t('business.title')}
-              subtitle={t('business.subtitle')}
-            />
+          {/* Content wrapper with same width as button panel */}
+          <Box sx={{
+            maxWidth: { xs: '100%', md: 1200 },
+            mx: 'auto',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1
+          }}>
+          {/* Simple Title with Icon */}
+          <Box sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            py: 2
+          }}>
+            <Typography 
+              variant="h3" 
+              component="h1"
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                fontWeight: 600,
+                color: 'text.primary',
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+              }}
+            >
+              <BusinessIcon sx={{ mr: 1, color: 'primary.main', fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' } }} />
+              {t('business.title')}
+            </Typography>
           </Box>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {success}
-            </Alert>
-          )}
 
           {/* Row container: Info (left) and Business Status (right) */}
           <Box sx={{
-            mb: { xs: 2, sm: 3 },
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
-            gap: { xs: 1, sm: 2 }
+            gap: 1.875, // 15px
+            py: 2
           }}>
             {/* Left: Business Information */}
             <Card sx={{ flex: { md: '2 1 0%' } }}>
@@ -367,6 +411,8 @@ const Business: React.FC = () => {
                     value={formData.company_name}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!fieldErrors.company_name}
+                    helperText={fieldErrors.company_name}
                   />
                   <TextField
                     fullWidth
@@ -375,6 +421,8 @@ const Business: React.FC = () => {
                     value={formData.full_name}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!fieldErrors.full_name}
+                    helperText={fieldErrors.full_name}
                   />
                 </Box>
               </CardContent>
@@ -410,9 +458,17 @@ const Business: React.FC = () => {
           </Box>
 
           {/* Tabs for Sub-entities */}
-          <Card sx={{
-            mb: { xs: 2, sm: 3 } // Reduce bottom margin to prevent overflow
+          <Box sx={{ 
+            flex: 1, 
+            display: 'flex', 
+            flexDirection: 'column',
+            py: 2
           }}>
+            <Card sx={{
+              flex: 1, // Take remaining space
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
             <Tabs
               value={activeTab}
               onChange={(_, newValue) => setActiveTab(newValue)}
@@ -421,32 +477,43 @@ const Business: React.FC = () => {
             >
               <Tab
                 icon={<ContactIcon />}
-                label={t('business.tabs.contacts')}
+                label={t('tabs.contacts')}
                 iconPosition="start"
               />
               <Tab
                 icon={<DocumentIcon />}
-                label={t('business.tabs.documents')}
+                label={t('tabs.documents')}
                 iconPosition="start"
               />
               <Tab
                 icon={<AddressIcon />}
-                label={t('business.tabs.addresses')}
+                label={t('tabs.addresses')}
                 iconPosition="start"
               />
             </Tabs>
 
-            <CardContent sx={{ pb: 6 }}>
+            <CardContent sx={{ 
+              pb: 6,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0
+            }}>
               {/* Tab Content */}
               {activeTab === 0 && businessData && (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0
+                  }}
                 >
                   <ContactManager
                     contacts={businessData.contacts}
-                    personId={businessData.id} // Using business ID as person ID for new structure
                     onContactsChange={handleContactsChange}
                     disabled={false}
                   />
@@ -458,10 +525,15 @@ const Business: React.FC = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0
+                  }}
                 >
                   <DocumentManager
                     documents={businessData.documents}
-                    personId={businessData.id} // Using business ID as person ID for new structure
                     onDocumentsChange={handleDocumentsChange}
                     disabled={false}
                   />
@@ -476,7 +548,6 @@ const Business: React.FC = () => {
                 >
                   <AddressManager
                     addresses={businessData.addresses}
-                    personId={businessData.id} // Using business ID as person ID for new structure
                     onAddressesChange={handleAddressesChange}
                     disabled={false}
                   />
@@ -484,17 +555,89 @@ const Business: React.FC = () => {
               )}
             </CardContent>
           </Card>
+          </Box> {/* Close Tabs Container */}
+          </Box> {/* Close Content wrapper */}
         </motion.div>
         </Box> {/* Close Inner Content */}
       </Box> {/* Close Content Container */}
 
-      {/* Button Panel - All styling handled by component */}
-      <EditPageButtonPanel
-        onSave={handleSave}
-        onCancel={handleCancel}
-        saving={saving}
-        savingText={t('business.saving')}
-      />
+      {/* Button Panel - Wrapped in Box with maxWidth */}
+      <Box sx={{
+        maxWidth: { xs: '100%', md: 1200 },
+        mx: 'auto',
+        width: '100%',
+        height: 'auto',
+        flexShrink: 0, // Shrink behavior - only grows as needed
+        py: 2
+      }}>
+        <EditPageButtonPanel
+          onSave={handleSave}
+          onCancel={handleCancel}
+          saving={saving}
+          savingText={t('business.saving')}
+        />
+      </Box>
+
+      {/* Success Modal */}
+      <Dialog
+        open={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            maxWidth: 400, // Smaller modal width
+            borderRadius: 2
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          backgroundColor: '#4caf50',
+          color: 'white',
+          fontWeight: 600,
+          textAlign: 'center',
+          py: 1.5, // Further reduced padding
+          fontSize: '1.1rem' // Smaller title
+        }}>
+          {t('business.success')}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, textAlign: 'center', pt: 2 }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mt: 2, // Added margin-top to center between header and button
+              mb: 2,
+              fontSize: '1rem', // Smaller font
+              fontWeight: 400,
+              color: 'text.primary',
+              lineHeight: 1.5
+            }}
+          >
+            {t('business.successMessage')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, justifyContent: 'center', pt: 1 }}>
+          <Button
+            ref={(el) => el?.focus()} // Auto-focus on button
+            onClick={handleSuccessModalClose}
+            variant="contained"
+            size="medium"
+            autoFocus // HTML auto-focus attribute
+            sx={{
+              backgroundColor: '#4caf50',
+              fontSize: '0.95rem',
+              px: 3,
+              py: 1,
+              minWidth: 100,
+              '&:hover': {
+                backgroundColor: '#45a049',
+              },
+            }}
+          >
+            {t('common.ok')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

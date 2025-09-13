@@ -7,7 +7,6 @@ import {
   ListItemIcon,
   ListItemText,
   Box,
-  Typography,
   Divider,
   useTheme,
   useMediaQuery,
@@ -63,18 +62,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       overflow: 'hidden',
       minWidth: 0
     }}>
-      <Box sx={{ p: 2, textAlign: 'center' }}>
-        {open ? (
-          <Typography variant="h6" color="primary" fontWeight="bold">
-            {t('app.name')}
-          </Typography>
-        ) : (
-          <Typography variant="h6" color="primary" fontWeight="bold" sx={{ fontSize: '1.2rem' }}>
-            FS
-          </Typography>
-        )}
-      </Box>
-      <Divider />
       
       {/* Main menu items */}
       <List sx={{ flex: 1, overflow: 'hidden' }}>
@@ -181,11 +168,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       sx={{
         width: open ? 280 : (isMobile ? 0 : 64),
         flexShrink: 0,
+        height: '100%',
         '& .MuiDrawer-paper': {
           width: open ? 280 : (isMobile ? 280 : 64),
           boxSizing: 'border-box',
           position: 'relative',
-          height: '100vh',
+          height: '100%',
           backgroundColor: '#A59D84',
           transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,

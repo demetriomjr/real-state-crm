@@ -15,26 +15,26 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
+import EditDialog from './common/EditDialog';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  WhatsApp as WhatsAppIcon,
   PhoneAndroid as CellphoneIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CONTACT_TYPES, type ContactType } from '../utils/validation';
+import { CONTACT_TYPES, type ContactType, formatPhone, formatCellphone } from '../utils/validation';
 import { getContactValidationErrorMessage } from '../utils/validation';
 
 interface Contact {
   id?: string;
+  contact_name?: string;
   contact_type: ContactType;
   contact_value: string;
-  person_id: string;
-  is_primary: boolean;
+  is_whatsapp?: boolean;
   is_default: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -42,14 +42,12 @@ interface Contact {
 
 interface ContactManagerProps {
   contacts: Contact[];
-  personId: string;
   onContactsChange: (contacts: Contact[]) => void;
   disabled?: boolean;
 }
 
 const ContactManager: React.FC<ContactManagerProps> = ({
   contacts,
-  personId,
   onContactsChange,
   disabled = false,
 }) => {
@@ -64,8 +62,6 @@ const ContactManager: React.FC<ContactManagerProps> = ({
         return <EmailIcon />;
       case 'phone':
         return <PhoneIcon />;
-      case 'whatsapp':
-        return <WhatsAppIcon />;
       case 'cellphone':
         return <CellphoneIcon />;
       default:
@@ -87,7 +83,7 @@ const ContactManager: React.FC<ContactManagerProps> = ({
     if (!contact.contact_value.trim()) {
       newErrors.contact_value = t('contact.validation.valueRequired');
     } else {
-      const validationError = getContactValidationErrorMessage(contact.contact_type, contact.contact_value);
+      const validationError = getContactValidationErrorMessage(contact.contact_type, contact.contact_value, t);
       if (validationError) {
         newErrors.contact_value = validationError;
       }
@@ -99,10 +95,10 @@ const ContactManager: React.FC<ContactManagerProps> = ({
 
   const handleAddContact = () => {
     const newContact: Contact = {
+      contact_name: '',
       contact_type: 'email',
       contact_value: '',
-      person_id: personId,
-      is_primary: false,
+      is_whatsapp: false,
       is_default: false,
     };
     setEditingContact(newContact);
@@ -129,6 +125,13 @@ const ContactManager: React.FC<ContactManagerProps> = ({
         ...editingContact,
         id: `temp_${Date.now()}`, // Temporary ID for new contacts
       };
+      
+      // If this is the first contact of this type and user didn't explicitly set it, make it default automatically
+      const existingContactsOfType = contacts.filter(c => c.contact_type === editingContact.contact_type);
+      if (existingContactsOfType.length === 0 && !editingContact.is_default) {
+        newContact.is_default = true;
+      }
+      
       updatedContacts = [...contacts, newContact];
     } else {
       // Update existing contact
@@ -137,11 +140,33 @@ const ContactManager: React.FC<ContactManagerProps> = ({
       );
     }
 
-    // Handle default logic - only one default per type
+    // Handle default logic - ensure only one default per type
+    const contactsOfType = updatedContacts.filter(c => c.contact_type === editingContact.contact_type);
+    
+    // If the current contact is being set as default, unset all others of the same type first
     if (editingContact.is_default) {
       updatedContacts = updatedContacts.map(contact => {
-        if (contact.contact_type === editingContact.contact_type && contact.id !== editingContact.id) {
-          return { ...contact, is_default: false };
+        if (contact.contact_type === editingContact.contact_type) {
+          // For new contacts, compare by position in the array
+          // For existing contacts, compare by ID
+          if (isAdding) {
+            // If adding, unset all existing contacts of this type
+            return contact.id?.startsWith('temp_') ? contact : { ...contact, is_default: false };
+          } else {
+            // If editing, unset all others except the current one
+            return contact.id !== editingContact.id ? { ...contact, is_default: false } : contact;
+          }
+        }
+        return contact;
+      });
+    }
+    
+    // If no default exists for this type, make the first one default
+    const defaultContactsOfType = updatedContacts.filter(c => c.contact_type === editingContact.contact_type && c.is_default);
+    if (defaultContactsOfType.length === 0 && contactsOfType.length > 0) {
+      updatedContacts = updatedContacts.map(contact => {
+        if (contact.contact_type === editingContact.contact_type && contact.id === contactsOfType[0].id) {
+          return { ...contact, is_default: true };
         }
         return contact;
       });
@@ -154,7 +179,27 @@ const ContactManager: React.FC<ContactManagerProps> = ({
   };
 
   const handleDeleteContact = (contactId: string) => {
+    const contactToDelete = contacts.find(c => c.id === contactId);
+    if (!contactToDelete) return;
+    
     const updatedContacts = contacts.filter(contact => contact.id !== contactId);
+    
+    // If we deleted the default contact of this type, make another one default
+    if (contactToDelete.is_default) {
+      const remainingContactsOfType = updatedContacts.filter(c => c.contact_type === contactToDelete.contact_type);
+      if (remainingContactsOfType.length > 0) {
+        // Make the first remaining contact of this type default
+        const updatedContactsWithNewDefault = updatedContacts.map(contact => {
+          if (contact.contact_type === contactToDelete.contact_type && contact.id === remainingContactsOfType[0].id) {
+            return { ...contact, is_default: true };
+          }
+          return contact;
+        });
+        onContactsChange(updatedContactsWithNewDefault);
+        return;
+      }
+    }
+    
     onContactsChange(updatedContacts);
   };
 
@@ -164,12 +209,24 @@ const ContactManager: React.FC<ContactManagerProps> = ({
     setErrors({});
   };
 
-  const handleFieldChange = (field: keyof Contact, value: any) => {
+  const handleFieldChange = (field: keyof Contact, value: string | boolean) => {
     if (!editingContact) return;
+
+    let processedValue = value;
+
+    // Apply formatting for contact_value based on contact_type
+    if (field === 'contact_value' && typeof value === 'string') {
+      const contactType = editingContact.contact_type;
+      if (contactType === 'phone') {
+        processedValue = formatPhone(value);
+      } else if (contactType === 'cellphone') {
+        processedValue = formatCellphone(value);
+      }
+    }
 
     setEditingContact(prev => ({
       ...prev!,
-      [field]: value,
+      [field]: processedValue,
     }));
 
     // Clear error for this field
@@ -181,16 +238,31 @@ const ContactManager: React.FC<ContactManagerProps> = ({
     }
   };
 
+  const formatContactValueForDisplay = (contactType: ContactType, contactValue: string): string => {
+    switch (contactType) {
+      case 'phone':
+        return formatPhone(contactValue);
+      case 'cellphone':
+        return formatCellphone(contactValue);
+      case 'email':
+      default:
+        return contactValue;
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">{t('contact.manager.title')}</Typography>
+        <Typography variant="h6" sx={{ display: { xs: 'none', sm: 'block' } }}>
+          {t('contact.manager.title')}
+        </Typography>
         {!disabled && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddContact}
             size="small"
+            sx={{ ml: { xs: 'auto', sm: 0 } }}
           >
             {t('contact.manager.addContact')}
           </Button>
@@ -215,19 +287,24 @@ const ContactManager: React.FC<ContactManagerProps> = ({
                       {getContactIcon(contact.contact_type)}
                       <Box>
                         <Typography variant="body2" color="text.secondary">
-                          {getContactTypeLabel(contact.contact_type)}
+                          {contact.contact_name || getContactTypeLabel(contact.contact_type)}
+                          {contact.is_whatsapp && (
+                            <Chip 
+                              label="WhatsApp" 
+                              size="small" 
+                              color="success" 
+                              sx={{ ml: 1, fontSize: '0.7rem', height: 20 }}
+                            />
+                          )}
                         </Typography>
                         <Typography variant="body1">
-                          {contact.contact_value}
+                          {formatContactValueForDisplay(contact.contact_type, contact.contact_value)}
                         </Typography>
                       </Box>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       {contact.is_default && (
                         <Chip label={t('contact.default')} size="small" color="primary" />
-                      )}
-                      {contact.is_primary && (
-                        <Chip label={t('contact.primary')} size="small" color="secondary" />
                       )}
                       {!disabled && (
                         <>
@@ -259,90 +336,93 @@ const ContactManager: React.FC<ContactManagerProps> = ({
         </AnimatePresence>
       </Box>
 
-      {/* Add/Edit Form */}
-      {editingContact && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-        >
-          <Card variant="outlined" sx={{ border: '2px solid', borderColor: 'primary.main' }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                {isAdding ? t('contact.manager.addContact') : t('contact.manager.editContact')}
-              </Typography>
+      {/* Edit Dialog */}
+      <EditDialog
+        open={!!editingContact}
+        onClose={handleCancel}
+        onSave={handleSaveContact}
+        title={isAdding ? t('contact.manager.addContact') : t('contact.manager.editContact')}
+        saveDisabled={false}
+        saveText={isAdding ? t('common.add') : t('common.save')}
+      >
+        {editingContact && (
+          <>
+            <TextField
+              fullWidth
+              label={t('contact.name')}
+              value={editingContact.contact_name || ''}
+              onChange={(e) => handleFieldChange('contact_name', e.target.value)}
+              error={!!errors.contact_name}
+              helperText={errors.contact_name || t('contact.help.name')}
+              sx={{ mb: 2 }}
+            />
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <FormControl fullWidth error={!!errors.contact_type}>
-                  <InputLabel>{t('contact.type')}</InputLabel>
-                  <Select
-                    value={editingContact.contact_type}
-                    onChange={(e) => handleFieldChange('contact_type', e.target.value)}
-                    label={t('contact.type')}
-                  >
-                    {CONTACT_TYPES.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getContactIcon(type)}
-                          {getContactTypeLabel(type)}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.contact_type && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                      {errors.contact_type}
-                    </Typography>
-                  )}
-                </FormControl>
+            <FormControl fullWidth error={!!errors.contact_type} sx={{ mb: 2 }}>
+              <InputLabel>{t('contact.type')}</InputLabel>
+              <Select
+                value={editingContact.contact_type}
+                onChange={(e) => handleFieldChange('contact_type', e.target.value)}
+                label={t('contact.type')}
+              >
+                {CONTACT_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {getContactIcon(type)}
+                      {getContactTypeLabel(type)}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.contact_type && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                  {errors.contact_type}
+                </Typography>
+              )}
+            </FormControl>
 
-                <TextField
-                  fullWidth
-                  label={t('contact.value')}
-                  value={editingContact.contact_value}
-                  onChange={(e) => handleFieldChange('contact_value', e.target.value)}
-                  error={!!errors.contact_value}
-                  helperText={errors.contact_value || t(`contact.help.${editingContact.contact_type}`)}
-                  type={editingContact.contact_type === 'email' ? 'email' : 'tel'}
+            <TextField
+              fullWidth
+              label={t('contact.value')}
+              value={editingContact.contact_value}
+              onChange={(e) => handleFieldChange('contact_value', e.target.value)}
+              error={!!errors.contact_value}
+              helperText={errors.contact_value || t(`contact.help.${editingContact.contact_type}`)}
+              type={editingContact.contact_type === 'email' ? 'email' : 'tel'}
+              sx={{ mb: 2 }}
+            />
+
+            {/* WhatsApp toggle - only show for phone and cellphone */}
+            {(editingContact.contact_type === 'phone' || editingContact.contact_type === 'cellphone') && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editingContact.is_whatsapp || false}
+                    onChange={(e) => handleFieldChange('is_whatsapp', e.target.checked)}
+                  />
+                }
+                label={t('contact.whatsapp')}
+                sx={{ display: 'block', mb: 1 }}
+              />
+            )}
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={editingContact.is_default}
+                  onChange={(e) => handleFieldChange('is_default', e.target.checked)}
+                  disabled={
+                    !isAdding && 
+                    editingContact.is_default && 
+                    contacts.filter(c => c.contact_type === editingContact.contact_type && c.is_default).length === 1
+                  }
                 />
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={editingContact.is_primary}
-                        onChange={(e) => handleFieldChange('is_primary', e.target.checked)}
-                      />
-                    }
-                    label={t('contact.primary')}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={editingContact.is_default}
-                        onChange={(e) => handleFieldChange('is_default', e.target.checked)}
-                      />
-                    }
-                    label={t('contact.default')}
-                  />
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button onClick={handleCancel}>
-                    {t('common.cancel')}
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={handleSaveContact}
-                  >
-                    {isAdding ? t('common.add') : t('common.save')}
-                  </Button>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+              }
+              label={t('contact.default')}
+              sx={{ display: 'block', mt: 1 }}
+            />
+          </>
+        )}
+      </EditDialog>
     </Box>
   );
 };

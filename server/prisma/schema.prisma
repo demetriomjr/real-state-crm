@@ -122,7 +122,6 @@ model Address {
   state         String
   postal_code   String
   country       String
-  is_primary    Boolean  @default(false)
   is_default    Boolean? @default(false)
   created_at    DateTime @default(now())
   created_by    String?
@@ -141,9 +140,10 @@ model Address {
 // Contact entity
 model Contact {
   id            String   @id @default(uuid())
+  contact_name  String?  // Optional contact name/label
   contact_type  String
   contact_value String
-  is_primary    Boolean  @default(false)
+  is_whatsapp   Boolean? @default(false) // WhatsApp toggle for phone/cellphone
   is_default    Boolean? @default(false)
   created_at    DateTime @default(now())
   created_by    String?
@@ -164,7 +164,6 @@ model Document {
   id              String   @id @default(uuid())
   document_type   String
   document_number String
-  is_primary      Boolean  @default(false)
   is_default      Boolean? @default(false)
   created_at      DateTime @default(now())
   created_by      String?

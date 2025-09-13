@@ -5,7 +5,6 @@ export class Document implements IAuditBase {
   document_type: string;
   document_number: string;
   person_id: string;
-  is_primary: boolean;
   is_default?: boolean;
   created_at: Date;
   created_by?: string;
@@ -19,7 +18,6 @@ export class Document implements IAuditBase {
     this.document_type = data.document_type || "";
     this.document_number = data.document_number || "";
     this.person_id = data.person_id || "";
-    this.is_primary = data.is_primary || false;
     this.is_default = data.is_default || false;
     this.created_at = data.created_at || new Date();
     this.created_by = data.created_by;

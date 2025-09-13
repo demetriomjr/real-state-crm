@@ -26,8 +26,8 @@ export class AddressResponseDto {
   @ApiProperty({ description: "District or neighborhood" })
   district?: string;
 
-  @ApiProperty({ description: "Whether this is the primary address" })
-  is_primary: boolean;
+  @ApiProperty({ description: "Whether this is the default address" })
+  is_default?: boolean;
 
   // Note: person_id and all audit fields are concealed for security reasons
 }
@@ -42,8 +42,8 @@ export class ContactResponseDto {
   @ApiProperty({ description: "Contact value" })
   contact_value: string;
 
-  @ApiProperty({ description: "Whether this is the primary contact" })
-  is_primary: boolean;
+  @ApiProperty({ description: "Whether this is the default contact" })
+  is_default?: boolean;
 
   // Note: person_id and all audit fields are concealed for security reasons
 }
@@ -58,8 +58,8 @@ export class DocumentResponseDto {
   @ApiProperty({ description: "Document number" })
   document_number: string;
 
-  @ApiProperty({ description: "Whether this is the primary document" })
-  is_primary: boolean;
+  @ApiProperty({ description: "Whether this is the default document" })
+  is_default?: boolean;
 
   // Note: person_id and all audit fields are concealed for security reasons
 }

@@ -15,8 +15,6 @@ export class DocumentResponseDto {
   document_number: string;
 
   @ApiProperty({ description: "Is primary document", example: true })
-  is_primary: boolean;
-
   @ApiProperty({
     description: "Is default document for this type",
     example: true,

@@ -64,11 +64,7 @@ export class LeadController {
       documents: other_documents,
     };
 
-    return await this.leadService.createLead(
-      leadData,
-      personData,
-      userId,
-    );
+    return await this.leadService.createLead(leadData, personData, userId);
   }
 
   @Get()
@@ -137,12 +133,7 @@ export class LeadController {
       documents: other_documents,
     };
 
-    return await this.leadService.updateLead(
-      id,
-      leadData,
-      personData,
-      userId,
-    );
+    return await this.leadService.updateLead(id, leadData, personData, userId);
   }
 
   @Delete(":id")

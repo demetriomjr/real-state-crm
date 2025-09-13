@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Paper } from '@mui/material';
+import { Button, Paper } from '@mui/material';
 import { Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
@@ -18,28 +18,20 @@ const EditPageButtonPanel: React.FC<EditPageButtonPanelProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Shared width styles for consistency
-  const sharedWidthStyles = {
-    maxWidth: { xs: '100%', md: 1200 },
-    mx: 'auto',
-    width: '100%'
-  };
-
   return (
-    <Box sx={sharedWidthStyles}>
-      <Paper
-        elevation={3}
-        sx={{
-          p: { xs: 1.5, sm: 2 },
-          backgroundColor: 'background.paper',
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          display: 'flex',
-          gap: 2,
-          justifyContent: 'flex-end'
-        }}
-      >
+    <Paper
+      elevation={3}
+      sx={{
+        width: '100%',
+        px: { xs: 1.5, sm: 2 },
+        py: { xs: 1.5, sm: 2 },
+        backgroundColor: 'background.paper',
+        borderRadius: 2,
+        display: 'flex',
+        gap: 2,
+        justifyContent: 'flex-end'
+      }}
+    >
           <Button
             variant="outlined"
             startIcon={<CancelIcon />}
@@ -71,8 +63,7 @@ const EditPageButtonPanel: React.FC<EditPageButtonPanelProps> = ({
           >
             {saving ? (savingText || t('business.saving')) : t('common.save')}
           </Button>
-        </Paper>
-    </Box>
+    </Paper>
   );
 };
 

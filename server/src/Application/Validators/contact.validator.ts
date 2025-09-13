@@ -8,7 +8,6 @@ export class ContactValidator {
   private readonly expectedContactTypes = [
     "email",
     "phone",
-    "whatsapp",
     "cellphone",
   ];
 
@@ -20,9 +19,6 @@ export class ContactValidator {
   private readonly phoneRegex =
     /^(\+?[1-9]\d{1,14}|\(\d{1,4}\)\s*\d{1,14}|\d{1,14})$/;
 
-  // WhatsApp regex - similar to phone but can include spaces and dashes
-  private readonly whatsappRegex =
-    /^(\+?[1-9]\d{1,14}|\(\d{1,4}\)\s*\d{1,14}|\d{1,14})$/;
 
   // Cellphone regex - Brazilian format and international
   private readonly cellphoneRegex =
@@ -67,10 +63,6 @@ export class ContactValidator {
       data.contact_value,
     );
 
-    // Validate is_primary (optional)
-    if (data.is_primary !== undefined && typeof data.is_primary !== "boolean") {
-      throw new BadRequestException("is_primary must be a boolean");
-    }
 
     // Validate is_default (optional)
     if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
@@ -123,10 +115,6 @@ export class ContactValidator {
       }
     }
 
-    // Validate is_primary if provided
-    if (data.is_primary !== undefined && typeof data.is_primary !== "boolean") {
-      throw new BadRequestException("is_primary must be a boolean");
-    }
 
     // Validate is_default if provided
     if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
@@ -152,11 +140,6 @@ export class ContactValidator {
       case "phone":
         if (!this.isValidPhone(cleanValue)) {
           throw new BadRequestException("Invalid phone format");
-        }
-        break;
-      case "whatsapp":
-        if (!this.isValidWhatsApp(cleanValue)) {
-          throw new BadRequestException("Invalid WhatsApp format");
         }
         break;
       case "cellphone":
@@ -188,18 +171,6 @@ export class ContactValidator {
     return cleanValue.length >= 7 && cleanValue.length <= 15;
   }
 
-  private isValidWhatsApp(value: string): boolean {
-    // Remove common separators
-    const cleanValue = value.replace(/[\s\-\(\)\.]/g, "");
-
-    // Check if it matches the WhatsApp regex
-    if (!this.whatsappRegex.test(cleanValue)) {
-      return false;
-    }
-
-    // WhatsApp numbers should be valid phone numbers
-    return this.isValidPhone(value);
-  }
 
   private isValidCellphone(value: string): boolean {
     // Remove common separators

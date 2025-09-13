@@ -9,6 +9,8 @@ const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
+        minHeight: 27,
+        height: 'auto',
         py: 1,
         px: 2,
         backgroundColor: '#C1BAA1',
@@ -16,6 +18,9 @@ const Footer: React.FC = () => {
         borderColor: 'divider',
         textAlign: 'center',
         flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}
     >
       <Typography variant="body2" color="text.secondary">

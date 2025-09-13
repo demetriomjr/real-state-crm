@@ -150,7 +150,10 @@ export class UserController {
     description: "Access denied - Insufficient user level",
   })
   @ApiResponse({ status: 404, description: "User not found" })
-  async findOne(@Param("id") id: string, @Request() req: any): Promise<UserResponseDto> {
+  async findOne(
+    @Param("id") id: string,
+    @Request() req: any,
+  ): Promise<UserResponseDto> {
     const userLevel = req.userLevel;
 
     // Get the user to check their level
