@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import { 
   DOCUMENT_TYPES, 
   type DocumentType, 
@@ -35,7 +36,7 @@ import {
 
 interface Document {
   id?: string;
-  document_type: string;
+  document_type: 'cpf' | 'cnpj' | 'rg' | 'passport' | 'driver_license';
   document_number: string;
   is_default: boolean;
   created_at?: Date;
@@ -84,6 +85,11 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
   };
 
   const handleAddDocument = () => {
+    if (documents.length >= 10) {
+      toast.error(t('document.maxItemsReached'));
+      return;
+    }
+    
     const newDocument: Document = {
       document_type: 'cpf',
       document_number: '',
@@ -220,17 +226,13 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" sx={{ display: { xs: 'none', sm: 'block' } }}>
-          {t('document.manager.title')}
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
         {!disabled && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddDocument}
             size="small"
-            sx={{ ml: { xs: 'auto', sm: 0 } }}
           >
             {t('document.manager.addDocument')}
           </Button>
@@ -239,8 +241,23 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
 
       {/* Existing Documents */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-        <AnimatePresence>
-          {documents.map((document) => (
+        {documents.length === 0 ? (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              py: 4,
+              color: 'text.secondary'
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {t('document.manager.noRecords')}
+            </Typography>
+          </Box>
+        ) : (
+          <AnimatePresence>
+            {documents.map((document) => (
             <motion.div
               key={document.id}
               initial={{ opacity: 0, y: -20 }}
@@ -292,8 +309,9 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
-        </AnimatePresence>
+            ))}
+          </AnimatePresence>
+        )}
       </Box>
 
       {/* Edit Dialog */}

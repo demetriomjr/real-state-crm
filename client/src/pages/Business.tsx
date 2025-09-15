@@ -46,7 +46,7 @@ interface Contact {
 
 interface Document {
   id?: string;
-  document_type: string;
+  document_type: 'cpf' | 'cnpj' | 'rg' | 'passport' | 'driver_license';
   document_number: string;
   is_default: boolean;
   created_at?: Date;
@@ -56,6 +56,7 @@ interface Document {
 interface Address {
   id?: string;
   street: string;
+  number?: string;
   city: string;
   state: string;
   postal_code: string;
@@ -67,11 +68,10 @@ interface Address {
 
 interface User {
   id: string;
-  fullName: string;
   username: string;
   user_level: number;
   tenant_id: string;
-  person_id: string;
+  person_id?: string;
   person: {
     id: string;
     full_name: string;
@@ -110,7 +110,7 @@ interface BusinessFormData {
 const Business: React.FC = () => {
   const { t } = useTranslation();
   const { setLoading } = useLoading();
-  const { user } = useAuth();
+  const { user, updateAuthData } = useAuth();
   const navigate = useNavigate();
   
   const [businessData, setBusinessData] = useState<BusinessData | null>(null);
@@ -136,7 +136,7 @@ const Business: React.FC = () => {
   const fetchBusinessData = async () => {
     try {
       setLoading(true, t('business.loading'));
-      const response = await apiService.get<BusinessData>('/businesses/me');
+      const response = await apiService.getCurrentBusiness();
       setBusinessData(response);
       setFormData({
         company_name: response.company_name,
@@ -145,7 +145,7 @@ const Business: React.FC = () => {
     } catch (err: unknown) {
       const errorMessage = handleError(
         err,
-        user?.user_level || 1,
+        1, // Default user level - actual level validated server-side
         () => {
           // Redirect to login handled by error handler
           window.location.href = '/login';
@@ -222,16 +222,34 @@ const Business: React.FC = () => {
         addresses: businessData?.addresses || [],
       };
 
-      const response = await apiService.put<BusinessData>('/businesses/me', completeFormData);
+      const response = await apiService.updateCurrentBusiness(completeFormData);
       setBusinessData(response);
       setSuccess(t('business.updateSuccess'));
+      
+      // Update user's full_name in localStorage if it changed
+      if (user && response.full_name !== user.fullName) {
+        const updatedUser = {
+          ...user,
+          fullName: response.full_name,
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Update auth context if available
+        if (updateAuthData) {
+          updateAuthData(
+            localStorage.getItem('token') || '',
+            localStorage.getItem('userSecret') || '',
+            localStorage.getItem('expires_at') || '',
+            updatedUser
+          );
+        }
+      }
       
       // Show success modal instead of toast
       setShowSuccessModal(true);
     } catch (err: unknown) {
       const errorMessage = handleError(
         err,
-        user?.user_level || 1,
+        1, // Default user level - actual level validated server-side
         () => {
           // Redirect to login handled by error handler
           window.location.href = '/login';

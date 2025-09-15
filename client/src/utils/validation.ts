@@ -264,32 +264,33 @@ export const formatPhone = (phone: string): string => {
   // Remove all non-digit characters
   const digits = phone.replace(/\D/g, '');
   
-  // Brazilian landline phone formatting
+  // Brazilian phone formatting (no country code) - Format: (##) #####-####
   if (digits.length === 10) {
-    // Format: (XX) XXXX-XXXX
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  } else if (digits.length === 11 && digits.startsWith('55')) {
-    // International Brazilian format: +55 (XX) XXXX-XXXX
+    // Format: (##) #####-#### for landlines
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  } else if (digits.length === 11) {
+    // Format: (##) #####-#### for cellphones
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  } else if (digits.length === 12 && digits.startsWith('55')) {
+    // Remove country code: 55 (##) #####-#### -> (##) #####-####
     const localDigits = digits.slice(2);
     if (localDigits.length === 10) {
-      return `+55 (${localDigits.slice(0, 2)}) ${localDigits.slice(2, 6)}-${localDigits.slice(6)}`;
+      return `(${localDigits.slice(0, 2)}) ${localDigits.slice(2, 7)}-${localDigits.slice(7)}`;
     }
   } else if (digits.length === 13 && digits.startsWith('55')) {
-    // International Brazilian format with area code: +55 (XX) XXXXX-XXXX
+    // Remove country code: 55 (##) #####-#### -> (##) #####-####
     const localDigits = digits.slice(2);
     if (localDigits.length === 11) {
-      return `+55 (${localDigits.slice(0, 2)}) ${localDigits.slice(2, 7)}-${localDigits.slice(7)}`;
+      return `(${localDigits.slice(0, 2)}) ${localDigits.slice(2, 7)}-${localDigits.slice(7)}`;
     }
   }
   
-  // International phone formatting
+  // International phone formatting (no country code)
   if (digits.length >= 7 && digits.length <= 15) {
     if (digits.length === 10) {
       return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    } else if (digits.length === 11 && digits[0] === '1') {
-      return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
     } else if (digits.length === 11) {
-      return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
     }
   }
   
@@ -300,26 +301,24 @@ export const formatCellphone = (cellphone: string): string => {
   // Remove all non-digit characters
   const digits = cellphone.replace(/\D/g, '');
   
-  // Brazilian cellphone formatting
+  // Brazilian cellphone formatting (no country code)
   if (digits.length === 11 && digits.startsWith('9')) {
     // Format: (XX) 9XXXX-XXXX
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   } else if (digits.length === 13 && digits.startsWith('55')) {
-    // International Brazilian format: +55 (XX) 9XXXX-XXXX
+    // Remove country code: 55 (XX) 9XXXX-XXXX -> (XX) 9XXXX-XXXX
     const localDigits = digits.slice(2);
     if (localDigits.length === 11 && localDigits.startsWith('9')) {
-      return `+55 (${localDigits.slice(0, 2)}) ${localDigits.slice(2, 7)}-${localDigits.slice(7)}`;
+      return `(${localDigits.slice(0, 2)}) ${localDigits.slice(2, 7)}-${localDigits.slice(7)}`;
     }
   }
   
-  // International cellphone formatting
+  // International cellphone formatting (no country code)
   if (digits.length >= 7 && digits.length <= 15) {
     if (digits.length === 10) {
       return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    } else if (digits.length === 11 && digits[0] === '1') {
-      return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
     } else if (digits.length === 11) {
-      return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
     }
   }
   

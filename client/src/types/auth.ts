@@ -13,9 +13,8 @@ export interface LoginResponse {
 export interface User {
   id: string;
   fullName: string;
-  username: string;
-  user_level: number;
-  tenant_id: string;
+  // Note: username, user_level, and roles removed for security - these are validated server-side only
+  // and available in JWT payload. Frontend should not store or trust these values.
 }
 
 export interface AuthContextType {

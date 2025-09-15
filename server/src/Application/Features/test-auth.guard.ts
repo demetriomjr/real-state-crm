@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import * as jwt from "jsonwebtoken";
 
 @Injectable()
 export class TestAuthGuard implements CanActivate {
@@ -19,13 +20,12 @@ export class TestAuthGuard implements CanActivate {
       const authHeader = request.headers.authorization;
       if (authHeader && authHeader.startsWith("Bearer ")) {
         try {
-          const jwt = require("jsonwebtoken");
           const token = authHeader.substring(7);
           const decoded = jwt.verify(
             token,
             process.env.JWT_SECRET ||
               "your-super-secret-jwt-key-change-in-production",
-          );
+          ) as any;
 
           // Use the tenant_id from the JWT token for proper tenant isolation
           request.tenantId = decoded.tenant_id;

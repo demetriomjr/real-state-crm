@@ -127,7 +127,7 @@ export const commonValidationRules: ValidationRules = {
   },
   phone: {
     required: true,
-    pattern: /^[\+]?[1-9][\d]{0,15}$/,
+    pattern: /^[+]?[1-9][\d]{0,15}$/,
     message: 'Please enter a valid phone number',
   },
   humanName: {

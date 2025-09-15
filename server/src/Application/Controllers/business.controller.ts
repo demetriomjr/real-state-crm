@@ -113,37 +113,6 @@ export class BusinessController {
     return this.businessService.findAll(page, limit, userLevel);
   }
 
-  @Get("me")
-  @UseGuards(
-    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
-      ? TestAuthGuard
-      : JwtAuthGuard,
-  )
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: "Get current user's business",
-    description:
-      "Retrieves the business information for the currently authenticated user.",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Business retrieved successfully",
-    type: BusinessResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: "Business not found",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Unauthorized - Invalid or missing JWT token",
-  })
-  async findMyBusiness(@Request() req: any): Promise<BusinessResponseDto> {
-    const tenantId = req.tenantId;
-    this.logger.log(`Fetching business for tenant: ${tenantId}`);
-    return this.businessService.findOneWithRelations(tenantId);
-  }
-
   @Get(":id")
   @UseGuards(
     process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
@@ -152,9 +121,9 @@ export class BusinessController {
   )
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Get business by ID (Admin Only)",
+    summary: "Get business by ID",
     description:
-      "Retrieves business details by ID. This endpoint requires admin level (8+) access.",
+      "Retrieves business details by ID. If ID matches current user's tenantId, returns business with relations (equivalent to /me). For other businesses, requires admin level (8+) access.",
   })
   @ApiParam({ name: "id", description: "Business ID (UUID)" })
   @ApiResponse({
@@ -165,7 +134,7 @@ export class BusinessController {
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Access denied - Admin level required",
+    description: "Access denied - Admin level required for other businesses",
   })
   @ApiResponse({ status: 404, description: "Business not found" })
   async findOne(
@@ -175,16 +144,16 @@ export class BusinessController {
     const userLevel = req.userLevel;
     const userTenantId = req.tenantId;
 
-    if (userLevel < 8) {
-      throw new BadRequestException(
-        "Access denied. Admin level (8+) required to view business details.",
-      );
+    // Check if this is the user's own business (equivalent to "me")
+    if (userTenantId === id) {
+      this.logger.log(`Fetching own business for tenant: ${userTenantId}`);
+      return this.businessService.findOneWithRelations(id);
     }
 
-    // Check tenant isolation - users can only access their own business
-    if (userTenantId && userTenantId !== id) {
+    // For other businesses, require admin level
+    if (userLevel < 8) {
       throw new BadRequestException(
-        "Access denied. You can only access your own business.",
+        "Access denied. Admin level (8+) required to view other business details.",
       );
     }
 
@@ -217,47 +186,14 @@ export class BusinessController {
     // TODO: Add confirmation step to create user - implement user creation confirmation logic
     const result = await this.businessService.create(createBusinessDto);
 
-    // Create JWT token for the master user
-    const authToken = await this.authorizationService.createToken(
-      result.masterUser,
+    // Create JWT token for the master user using DTO
+    const authToken = await this.authorizationService.createTokenFromDto(
+      result.masterUserDto,
+      result.masterUserLevel,
+      result.tenantId,
     );
 
     return authToken;
-  }
-
-  @Put("me")
-  @UseGuards(
-    process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
-      ? TestAuthGuard
-      : JwtAuthGuard,
-  )
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: "Update current user's business",
-    description:
-      "Updates the business information for the currently authenticated user.",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Business updated successfully",
-    type: BusinessResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: "Business not found",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Unauthorized - Invalid or missing JWT token",
-  })
-  @ApiResponse({ status: 400, description: "Validation error" })
-  async updateMyBusiness(
-    @Body() updateBusinessDto: BusinessUpdateDto,
-    @Request() req: any,
-  ): Promise<BusinessResponseDto> {
-    const tenantId = req.tenantId;
-    this.logger.log(`Updating business for tenant: ${tenantId}`);
-    return this.businessService.update(tenantId, updateBusinessDto);
   }
 
   @Put(":id")
@@ -268,9 +204,9 @@ export class BusinessController {
   )
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Update business by ID (Admin Only)",
+    summary: "Update business by ID",
     description:
-      "Updates business information. This endpoint requires admin level (8+) access and tenant isolation.",
+      "Updates business information. If ID matches current user's tenantId, allows update (equivalent to /me). For other businesses, requires admin level (8+) access.",
   })
   @ApiParam({ name: "id", description: "Business ID (UUID)" })
   @ApiResponse({
@@ -281,7 +217,7 @@ export class BusinessController {
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Access denied - Admin level required",
+    description: "Access denied - Admin level required for other businesses",
   })
   @ApiResponse({ status: 404, description: "Business not found" })
   @ApiResponse({ status: 400, description: "Validation error" })
@@ -293,16 +229,16 @@ export class BusinessController {
     const userLevel = req.userLevel;
     const userTenantId = req.tenantId;
 
-    if (userLevel < 8) {
-      throw new BadRequestException(
-        "Access denied. Admin level (8+) required to update business.",
-      );
+    // Check if this is the user's own business (equivalent to "me")
+    if (userTenantId === id) {
+      this.logger.log(`Updating own business for tenant: ${userTenantId}`);
+      return this.businessService.update(id, updateBusinessDto);
     }
 
-    // Check tenant isolation - users can only update their own business
-    if (userTenantId && userTenantId !== id) {
+    // For other businesses, require admin level
+    if (userLevel < 8) {
       throw new BadRequestException(
-        "Access denied. You can only update your own business.",
+        "Access denied. Admin level (8+) required to update other businesses.",
       );
     }
 

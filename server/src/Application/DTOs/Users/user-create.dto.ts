@@ -2,10 +2,6 @@ import { IsString, IsOptional, IsInt, Min, Max, IsUUID } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateUserDto {
-  @ApiProperty({ description: "Full name of the user", example: "John Doe" })
-  @IsString()
-  fullName: string;
-
   @ApiProperty({ description: "Unique username", example: "johndoe" })
   @IsString()
   username: string;
@@ -35,4 +31,13 @@ export class CreateUserDto {
   })
   @IsUUID()
   tenant_id: string;
+
+  @ApiProperty({
+    description: "Person ID (UUID) - links user to person entity",
+    example: "550e8400-e29b-41d4-a716-446655440001",
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  person_id?: string;
 }

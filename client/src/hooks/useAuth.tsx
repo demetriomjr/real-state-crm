@@ -136,12 +136,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
+      // Update auth state synchronously to ensure it's available immediately
       setToken(response.token);
       setUser(response.user);
-    } catch (error) {
-      throw error;
-    } finally {
+      
+      // Ensure loading is set to false after state updates
       setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
   };
 
@@ -170,10 +173,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Fallback to temporary user object if no user data provided
       const tempUser: User = {
         id: 'temp',
-        username: 'temp',
         fullName: 'Usuário',
-        user_level: 1,
-        tenant_id: 'temp',
+        // Note: username, user_level, and roles removed for security
       };
       setUser(tempUser);
       localStorage.setItem('user', JSON.stringify(tempUser));

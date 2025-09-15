@@ -15,6 +15,35 @@ export class Chat implements IAuditBase {
   deleted_at?: Date;
   deleted_by?: string;
 
+  // Person relation data (embedded from repository)
+  person?: {
+    full_name: string;
+    contacts?: Array<{
+      id: string;
+      contact_type: string;
+      contact_value: string;
+      contact_name?: string;
+      is_whatsapp?: boolean;
+      is_default: boolean;
+    }>;
+    documents?: Array<{
+      id: string;
+      document_type: string;
+      document_number: string;
+      is_default: boolean;
+    }>;
+    addresses?: Array<{
+      id: string;
+      street: string;
+      number?: string;
+      city: string;
+      state: string;
+      postal_code: string;
+      country: string;
+      is_default: boolean;
+    }>;
+  };
+
   constructor(data: Partial<Chat>) {
     this.id = data.id || "";
     this.person_id = data.person_id;
@@ -29,5 +58,6 @@ export class Chat implements IAuditBase {
     this.updated_by = data.updated_by;
     this.deleted_at = data.deleted_at;
     this.deleted_by = data.deleted_by;
+    this.person = data.person;
   }
 }

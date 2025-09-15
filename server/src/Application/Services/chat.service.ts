@@ -234,36 +234,6 @@ export class ChatService {
     return chat ? this.mapChatToResponseDto(chat) : null;
   }
 
-  async findByMessageId(messageId: string): Promise<MessageResponseDto | null> {
-    this.logger.log(`Fetching message by message ID: ${messageId}`);
-    const message = await this.messageRepository.findByMessageId(messageId);
-    return message ? this.mapMessageToResponseDto(message) : null;
-  }
-
-  /**
-   * PURGE - Permanently delete chat and all related entities
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   * NOT EXPOSED TO CONTROLLERS - Service level only
-   */
-  async purge(id: string): Promise<void> {
-    this.logger.warn(`PURGING chat with ID: ${id} - PERMANENT DELETION`);
-
-    const existingChat = await this.chatRepository.findOne(id);
-    if (!existingChat) {
-      this.logger.warn(`Chat with ID ${id} not found for purge`);
-      throw new NotFoundException(`Chat with ID ${id} not found`);
-    }
-
-    // Purge related entities first
-    await this.messageRepository.purgeByChat(id);
-
-    // Finally purge the chat
-    await this.chatRepository.purge(id);
-
-    this.logger.warn(`Chat PURGED permanently with ID: ${id}`);
-  }
-
   private mapChatToResponseDto(chat: Chat): ChatResponseDto {
     return {
       id: chat.id,
@@ -272,6 +242,16 @@ export class ChatService {
       user_observations: chat.user_observations,
       session_id: chat.session_id,
       last_message_at: chat.last_message_at,
+      // Person data embedded directly (person is a fragment, not a separate entity)
+      full_name: chat.person?.full_name,
+      document_type: chat.person?.documents?.find((doc) => doc.is_default)
+        ?.document_type,
+      document_number: chat.person?.documents?.find((doc) => doc.is_default)
+        ?.document_number,
+      contacts: chat.person?.contacts || [],
+      documents: chat.person?.documents || [],
+      addresses: chat.person?.addresses || [],
+      // Note: person_id and all audit fields are concealed for security reasons
     };
   }
 

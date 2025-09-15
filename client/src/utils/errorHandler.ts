@@ -15,7 +15,7 @@ export interface SanitizedError {
  * @param userLevel - User's permission level (for developer-specific errors)
  * @returns Sanitized error information
  */
-export function sanitizeError(error: any, userLevel: number = 1): SanitizedError {
+export function sanitizeError(error: unknown, userLevel: number = 1): SanitizedError {
   // Default user-friendly error
   const defaultError: SanitizedError = {
     message: 'Ocorreu um erro inesperado. Tente novamente.',
@@ -28,8 +28,9 @@ export function sanitizeError(error: any, userLevel: number = 1): SanitizedError
     return defaultError;
   }
 
-  const status = error.response?.status;
-  const message = error.response?.data?.message || error.message || '';
+  const errorObj = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+  const status = errorObj.response?.status;
+  const message = errorObj.response?.data?.message || errorObj.message || '';
 
   // Handle authentication/authorization errors
   if (status === 401 || status === 403) {
@@ -82,7 +83,7 @@ export function sanitizeError(error: any, userLevel: number = 1): SanitizedError
       console.warn('Sensitive error detected (developer view):', {
         originalMessage: message,
         status,
-        error: error.response?.data,
+        error: errorObj.response?.data,
       });
     }
     
@@ -130,7 +131,7 @@ export function sanitizeError(error: any, userLevel: number = 1): SanitizedError
     console.warn('Error details (developer view):', {
       message,
       status,
-      error: error.response?.data,
+      error: errorObj.response?.data,
     });
   }
 
@@ -151,7 +152,7 @@ export function sanitizeError(error: any, userLevel: number = 1): SanitizedError
  * @returns The sanitized error message
  */
 export function handleError(
-  error: any,
+  error: unknown,
   userLevel: number = 1,
   onRedirectToLogin?: () => void,
   showToast?: (message: string, type: 'error' | 'warning') => void

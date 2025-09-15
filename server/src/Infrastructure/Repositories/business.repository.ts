@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { MainDatabaseContext } from "@/Infrastructure/Database/main-database.context";
-import { BusinessCreateDto, BusinessUpdateDto } from "@/Application/DTOs";
+import { BusinessCreateDto } from "@/Application/DTOs";
 
 @Injectable()
 export class BusinessRepository {
@@ -98,13 +98,8 @@ export class BusinessRepository {
     return business;
   }
 
-  async update(
-    id: string,
-    businessData: any,
-    personData?: any,
-    subEntitiesData?: any,
-  ): Promise<any> {
-    // Update business data
+  async update(id: string, businessData: any): Promise<any> {
+    // Update business data only
     const business = await this.prisma.business.update({
       where: { id },
       data: {
@@ -123,97 +118,6 @@ export class BusinessRepository {
         },
       },
     });
-
-    // Update person data if provided
-    if (personData && personData.full_name) {
-      // Find the master user (level 9) or fallback to first user
-      const masterUser =
-        business.users?.find((user: any) => user.user_level === 9) ||
-        business.users?.[0];
-
-      if (masterUser && masterUser.person_id) {
-        await this.prisma.person.update({
-          where: { id: masterUser.person_id },
-          data: {
-            full_name: personData.full_name,
-          },
-        });
-      }
-    }
-
-    // Update sub-entities if provided
-    if (subEntitiesData) {
-      const masterUser =
-        business.users?.find((user: any) => user.user_level === 9) ||
-        business.users?.[0];
-
-      if (masterUser && masterUser.person_id) {
-        const personId = masterUser.person_id;
-
-        // Handle contacts
-        if (subEntitiesData.contacts && subEntitiesData.contacts.length > 0) {
-          // Delete existing contacts for this person
-          await this.prisma.contact.deleteMany({
-            where: { person_id: personId },
-          });
-
-          // Create new contacts
-          for (const contact of subEntitiesData.contacts) {
-            await this.prisma.contact.create({
-              data: {
-                contact_type: contact.contact_type,
-                contact_value: contact.contact_value,
-                person_id: personId,
-                is_default: contact.is_default,
-              },
-            });
-          }
-        }
-
-        // Handle documents
-        if (subEntitiesData.documents && subEntitiesData.documents.length > 0) {
-          // Delete existing documents for this person
-          await this.prisma.document.deleteMany({
-            where: { person_id: personId },
-          });
-
-          // Create new documents
-          for (const document of subEntitiesData.documents) {
-            await this.prisma.document.create({
-              data: {
-                document_type: document.document_type,
-                document_number: document.document_number,
-                person_id: personId,
-                is_default: document.is_default,
-              },
-            });
-          }
-        }
-
-        // Handle addresses
-        if (subEntitiesData.addresses && subEntitiesData.addresses.length > 0) {
-          // Delete existing addresses for this person
-          await this.prisma.address.deleteMany({
-            where: { person_id: personId },
-          });
-
-          // Create new addresses
-          for (const address of subEntitiesData.addresses) {
-            await this.prisma.address.create({
-              data: {
-                street: address.street,
-                city: address.city,
-                state: address.state,
-                postal_code: address.postal_code,
-                country: address.country,
-                person_id: personId,
-                is_default: address.is_default,
-              },
-            });
-          }
-        }
-      }
-    }
 
     // Return the raw business entity - Service layer will handle DTO mapping
     return business;
@@ -247,16 +151,5 @@ export class BusinessRepository {
       },
     });
     return count > 0;
-  }
-
-  /**
-   * PURGE - Permanently delete business from database
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purge(id: string): Promise<void> {
-    await this.prisma.business.delete({
-      where: { id },
-    });
   }
 }

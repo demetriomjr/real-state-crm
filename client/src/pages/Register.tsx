@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { useLoading } from '../hooks/useLoading';
 import { handleError } from '../utils/errorHandler';
+import type { User } from '../types/auth';
 import { useAuth } from '../hooks/useAuth';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { useFormValidation, commonValidationRules } from '../hooks/useFormValidation';
@@ -140,7 +141,9 @@ const Register: React.FC = () => {
     setSuccess('');
 
     try {
-      const { confirmPassword: _, ...businessData } = formData;
+      const { confirmPassword, ...businessData } = formData;
+      // confirmPassword is used for validation but not sent to server
+      void confirmPassword;
       
       // Filter out empty optional fields
       const filteredData = {
@@ -149,10 +152,10 @@ const Register: React.FC = () => {
         master_user_phone: businessData.master_user_phone || undefined,
       };
       
-      const response = await apiService.post<{token: string, userSecret: string, expires_at: string, user: any}>('/businesses', filteredData);
+      const response = await apiService.post<{token: string, userSecret: string, expires_at: string, user: unknown}>('/businesses', filteredData);
       
       // Update authentication data in context
-      updateAuthData(response.token, response.userSecret, response.expires_at, response.user);
+      updateAuthData(response.token, response.userSecret, response.expires_at, response.user as User);
       
       setLoading(false);
       setShowSuccessModal(true);

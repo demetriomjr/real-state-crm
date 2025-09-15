@@ -30,7 +30,6 @@ model AuditBase {
 // User entity
 model User {
   id         String    @id @default(uuid())
-  fullName   String
   username   String    @unique
   password   String
   user_level Int       @default(1)
@@ -42,12 +41,13 @@ model User {
   deleted_by String?
 
   // Relations
-  userRoles UserRole[]
-  messages  Message[]
-  tenant_id String?
-  business  Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  person_id String?
-  person    Person?   @relation(fields: [person_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  userRoles  UserRole[]
+  messages   Message[]
+  loginLogs  UserLoginLog[]
+  tenant_id  String?
+  business   Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  person_id  String?
+  person     Person?   @relation(fields: [person_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("users")
 }
@@ -84,8 +84,10 @@ model Business {
   deleted_by   String?
 
   // Relations
-  users User[]
+  users           User[]
   whatsappSessions WhatsappSession[]
+  userLoginLogs   UserLoginLog[]
+  people          Person[]
 
   @@map("businesses")
 }
@@ -110,6 +112,7 @@ model Person {
   customers Customer[]
   chats     Chat[]
   users     User[]
+  tenant    Business? @relation(fields: [tenant_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("people")
 }
@@ -118,6 +121,7 @@ model Person {
 model Address {
   id            String   @id @default(uuid())
   street        String
+  number        String?
   city          String
   state         String
   postal_code   String
@@ -313,4 +317,22 @@ model WhatsappSession {
   chats   Chat[]
 
   @@map("whatsapp_sessions")
+}
+
+model UserLoginLog {
+  id          String   @id @default(cuid())
+  user_id     String
+  tenant_id   String
+  login_at    DateTime @default(now())
+  ip_address  String?
+  user_agent  String?
+  success     Boolean  @default(true)
+  failure_reason String?
+  created_at  DateTime @default(now())
+
+  // Relations
+  user   User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tenant Business @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("user_login_logs")
 }

@@ -205,53 +205,6 @@ export class CustomerService {
     });
   }
 
-  /**
-   * Converts a lead to a customer
-   */
-  async convertLeadToCustomer(
-    leadId: string,
-    customerData: any,
-    userId?: string,
-  ): Promise<any> {
-    this.logger.log(`Converting lead to customer: ${leadId}`);
-
-    // Get the lead with person data
-    const lead = await this.prisma.lead.findUnique({
-      where: { id: leadId },
-      include: {
-        person: true,
-      },
-    });
-
-    if (!lead) {
-      throw new Error("Lead not found");
-    }
-
-    // Create customer using the same person
-    const customer = await this.prisma.customer.create({
-      data: {
-        ...customerData,
-        person_id: lead.person_id,
-        created_by: userId,
-        updated_by: userId,
-      },
-      include: {
-        person: true,
-      },
-    });
-
-    // Soft delete the lead
-    await this.prisma.lead.update({
-      where: { id: leadId },
-      data: {
-        deleted_at: new Date(),
-        deleted_by: userId,
-      },
-    });
-
-    return customer;
-  }
-
   // Address management methods
   async handleAddressPrimaryFlag(
     personId: string,
@@ -279,8 +232,7 @@ export class CustomerService {
           person_id: personId,
           deleted_at: null,
         },
-        data: {
-        },
+        data: {},
       });
       this.logger.log(`Unset other primary addresses for person ${personId}`);
       return true;
@@ -301,9 +253,7 @@ export class CustomerService {
     const createdAddresses = [];
 
     for (const address of addresses) {
-      const isPrimary = await this.handleAddressPrimaryFlag(
-        personId,
-      );
+      await this.handleAddressPrimaryFlag(personId);
 
       const createdAddress = await this.prisma.address.create({
         data: {
@@ -331,9 +281,9 @@ export class CustomerService {
 
     for (const address of addresses) {
       if (address.id) {
-        const isPrimary = address.is_default
-            ? await this.handleAddressPrimaryFlag(personId, true)
-            : false;
+        if (address.is_default) {
+          await this.handleAddressPrimaryFlag(personId, true);
+        }
 
         const updatedAddress = await this.prisma.address.update({
           where: { id: address.id },
@@ -345,9 +295,7 @@ export class CustomerService {
 
         updatedAddresses.push(updatedAddress);
       } else {
-        const isPrimary = await this.handleAddressPrimaryFlag(
-          personId,
-        );
+        await this.handleAddressPrimaryFlag(personId);
 
         const createdAddress = await this.prisma.address.create({
           data: {
@@ -392,8 +340,7 @@ export class CustomerService {
           person_id: personId,
           deleted_at: null,
         },
-        data: {
-        },
+        data: {},
       });
       this.logger.log(`Unset other primary contacts for person ${personId}`);
       return true;
@@ -414,9 +361,7 @@ export class CustomerService {
     const createdContacts = [];
 
     for (const contact of contacts) {
-      const isPrimary = await this.handleContactPrimaryFlag(
-        personId,
-      );
+      await this.handleContactPrimaryFlag(personId);
 
       const createdContact = await this.prisma.contact.create({
         data: {
@@ -444,9 +389,9 @@ export class CustomerService {
 
     for (const contact of contacts) {
       if (contact.id) {
-        const isPrimary = contact.is_default
-            ? await this.handleContactPrimaryFlag(personId, true)
-            : false;
+        if (contact.is_default) {
+          await this.handleContactPrimaryFlag(personId, true);
+        }
 
         const updatedContact = await this.prisma.contact.update({
           where: { id: contact.id },
@@ -458,9 +403,7 @@ export class CustomerService {
 
         updatedContacts.push(updatedContact);
       } else {
-        const isPrimary = await this.handleContactPrimaryFlag(
-          personId,
-        );
+        await this.handleContactPrimaryFlag(personId);
 
         const createdContact = await this.prisma.contact.create({
           data: {
@@ -505,8 +448,7 @@ export class CustomerService {
           person_id: personId,
           deleted_at: null,
         },
-        data: {
-        },
+        data: {},
       });
       this.logger.log(`Unset other primary documents for person ${personId}`);
       return true;
@@ -527,9 +469,7 @@ export class CustomerService {
     const createdDocuments = [];
 
     for (const document of documents) {
-      const isPrimary = await this.handleDocumentPrimaryFlag(
-        personId,
-      );
+      await this.handleDocumentPrimaryFlag(personId);
 
       const createdDocument = await this.prisma.document.create({
         data: {
@@ -557,9 +497,9 @@ export class CustomerService {
 
     for (const document of documents) {
       if (document.id) {
-        const isPrimary = document.is_default
-            ? await this.handleDocumentPrimaryFlag(personId, true)
-            : false;
+        if (document.is_default) {
+          await this.handleDocumentPrimaryFlag(personId, true);
+        }
 
         const updatedDocument = await this.prisma.document.update({
           where: { id: document.id },
@@ -571,9 +511,7 @@ export class CustomerService {
 
         updatedDocuments.push(updatedDocument);
       } else {
-        const isPrimary = await this.handleDocumentPrimaryFlag(
-          personId,
-        );
+        await this.handleDocumentPrimaryFlag(personId);
 
         const createdDocument = await this.prisma.document.create({
           data: {

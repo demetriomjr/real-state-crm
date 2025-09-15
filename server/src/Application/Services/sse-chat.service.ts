@@ -29,7 +29,6 @@ export class SSEChatService {
     userId: string,
     chatId: string,
     response: Response,
-    lastMessageDateTime?: string,
   ): Promise<void> {
     this.logger.log(`User ${userId} subscribing to chat ${chatId}`);
 

@@ -44,8 +44,8 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     // Log to external service if available
-    if ((window as any).gtag) {
-      (window as any).gtag('event', 'exception', {
+    if ((window as unknown as { gtag?: (event: string, action: string, params: { description: string; fatal: boolean }) => void }).gtag) {
+      (window as unknown as { gtag: (event: string, action: string, params: { description: string; fatal: boolean }) => void }).gtag('event', 'exception', {
         description: error.toString(),
         fatal: false,
       });

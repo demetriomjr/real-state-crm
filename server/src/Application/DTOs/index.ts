@@ -1,9 +1,14 @@
-export { CreateUserDto, UpdateUserDto, UserResponseDto } from "./Users";
+export {
+  CreateUserDto,
+  UpdateUserDto,
+  UserResponseDto,
+  PasswordChangeDto,
+  PasswordChangeResponseDto,
+} from "./Users";
 export {
   BusinessCreateDto,
   BusinessUpdateDto,
   BusinessResponseDto,
-  BusinessCreateResponseDto,
 } from "./Business";
 export { LeadCreateDto, LeadUpdateDto, LeadResponseDto } from "./Leads";
 export {
@@ -12,14 +17,8 @@ export {
   CustomerResponseDto,
 } from "./Customers";
 export {
-  ContactCreateDto,
-  ContactUpdateDto,
   ContactResponseDto,
-  DocumentCreateDto,
-  DocumentUpdateDto,
   DocumentResponseDto,
-  AddressCreateDto,
-  AddressUpdateDto,
   AddressResponseDto,
 } from "./People";
 export {

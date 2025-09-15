@@ -20,6 +20,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Business from './pages/Business';
+import UserEdit from './pages/UserEdit';
 import './i18n';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -155,6 +156,17 @@ const AppContent: React.FC = () => {
                                       }}
                                     >
                                       <Business />
+                                    </PageErrorHandler>
+                                  } 
+                                />
+                                <Route 
+                                  path="/me" 
+                                  element={
+                                    <PageErrorHandler 
+                                      fallbackTitle="Erro na Página de Perfil" 
+                                      fallbackMessage="Ocorreu um erro ao carregar os dados do usuário. Verifique sua conexão e tente novamente."
+                                    >
+                                      <UserEdit />
                                     </PageErrorHandler>
                                   } 
                                 />

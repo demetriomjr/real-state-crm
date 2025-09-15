@@ -5,11 +5,7 @@ export class ContactValidator {
   private readonly logger = new Logger(ContactValidator.name);
 
   // Expected contact types
-  private readonly expectedContactTypes = [
-    "email",
-    "phone",
-    "cellphone",
-  ];
+  private readonly expectedContactTypes = ["email", "phone", "cellphone"];
 
   // Regex patterns for different contact types
   private readonly emailRegex =
@@ -18,7 +14,6 @@ export class ContactValidator {
   // International phone regex - supports various formats
   private readonly phoneRegex =
     /^(\+?[1-9]\d{1,14}|\(\d{1,4}\)\s*\d{1,14}|\d{1,14})$/;
-
 
   // Cellphone regex - Brazilian format and international
   private readonly cellphoneRegex =
@@ -62,7 +57,6 @@ export class ContactValidator {
       data.contact_type,
       data.contact_value,
     );
-
 
     // Validate is_default (optional)
     if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
@@ -114,7 +108,6 @@ export class ContactValidator {
         );
       }
     }
-
 
     // Validate is_default if provided
     if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
@@ -170,7 +163,6 @@ export class ContactValidator {
     // International phone numbers should be between 7 and 15 digits
     return cleanValue.length >= 7 && cleanValue.length <= 15;
   }
-
 
   private isValidCellphone(value: string): boolean {
     // Remove common separators

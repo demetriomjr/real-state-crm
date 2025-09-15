@@ -76,7 +76,6 @@ export class FeedbackService {
     // Generate AI feedback based on the messages
     const feedbackContent = await this.generateAIFeedback(
       createFeedbackDto.user_prompt,
-      messageIds,
     );
 
     // Determine feedback type based on content analysis
@@ -95,10 +94,7 @@ export class FeedbackService {
     return this.mapToResponseDto(feedback);
   }
 
-  private async generateAIFeedback(
-    userPrompt?: string,
-    messageIds?: string[],
-  ): Promise<string> {
+  private async generateAIFeedback(userPrompt?: string): Promise<string> {
     // TODO: Implement actual AI integration
     // This could be OpenAI, Claude, or other AI services
 
@@ -148,39 +144,6 @@ export class FeedbackService {
     } else {
       return "neutral";
     }
-  }
-
-  /**
-   * PURGE - Permanently delete feedback from database
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   * NOT EXPOSED TO CONTROLLERS - Service level only
-   */
-  async purge(id: string): Promise<void> {
-    this.logger.warn(`PURGING feedback with ID: ${id} - PERMANENT DELETION`);
-
-    const existingFeedback = await this.feedbackRepository.findOne(id);
-    if (!existingFeedback) {
-      this.logger.warn(`Feedback with ID ${id} not found for purge`);
-      throw new NotFoundException(`Feedback with ID ${id} not found`);
-    }
-
-    await this.feedbackRepository.purge(id);
-    this.logger.warn(`Feedback PURGED permanently with ID: ${id}`);
-  }
-
-  /**
-   * PURGE BY CHAT - Permanently delete all feedbacks for a specific chat
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   * NOT EXPOSED TO CONTROLLERS - Service level only
-   */
-  async purgeByChat(chatId: string): Promise<void> {
-    this.logger.warn(
-      `PURGING all feedbacks for chat: ${chatId} - PERMANENT DELETION`,
-    );
-    await this.feedbackRepository.purgeByChat(chatId);
-    this.logger.warn(`All feedbacks PURGED permanently for chat: ${chatId}`);
   }
 
   private mapToResponseDto(feedback: Feedback): FeedbackResponseDto {

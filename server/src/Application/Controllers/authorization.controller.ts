@@ -7,9 +7,11 @@ import {
   HttpCode,
   UnauthorizedException,
   Logger,
+  Req,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from "@nestjs/swagger";
 import { AuthorizationService } from "@/Application/Services/authorization.service";
+import { UserLoginLogService } from "@/Application/Services/user-login-log.service";
 import {
   AuthorizationRequestDto,
   AuthorizationResponseDto,
@@ -20,7 +22,10 @@ import {
 export class AuthorizationController {
   private readonly logger = new Logger(AuthorizationController.name);
 
-  constructor(private readonly authorizationService: AuthorizationService) {}
+  constructor(
+    private readonly authorizationService: AuthorizationService,
+    private readonly userLoginLogService: UserLoginLogService,
+  ) {}
 
   @Post("login")
   @HttpCode(HttpStatus.OK)
@@ -33,6 +38,7 @@ export class AuthorizationController {
   @ApiResponse({ status: 401, description: "Invalid credentials" })
   async login(
     @Body() authRequest: AuthorizationRequestDto,
+    @Req() req: any,
   ): Promise<AuthorizationResponseDto> {
     this.logger.log(`Login attempt for username: ${authRequest.username}`);
 
@@ -40,6 +46,20 @@ export class AuthorizationController {
       authRequest.username,
       authRequest.password,
     );
+
+    // Log the login attempt
+    try {
+      await this.userLoginLogService.logLogin({
+        user_id: result.user?.id || "",
+        tenant_id: result.user?.tenant_id || "",
+        ip_address: req.ip || req.connection?.remoteAddress,
+        user_agent: req.headers["user-agent"],
+        success: !!result.user,
+        failure_reason: result.user ? undefined : result.error,
+      });
+    } catch (logError) {
+      this.logger.error(`Failed to log login attempt: ${logError.message}`);
+    }
 
     if (!result.user) {
       this.logger.warn(

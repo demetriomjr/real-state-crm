@@ -8,15 +8,6 @@ export class UserValidator {
   async validateCreate(createUserDto: CreateUserDto): Promise<void> {
     const errors: string[] = [];
 
-    // Validate fullName
-    if (!createUserDto.fullName || createUserDto.fullName.trim().length === 0) {
-      errors.push("fullName is required");
-    } else if (createUserDto.fullName.length < 2) {
-      errors.push("fullName must be at least 2 characters long");
-    } else if (createUserDto.fullName.length > 100) {
-      errors.push("fullName must not exceed 100 characters");
-    }
-
     // Validate username
     if (!createUserDto.username || createUserDto.username.trim().length === 0) {
       errors.push("username is required");
@@ -74,17 +65,6 @@ export class UserValidator {
 
   async validateUpdate(updateUserDto: UpdateUserDto): Promise<void> {
     const errors: string[] = [];
-
-    // Validate fullName if provided
-    if (updateUserDto.fullName !== undefined) {
-      if (updateUserDto.fullName.trim().length === 0) {
-        errors.push("fullName cannot be empty");
-      } else if (updateUserDto.fullName.length < 2) {
-        errors.push("fullName must be at least 2 characters long");
-      } else if (updateUserDto.fullName.length > 100) {
-        errors.push("fullName must not exceed 100 characters");
-      }
-    }
 
     // Validate username if provided
     if (updateUserDto.username !== undefined) {

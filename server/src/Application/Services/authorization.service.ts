@@ -4,10 +4,12 @@ import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcryptjs";
 import { UserService } from "./user.service";
 import { UserSecretCacheService } from "./user-secret-cache.service";
+import { UserLoginLogService } from "./user-login-log.service";
 import {
   AuthorizationResponseDto,
   JwtPayload,
 } from "@/Application/DTOs/Authorization";
+import { UserResponseDto } from "@/Application/DTOs";
 
 @Injectable()
 export class AuthorizationService {
@@ -20,6 +22,7 @@ export class AuthorizationService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly userSecretCache: UserSecretCacheService,
+    private readonly userLoginLogService: UserLoginLogService,
   ) {}
 
   async validateUser(
@@ -97,13 +100,53 @@ export class AuthorizationService {
       token,
       userSecret,
       expires_at: expiresAt,
-      user: {
-        id: user.id,
-        fullName: user.fullName,
-        username: user.username,
-        user_level: user.user_level,
-        tenant_id: user.tenant_id,
-      },
+      userId: user.id,
+      userFullName: user.person?.full_name || user.username, // Use person's full_name or fallback to username
+      // Note: username, userLevel, and userRoles removed for security - available in JWT payload only
+    };
+  }
+
+  async createTokenFromDto(
+    userDto: UserResponseDto,
+    userLevel: number,
+    tenantId: string,
+  ): Promise<AuthorizationResponseDto> {
+    this.logger.log(`Creating token from DTO for user: ${userDto.id}`);
+
+    // Generate userSecret for this session
+    const userSecret = this.userSecretCache.generateUserSecret();
+
+    const payload: JwtPayload = {
+      tenant_id: tenantId,
+      user_id: userDto.id,
+      user_level: userLevel,
+    };
+
+    const expiresIn = this.configService.get<string>("JWT_EXPIRES_IN", "30m");
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes
+
+    const token = this.jwtService.sign(payload, {
+      expiresIn,
+      secret: this.configService.get<string>("JWT_SECRET"),
+    });
+
+    // Store userSecret in cache with user data
+    this.userSecretCache.storeUserSecret(
+      userSecret,
+      userDto.id,
+      tenantId,
+      userLevel,
+      30, // 30 minutes expiration
+    );
+
+    return {
+      token,
+      userSecret,
+      expires_at: expiresAt,
+      userId: userDto.id,
+      userFullName: userDto.full_name,
+      // Note: username, userLevel, and userRoles removed for security - available in JWT payload only
     };
   }
 
@@ -174,7 +217,7 @@ export class AuthorizationService {
       return this.createToken(mockUserWithId);
     }
 
-    // Get fresh user data
+    // Get fresh user data with person information
     const user = await this.userService.findOneRaw(payload.user_id);
     if (!user || user.tenant_id !== payload.tenant_id) {
       this.logger.warn(

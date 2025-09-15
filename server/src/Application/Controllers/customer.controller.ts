@@ -149,19 +149,4 @@ export class CustomerController {
     await this.customerService.deleteCustomer(id, userId);
     return { message: "Customer deleted successfully" };
   }
-
-  @Post("convert-from-lead/:leadId")
-  async convertLeadToCustomer(
-    @Param("leadId") leadId: string,
-    @Body() customerData: any,
-    @Request() req: any,
-  ): Promise<CustomerResponseDto> {
-    const userId = req.user?.id;
-    const customer = await this.customerService.convertLeadToCustomer(
-      leadId,
-      customerData,
-      userId,
-    );
-    return customer;
-  }
 }

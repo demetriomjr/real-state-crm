@@ -37,6 +37,23 @@ export class UserRepository {
         id,
         deleted_at: null,
       },
+      include: {
+        person: {
+          include: {
+            contacts: true,
+            documents: true,
+            addresses: true,
+          },
+        },
+        userRoles: {
+          where: {
+            is_allowed: true,
+          },
+          select: {
+            role: true,
+          },
+        },
+      },
     });
 
     return user ? new User(user) : null;
@@ -48,6 +65,23 @@ export class UserRepository {
         username,
         deleted_at: null,
       },
+      include: {
+        person: {
+          include: {
+            contacts: true,
+            documents: true,
+            addresses: true,
+          },
+        },
+        userRoles: {
+          where: {
+            is_allowed: true,
+          },
+          select: {
+            role: true,
+          },
+        },
+      },
     });
 
     return user ? new User(user) : null;
@@ -56,11 +90,11 @@ export class UserRepository {
   async create(createUserDto: CreateUserDto): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
-        fullName: createUserDto.fullName,
         username: createUserDto.username.toLowerCase(),
         password: createUserDto.password,
         user_level: createUserDto.user_level || 1,
         tenant_id: createUserDto.tenant_id,
+        person_id: createUserDto.person_id,
       },
     });
 
@@ -71,7 +105,6 @@ export class UserRepository {
     const user = await this.prisma.user.update({
       where: { id },
       data: {
-        ...(updateUserDto.fullName && { fullName: updateUserDto.fullName }),
         ...(updateUserDto.username && {
           username: updateUserDto.username.toLowerCase(),
         }),
@@ -80,6 +113,7 @@ export class UserRepository {
           user_level: updateUserDto.user_level,
         }),
         ...(updateUserDto.tenant_id && { tenant_id: updateUserDto.tenant_id }),
+        ...(updateUserDto.person_id && { person_id: updateUserDto.person_id }),
       },
     });
 
@@ -118,36 +152,4 @@ export class UserRepository {
     return users.map((user) => new User(user));
   }
 
-  /**
-   * PURGE - Permanently delete user from database
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purge(id: string): Promise<void> {
-    await this.prisma.user.delete({
-      where: { id },
-    });
-  }
-
-  /**
-   * PURGE USER ROLES - Permanently delete all user roles for a user
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purgeUserRoles(userId: string): Promise<void> {
-    await this.prisma.userRole.deleteMany({
-      where: { user_id: userId },
-    });
-  }
-
-  /**
-   * PURGE BY TENANT - Permanently delete all users for a specific tenant
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purgeByTenant(tenant_id: string): Promise<void> {
-    await this.prisma.user.deleteMany({
-      where: { tenant_id },
-    });
-  }
 }

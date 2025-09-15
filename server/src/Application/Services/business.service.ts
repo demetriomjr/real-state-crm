@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
   Logger,
   BadRequestException,
 } from "@nestjs/common";
@@ -12,7 +11,10 @@ import {
   BusinessCreateDto,
   BusinessUpdateDto,
   BusinessResponseDto,
+  UserResponseDto,
 } from "@/Application/DTOs";
+import { UserService } from "./user.service";
+import { PersonService } from "./person.service";
 import * as bcrypt from "bcryptjs";
 
 @Injectable()
@@ -23,6 +25,8 @@ export class BusinessService {
     private readonly businessRepository: BusinessRepository,
     private readonly userRepository: UserRepository,
     private readonly businessValidator: BusinessValidator,
+    private readonly userService: UserService,
+    private readonly personService: PersonService,
   ) {}
 
   private get prisma() {
@@ -76,13 +80,33 @@ export class BusinessService {
     return this.mapToResponseDto(business);
   }
 
-  async create(
-    createBusinessDto: BusinessCreateDto,
-  ): Promise<{ business: BusinessResponseDto; masterUser: any }> {
+  async create(createBusinessDto: BusinessCreateDto): Promise<{
+    business: BusinessResponseDto;
+    masterUserDto: UserResponseDto;
+    masterUserLevel: number;
+    tenantId: string;
+  }> {
     this.logger.log(`Creating new business: ${createBusinessDto.company_name}`);
 
     // Validate business data
     await this.businessValidator.validateCreate(createBusinessDto);
+
+    // Validate max items for lists
+    if (createBusinessDto.contacts && createBusinessDto.contacts.length > 10) {
+      throw new BadRequestException("Maximum of 10 contacts allowed");
+    }
+    if (
+      createBusinessDto.documents &&
+      createBusinessDto.documents.length > 10
+    ) {
+      throw new BadRequestException("Maximum of 10 documents allowed");
+    }
+    if (
+      createBusinessDto.addresses &&
+      createBusinessDto.addresses.length > 10
+    ) {
+      throw new BadRequestException("Maximum of 10 addresses allowed");
+    }
 
     // Start transaction
     const result = await this.prisma.$transaction(async (prisma) => {
@@ -101,52 +125,42 @@ export class BusinessService {
           10,
         );
 
-        // Create person for the master user
-        const person = await prisma.person.create({
-          data: {
-            full_name: createBusinessDto.master_user_fullName,
-            tenant_id: business.id,
-          },
-        });
+        // Prepare person data
+        const personData = {
+          full_name: createBusinessDto.master_user_fullName,
+          tenant_id: business.id,
+        };
 
-        // Create contacts for the person (email and phone) - only if provided
-        const contacts = [];
+        // Prepare sub-entities data
+        const subEntitiesData = {
+          contacts: [],
+        };
 
         if (createBusinessDto.master_user_email) {
-          contacts.push(
-            prisma.contact.create({
-              data: {
-                contact_type: "email",
-                contact_value:
-                  createBusinessDto.master_user_email.toLowerCase(),
-                person_id: person.id,
-                is_default: true,
-              },
-            }),
-          );
+          subEntitiesData.contacts.push({
+            contact_type: "email",
+            contact_value: createBusinessDto.master_user_email.toLowerCase(),
+            is_default: true,
+          });
         }
 
         if (createBusinessDto.master_user_phone) {
-          contacts.push(
-            prisma.contact.create({
-              data: {
-                contact_type: "phone",
-                contact_value: createBusinessDto.master_user_phone,
-                person_id: person.id,
-                is_default: true,
-              },
-            }),
-          );
+          subEntitiesData.contacts.push({
+            contact_type: "phone",
+            contact_value: createBusinessDto.master_user_phone,
+            is_default: true,
+          });
         }
 
-        if (contacts.length > 0) {
-          await Promise.all(contacts);
-        }
+        // Create person using PersonService
+        const person = await this.personService.createPerson(
+          personData,
+          subEntitiesData,
+        );
 
         // Create master user with business.id as tenant_id and person.id
         const masterUser = await prisma.user.create({
           data: {
-            fullName: createBusinessDto.master_user_fullName,
             username: createBusinessDto.master_user_username.toLowerCase(),
             password: hashedPassword,
             user_level: 9, // Master user level
@@ -164,7 +178,7 @@ export class BusinessService {
           },
           masterUser,
           person,
-          contacts,
+          contacts: subEntitiesData.contacts,
         };
       } catch (error) {
         this.logger.error(`Transaction failed: ${error.message}`);
@@ -178,9 +192,14 @@ export class BusinessService {
       `Business created successfully: ${result.business.company_name} with master user: ${result.masterUser.username}`,
     );
 
+    // Convert masterUser to DTO
+    const masterUserDto = await this.userService.findOne(result.masterUser.id);
+
     return {
       business: this.mapToResponseDto(result.business),
-      masterUser: result.masterUser,
+      masterUserDto: masterUserDto,
+      masterUserLevel: result.masterUser.user_level,
+      tenantId: result.masterUser.tenant_id,
     };
   }
 
@@ -192,6 +211,23 @@ export class BusinessService {
 
     // Validate business data
     await this.businessValidator.validateUpdate(updateBusinessDto);
+
+    // Validate max items for lists
+    if (updateBusinessDto.contacts && updateBusinessDto.contacts.length > 10) {
+      throw new BadRequestException("Maximum of 10 contacts allowed");
+    }
+    if (
+      updateBusinessDto.documents &&
+      updateBusinessDto.documents.length > 10
+    ) {
+      throw new BadRequestException("Maximum of 10 documents allowed");
+    }
+    if (
+      updateBusinessDto.addresses &&
+      updateBusinessDto.addresses.length > 10
+    ) {
+      throw new BadRequestException("Maximum of 10 addresses allowed");
+    }
 
     // Check if business exists
     const existingBusiness = await this.businessRepository.findOne(id);
@@ -215,22 +251,32 @@ export class BusinessService {
       subscription,
     };
 
-    const personData = {
-      full_name,
-    };
+    // Update business data first
+    const business = await this.businessRepository.update(id, businessData);
 
-    const subEntitiesData = {
-      contacts,
-      documents,
-      addresses,
-    };
+    // Update person data if provided
+    if (full_name || contacts || documents || addresses) {
+      // Find the master user (level 9) or fallback to first user
+      const masterUser = business.users?.find((user: any) => user.user_level === 9) || business.users?.[0];
 
-    const business = await this.businessRepository.update(
-      id,
-      businessData,
-      personData,
-      subEntitiesData,
-    );
+      if (masterUser && masterUser.person_id) {
+        const personData = {
+          full_name,
+        };
+
+        const subEntitiesData = {
+          contacts,
+          documents,
+          addresses,
+        };
+
+        await this.personService.updatePerson(
+          masterUser.person_id,
+          personData,
+          subEntitiesData,
+        );
+      }
+    }
     this.logger.log(`Business updated successfully with ID: ${business.id}`);
 
     // Fetch the updated business with relations to return complete data
@@ -268,45 +314,6 @@ export class BusinessService {
   async validateTenantId(tenantId: string): Promise<boolean> {
     this.logger.log(`Validating tenant ID: ${tenantId}`);
     return await this.businessRepository.validateTenantId(tenantId);
-  }
-
-  /**
-   * PURGE - Permanently delete business and all related entities
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   * NOT EXPOSED TO CONTROLLERS - Service level only
-   */
-  async purge(id: string): Promise<void> {
-    this.logger.warn(`PURGING business with ID: ${id} - PERMANENT DELETION`);
-
-    // Check if business exists
-    const existingBusiness = await this.businessRepository.findOne(id);
-    if (!existingBusiness) {
-      this.logger.warn(`Business with ID ${id} not found for purge`);
-      throw new NotFoundException(`Business with ID ${id} not found`);
-    }
-
-    // Use business.id as tenant_id
-    const tenantId = existingBusiness.id;
-
-    // Start transaction to ensure all related data is purged atomically
-    await this.prisma.$transaction(async () => {
-      // 1. Purge all user roles for users in this tenant
-      const users = await this.userRepository.findByTenant(tenantId);
-      for (const user of users) {
-        await this.userRepository.purgeUserRoles(user.id);
-      }
-
-      // 2. Purge all users in this tenant
-      await this.userRepository.purgeByTenant(tenantId);
-
-      // 3. Finally purge the business itself
-      await this.businessRepository.purge(id);
-    });
-
-    this.logger.warn(
-      `Business PURGED permanently with ID: ${id} and tenant: ${tenantId}`,
-    );
   }
 
   private getSubscriptionLevel(subscription: number): string {

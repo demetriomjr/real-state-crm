@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
 import usernameService from '../services/usernameService';
 
@@ -17,8 +17,8 @@ export const useUsernameValidation = (debounceMs: number = 500) => {
     error: null,
   });
 
-  const validateUsername = useCallback(
-    debounce(async (username: string) => {
+  const debouncedValidate = useMemo(
+    () => debounce(async (username: string) => {
       if (!username || username.length < 3) {
         setValidationState({
           isValidating: false,
@@ -39,7 +39,7 @@ export const useUsernameValidation = (debounceMs: number = 500) => {
           message: result.message || '',
           error: null,
         });
-      } catch (error: any) {
+      } catch {
         setValidationState({
           isValidating: false,
           isAvailable: null,
@@ -50,6 +50,10 @@ export const useUsernameValidation = (debounceMs: number = 500) => {
     }, debounceMs),
     [debounceMs]
   );
+
+  const validateUsername = useCallback((username: string) => {
+    debouncedValidate(username);
+  }, [debouncedValidate]);
 
   const resetValidation = useCallback(() => {
     setValidationState({

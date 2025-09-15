@@ -67,7 +67,6 @@ export class DocumentValidator {
       data.document_number,
     );
 
-
     // Validate is_default (optional)
     if (data.is_default !== undefined && typeof data.is_default !== "boolean") {
       throw new BadRequestException("is_default must be a boolean");
@@ -128,7 +127,6 @@ export class DocumentValidator {
         );
       }
     }
-
 
     // Validate is_default if provided
     if (data.is_default !== undefined && typeof data.is_default !== "boolean") {

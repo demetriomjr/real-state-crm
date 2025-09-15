@@ -13,9 +13,9 @@ class UsernameService {
         available: response.available,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If we get a 404 or 409, it means username is taken
-      if (error.response?.status === 409) {
+      if ((error as { response?: { status?: number } }).response?.status === 409) {
         return {
           available: false,
           message: 'Nome de usuário já está em uso'

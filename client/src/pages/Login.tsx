@@ -22,7 +22,7 @@ import type { LoginRequest } from '../types/auth';
 const Login: React.FC = () => {
   const { t } = useTranslation();
   const { setLoading } = useLoading();
-  const { user, login: authLogin } = useAuth();
+  const { login: authLogin } = useAuth();
   const [formData, setFormData] = useState<LoginRequest>({
     username: '',
     password: '',
@@ -48,10 +48,10 @@ const Login: React.FC = () => {
       await authLogin(formData);
       toast.success(t('auth.login.loginSuccess'));
       navigate('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMessage = handleError(
         err,
-        user?.user_level || 1,
+        1, // Default user level - actual level validated server-side
         undefined, // No redirect needed for login errors
         (message, type) => {
           if (type === 'error') {

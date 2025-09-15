@@ -25,6 +25,13 @@ export class ChatRepository {
             orderBy: { created_at: "desc" },
             take: 1,
           },
+          person: {
+            include: {
+              contacts: true,
+              documents: true,
+              addresses: true,
+            },
+          },
         },
       }),
       this.prisma.chat.count({
@@ -48,6 +55,13 @@ export class ChatRepository {
         messages: {
           where: { deleted_at: null },
           orderBy: { created_at: "asc" },
+        },
+        person: {
+          include: {
+            contacts: true,
+            documents: true,
+            addresses: true,
+          },
         },
       },
     });
@@ -150,16 +164,5 @@ export class ChatRepository {
       },
     });
     return count > 0;
-  }
-
-  /**
-   * PURGE - Permanently delete chat from database
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purge(id: string): Promise<void> {
-    await this.prisma.chat.delete({
-      where: { id },
-    });
   }
 }

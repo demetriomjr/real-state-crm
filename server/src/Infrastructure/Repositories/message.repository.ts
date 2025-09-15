@@ -82,7 +82,7 @@ export class MessageRepository {
   }
 
   async createMany(createMessageDtos: CreateMessageDto[]): Promise<Message[]> {
-    const messages = await this.prisma.message.createMany({
+    await this.prisma.message.createMany({
       data: createMessageDtos.map((dto) => ({
         chat_id: dto.chat_id,
         user_id: dto.user_id,
@@ -152,27 +152,5 @@ export class MessageRepository {
       },
     });
     return count > 0;
-  }
-
-  /**
-   * PURGE - Permanently delete message from database
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purge(id: string): Promise<void> {
-    await this.prisma.message.delete({
-      where: { id },
-    });
-  }
-
-  /**
-   * PURGE BY CHAT - Permanently delete all messages for a specific chat
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purgeByChat(chatId: string): Promise<void> {
-    await this.prisma.message.deleteMany({
-      where: { chat_id: chatId },
-    });
   }
 }

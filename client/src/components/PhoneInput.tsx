@@ -15,7 +15,8 @@ import {
   getAllPhoneMasks, 
   formatPhoneWithMask, 
   parsePhoneWithMask, 
-  validatePhoneWithMask 
+  validatePhoneWithMask,
+  type PhoneMask
 } from '../utils/phoneMasks';
 
 interface PhoneInputProps {
@@ -59,7 +60,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     }
   }, [value, currentMask]);
 
-  const handleMaskChange = (newMask: any) => {
+  const handleMaskChange = (newMask: PhoneMask) => {
     setCurrentMask(newMask);
     if (value) {
       const formatted = formatPhoneWithMask(value, newMask);

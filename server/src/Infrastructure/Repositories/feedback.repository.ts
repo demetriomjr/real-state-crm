@@ -78,26 +78,4 @@ export class FeedbackRepository {
     });
     return count > 0;
   }
-
-  /**
-   * PURGE - Permanently delete feedback from database
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purge(id: string): Promise<void> {
-    await this.prisma.feedback.delete({
-      where: { id },
-    });
-  }
-
-  /**
-   * PURGE BY CHAT - Permanently delete all feedbacks for a specific chat
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   */
-  async purgeByChat(chatId: string): Promise<void> {
-    await this.prisma.feedback.deleteMany({
-      where: { chat_id: chatId },
-    });
-  }
 }

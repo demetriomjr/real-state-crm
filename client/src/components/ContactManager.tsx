@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import { CONTACT_TYPES, type ContactType, formatPhone, formatCellphone } from '../utils/validation';
 import { getContactValidationErrorMessage } from '../utils/validation';
 
@@ -94,6 +95,11 @@ const ContactManager: React.FC<ContactManagerProps> = ({
   };
 
   const handleAddContact = () => {
+    if (contacts.length >= 10) {
+      toast.error(t('contact.maxItemsReached'));
+      return;
+    }
+    
     const newContact: Contact = {
       contact_name: '',
       contact_type: 'email',
@@ -252,17 +258,13 @@ const ContactManager: React.FC<ContactManagerProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" sx={{ display: { xs: 'none', sm: 'block' } }}>
-          {t('contact.manager.title')}
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
         {!disabled && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddContact}
             size="small"
-            sx={{ ml: { xs: 'auto', sm: 0 } }}
           >
             {t('contact.manager.addContact')}
           </Button>
@@ -271,8 +273,23 @@ const ContactManager: React.FC<ContactManagerProps> = ({
 
       {/* Existing Contacts */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-        <AnimatePresence>
-          {contacts.map((contact) => (
+        {contacts.length === 0 ? (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              py: 4,
+              color: 'text.secondary'
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {t('contact.manager.noRecords')}
+            </Typography>
+          </Box>
+        ) : (
+          <AnimatePresence>
+            {contacts.map((contact) => (
             <motion.div
               key={contact.id}
               initial={{ opacity: 0, y: -20 }}
@@ -332,8 +349,9 @@ const ContactManager: React.FC<ContactManagerProps> = ({
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
-        </AnimatePresence>
+            ))}
+          </AnimatePresence>
+        )}
       </Box>
 
       {/* Edit Dialog */}

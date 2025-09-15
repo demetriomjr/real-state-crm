@@ -28,7 +28,11 @@ export class ContactUpdateDto {
   @IsString()
   contact_value: string;
 
-  @ApiProperty({ description: "Is default contact", example: true, required: false })
+  @ApiProperty({
+    description: "Is default contact",
+    example: true,
+    required: false,
+  })
   @IsOptional()
   is_default?: boolean;
 }
@@ -51,7 +55,11 @@ export class DocumentUpdateDto {
   @IsString()
   document_number: string;
 
-  @ApiProperty({ description: "Is default document", example: true, required: false })
+  @ApiProperty({
+    description: "Is default document",
+    example: true,
+    required: false,
+  })
   @IsOptional()
   is_default?: boolean;
 }
@@ -86,7 +94,11 @@ export class AddressUpdateDto {
   @IsString()
   country: string;
 
-  @ApiProperty({ description: "Is default address", example: true, required: false })
+  @ApiProperty({
+    description: "Is default address",
+    example: true,
+    required: false,
+  })
   @IsOptional()
   is_default?: boolean;
 }

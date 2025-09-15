@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, IsEnum, IsArray } from "class-validator";
+import { IsString, IsOptional, IsUUID, IsArray } from "class-validator";
 
 export class FeedbackCreateDto {
   @IsUUID()

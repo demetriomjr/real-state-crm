@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import { 
   validateCEP, 
   formatCEP, 
@@ -29,6 +30,7 @@ import {
 interface Address {
   id?: string;
   street: string;
+  number?: string;
   city: string;
   state: string;
   postal_code: string;
@@ -84,8 +86,14 @@ const AddressManager: React.FC<AddressManagerProps> = ({
   };
 
   const handleAddAddress = () => {
+    if (addresses.length >= 10) {
+      toast.error(t('address.maxItemsReached'));
+      return;
+    }
+    
     const newAddress: Address = {
       street: '',
+      number: '',
       city: '',
       state: '',
       postal_code: '',
@@ -242,17 +250,13 @@ const AddressManager: React.FC<AddressManagerProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" sx={{ display: { xs: 'none', sm: 'block' } }}>
-          {t('address.manager.title')}
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
         {!disabled && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddAddress}
             size="small"
-            sx={{ ml: { xs: 'auto', sm: 0 } }}
           >
             {t('address.manager.addAddress')}
           </Button>
@@ -261,8 +265,23 @@ const AddressManager: React.FC<AddressManagerProps> = ({
 
       {/* Existing Addresses */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-        <AnimatePresence>
-          {addresses.map((address) => (
+        {addresses.length === 0 ? (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              py: 4,
+              color: 'text.secondary'
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {t('address.manager.noRecords')}
+            </Typography>
+          </Box>
+        ) : (
+          <AnimatePresence>
+            {addresses.map((address) => (
             <motion.div
               key={address.id}
               initial={{ opacity: 0, y: -20 }}
@@ -311,8 +330,9 @@ const AddressManager: React.FC<AddressManagerProps> = ({
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
-        </AnimatePresence>
+            ))}
+          </AnimatePresence>
+        )}
       </Box>
 
       {/* Edit Dialog */}
@@ -351,15 +371,24 @@ const AddressManager: React.FC<AddressManagerProps> = ({
               </Typography>
             </Box>
 
-            <TextField
-              fullWidth
-              label={t('address.street')}
-              value={editingAddress.street}
-              onChange={(e) => handleFieldChange('street', e.target.value)}
-              error={!!errors.street}
-              helperText={errors.street}
-              sx={{ mb: 2 }}
-            />
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+              <TextField
+                fullWidth
+                label={t('address.street')}
+                value={editingAddress.street}
+                onChange={(e) => handleFieldChange('street', e.target.value)}
+                error={!!errors.street}
+                helperText={errors.street}
+              />
+              <TextField
+                label={t('address.number')}
+                value={editingAddress.number || ''}
+                onChange={(e) => handleFieldChange('number', e.target.value)}
+                error={!!errors.number}
+                helperText={errors.number}
+                sx={{ minWidth: { xs: '100%', sm: '120px' } }}
+              />
+            </Box>
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
               <TextField
@@ -371,40 +400,36 @@ const AddressManager: React.FC<AddressManagerProps> = ({
                 helperText={errors.city}
               />
               <TextField
-                fullWidth
                 label={t('address.state')}
                 value={editingAddress.state}
-                onChange={(e) => handleFieldChange('state', e.target.value)}
+                onChange={(e) => handleFieldChange('state', e.target.value.toUpperCase())}
                 error={!!errors.state}
                 helperText={errors.state}
+                inputProps={{ maxLength: 2 }}
+                sx={{ minWidth: { xs: '100%', sm: '80px' } }}
               />
             </Box>
 
-            <TextField
-              fullWidth
-              label={t('address.country')}
-              value={editingAddress.country}
-              onChange={(e) => handleFieldChange('country', e.target.value)}
-              error={!!errors.country}
-              helperText={errors.country}
-              sx={{ mb: 2 }}
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={editingAddress.is_default}
-                  onChange={(e) => handleFieldChange('is_default', e.target.checked)}
-                  disabled={
-                    !isAdding && 
-                    editingAddress.is_default && 
-                    addresses.filter(a => a.is_default).length === 1
-                  }
-                />
-              }
-              label={t('address.default')}
-              sx={{ display: 'block', mt: 1 }}
-            />
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2, alignItems: 'flex-start' }}>
+              <TextField
+                fullWidth
+                label={t('address.country')}
+                value={editingAddress.country}
+                onChange={(e) => handleFieldChange('country', e.target.value)}
+                error={!!errors.country}
+                helperText={errors.country}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editingAddress.is_default}
+                    onChange={(e) => handleFieldChange('is_default', e.target.checked)}
+                  />
+                }
+                label={t('address.default')}
+                sx={{ mt: 1 }}
+              />
+            </Box>
           </>
         )}
       </EditDialog>

@@ -220,8 +220,7 @@ export class LeadService {
           person_id: personId,
           deleted_at: null,
         },
-        data: {
-        },
+        data: {},
       });
       this.logger.log(`Unset other primary addresses for person ${personId}`);
       return true;
@@ -242,9 +241,7 @@ export class LeadService {
     const createdAddresses = [];
 
     for (const address of addresses) {
-      const isPrimary = await this.handleAddressPrimaryFlag(
-        personId,
-      );
+      await this.handleAddressPrimaryFlag(personId);
 
       const createdAddress = await this.prisma.address.create({
         data: {
@@ -272,9 +269,9 @@ export class LeadService {
 
     for (const address of addresses) {
       if (address.id) {
-        const isPrimary = address.is_default
-            ? await this.handleAddressPrimaryFlag(personId, true)
-            : false;
+        if (address.is_default) {
+          await this.handleAddressPrimaryFlag(personId, true);
+        }
 
         const updatedAddress = await this.prisma.address.update({
           where: { id: address.id },
@@ -286,9 +283,7 @@ export class LeadService {
 
         updatedAddresses.push(updatedAddress);
       } else {
-        const isPrimary = await this.handleAddressPrimaryFlag(
-          personId,
-        );
+        await this.handleAddressPrimaryFlag(personId);
 
         const createdAddress = await this.prisma.address.create({
           data: {
@@ -333,8 +328,7 @@ export class LeadService {
           person_id: personId,
           deleted_at: null,
         },
-        data: {
-        },
+        data: {},
       });
       this.logger.log(`Unset other primary contacts for person ${personId}`);
       return true;
@@ -355,9 +349,7 @@ export class LeadService {
     const createdContacts = [];
 
     for (const contact of contacts) {
-      const isPrimary = await this.handleContactPrimaryFlag(
-        personId,
-      );
+      await this.handleContactPrimaryFlag(personId);
 
       const createdContact = await this.prisma.contact.create({
         data: {
@@ -385,9 +377,9 @@ export class LeadService {
 
     for (const contact of contacts) {
       if (contact.id) {
-        const isPrimary = contact.is_default
-            ? await this.handleContactPrimaryFlag(personId, true)
-            : false;
+        if (contact.is_default) {
+          await this.handleContactPrimaryFlag(personId, true);
+        }
 
         const updatedContact = await this.prisma.contact.update({
           where: { id: contact.id },
@@ -399,9 +391,7 @@ export class LeadService {
 
         updatedContacts.push(updatedContact);
       } else {
-        const isPrimary = await this.handleContactPrimaryFlag(
-          personId,
-        );
+        await this.handleContactPrimaryFlag(personId);
 
         const createdContact = await this.prisma.contact.create({
           data: {
@@ -446,8 +436,7 @@ export class LeadService {
           person_id: personId,
           deleted_at: null,
         },
-        data: {
-        },
+        data: {},
       });
       this.logger.log(`Unset other primary documents for person ${personId}`);
       return true;
@@ -468,9 +457,7 @@ export class LeadService {
     const createdDocuments = [];
 
     for (const document of documents) {
-      const isPrimary = await this.handleDocumentPrimaryFlag(
-        personId,
-      );
+      await this.handleDocumentPrimaryFlag(personId);
 
       const createdDocument = await this.prisma.document.create({
         data: {
@@ -498,9 +485,9 @@ export class LeadService {
 
     for (const document of documents) {
       if (document.id) {
-        const isPrimary = document.is_default
-            ? await this.handleDocumentPrimaryFlag(personId, true)
-            : false;
+        if (document.is_default) {
+          await this.handleDocumentPrimaryFlag(personId, true);
+        }
 
         const updatedDocument = await this.prisma.document.update({
           where: { id: document.id },
@@ -512,9 +499,7 @@ export class LeadService {
 
         updatedDocuments.push(updatedDocument);
       } else {
-        const isPrimary = await this.handleDocumentPrimaryFlag(
-          personId,
-        );
+        await this.handleDocumentPrimaryFlag(personId);
 
         const createdDocument = await this.prisma.document.create({
           data: {

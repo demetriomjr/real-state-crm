@@ -20,20 +20,18 @@ export class AuthorizationResponseDto {
   expires_at: Date;
 
   @ApiProperty({
-    description: "User information",
-    example: {
-      id: "550e8400-e29b-41d4-a716-446655440000",
-      fullName: "John Doe",
-      username: "johndoe",
-      user_level: 5,
-      tenant_id: "550e8400-e29b-41d4-a716-446655440001",
-    },
+    description: "User ID",
+    example: "550e8400-e29b-41d4-a716-446655440000",
   })
-  user: {
-    id: string;
-    fullName: string;
-    username: string;
-    user_level: number;
-    tenant_id: string;
-  };
+  userId: string;
+
+  @ApiProperty({
+    description: "User full name",
+    example: "John Doe",
+  })
+  userFullName: string;
+
+  // Note: username, userLevel, and userRoles are removed from frontend response
+  // for security reasons. These values are available in JWT payload and
+  // should be validated server-side only.
 }

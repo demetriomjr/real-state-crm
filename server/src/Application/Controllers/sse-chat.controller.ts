@@ -1,8 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
-  Delete,
   Param,
   Query,
   Res,
@@ -67,12 +65,7 @@ export class SSEChatController {
     );
 
     // Subscribe to chat updates
-    const subscription = await this.sseChatService.subscribe(
-      userId,
-      chatId,
-      res,
-      lastMessageDateTime,
-    );
+    await this.sseChatService.subscribe(userId, chatId, res);
 
     // Handle client disconnect
     req.on("close", () => {
@@ -93,11 +86,12 @@ export class SSEChatController {
     }, 30000); // 30 seconds heartbeat
   }
 
-  @Post("unsubscribe")
+  @Get("unsubscribe/:id")
   @ApiOperation({ summary: "Unsubscribe from SSE chat updates" })
+  @ApiParam({ name: "id", description: "User ID or Session ID" })
   @ApiResponse({ status: 200, description: "Successfully unsubscribed" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  async unsubscribe(@Request() req: any = {}) {
+  async unsubscribe(@Param("id") id: string, @Request() req: any = {}) {
     const userId = req.user?.id;
     const userLevel = req.userLevel;
 
@@ -105,8 +99,9 @@ export class SSEChatController {
       throw new UnauthorizedException("User authentication required");
     }
 
-    this.logger.log(`User ${userId} unsubscribing from chat`);
-    this.sseChatService.unsubscribe(userId);
+    // Use the provided ID parameter (could be userId or sessionId)
+    this.logger.log(`User ${userId} unsubscribing from chat using ID: ${id}`);
+    this.sseChatService.unsubscribe(id);
 
     return { message: "Successfully unsubscribed" };
   }

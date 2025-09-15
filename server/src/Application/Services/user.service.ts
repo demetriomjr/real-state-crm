@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
   Logger,
 } from "@nestjs/common";
 import { UserRepository } from "@/Infrastructure/Repositories/user.repository";
@@ -11,13 +12,17 @@ import {
   UpdateUserDto,
   UserResponseDto,
 } from "@/Application/DTOs";
+import { PersonService } from "./person.service";
 import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly personService: PersonService,
+  ) {}
 
   async findAll(
     page: number = 1,
@@ -107,9 +112,13 @@ export class UserService {
       }
     }
 
-    // Hash password if it's being updated
+    // Hash password if it's being updated (only if it's not already hashed)
     if (updateUserDto.password) {
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+      // Check if password is already hashed (starts with $2b$)
+      if (!updateUserDto.password.startsWith("$2b$")) {
+        updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+      }
+      // If it starts with $2b$, it's already hashed (from password change modal)
     }
 
     const user = await this.userRepository.update(id, updateUserDto);
@@ -147,63 +156,91 @@ export class UserService {
     return await this.userRepository.findOne(id);
   }
 
-  /**
-   * PURGE - Permanently delete user and all related entities
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   * NOT EXPOSED TO CONTROLLERS - Service level only
-   */
-  async purge(id: string): Promise<void> {
-    this.logger.warn(`PURGING user with ID: ${id} - PERMANENT DELETION`);
+  async updateProfile(
+    id: string,
+    updateData: { 
+      username?: string; 
+      full_name?: string;
+      password?: string;
+      contacts?: any[];
+      documents?: any[];
+      addresses?: any[];
+    },
+  ): Promise<UserResponseDto> {
+    this.logger.log(`Updating profile for user with ID: ${id}`);
 
-    // Check if user exists
+    // Get the current user
     const existingUser = await this.userRepository.findOne(id);
     if (!existingUser) {
-      this.logger.warn(`User with ID ${id} not found for purge`);
+      this.logger.warn(`User with ID ${id} not found for profile update`);
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    // Get the user's tenant_id for related entity cleanup
-    const tenantId = existingUser.tenant_id;
-
-    // Purge related entities first (respecting foreign key constraints)
-    await this.userRepository.purgeUserRoles(id);
-
-    // Finally purge the user
-    await this.userRepository.purge(id);
-
-    this.logger.warn(
-      `User PURGED permanently with ID: ${id} from tenant: ${tenantId}`,
-    );
-  }
-
-  /**
-   * PURGE BY TENANT - Permanently delete all users in a tenant
-   * WARNING: This method permanently deletes data and cannot be undone
-   * Should only be used for testing purposes or data cleanup
-   * NOT EXPOSED TO CONTROLLERS - Service level only
-   */
-  async purgeByTenant(tenant_id: string): Promise<void> {
-    this.logger.warn(
-      `PURGING all users for tenant: ${tenant_id} - PERMANENT DELETION`,
-    );
-
-    // Get all users in the tenant
-    const users = await this.userRepository.findByTenant(tenant_id);
-
-    // Purge each user individually to ensure proper cleanup
-    for (const user of users) {
-      await this.purge(user.id);
+    // Update user data if provided
+    if (updateData.username) {
+      // Check if username is being changed and if it's available
+      if (updateData.username !== existingUser.username) {
+        const userWithUsername = await this.userRepository.findByUsername(
+          updateData.username,
+        );
+        if (userWithUsername && userWithUsername.id !== id) {
+          this.logger.warn(
+            `Username already exists during profile update: ${updateData.username}`,
+          );
+          throw new ConflictException("Username already exists");
+        }
+      }
     }
 
-    this.logger.warn(`All users PURGED permanently for tenant: ${tenant_id}`);
+    // Update person data if provided
+    if (existingUser.person_id && (
+      updateData.full_name !== undefined ||
+      updateData.contacts ||
+      updateData.documents ||
+      updateData.addresses
+    )) {
+      const personData = {
+        full_name: updateData.full_name,
+      };
+
+      const subEntitiesData = {
+        contacts: updateData.contacts,
+        documents: updateData.documents,
+        addresses: updateData.addresses,
+      };
+
+      await this.personService.updatePerson(
+        existingUser.person_id,
+        personData,
+        subEntitiesData,
+      );
+    }
+
+    // Update user data (username and password)
+    const updateUserDto: UpdateUserDto = {};
+    if (updateData.username) {
+      updateUserDto.username = updateData.username;
+    }
+    if (updateData.password) {
+      // Password is already hashed, don't hash again
+      updateUserDto.password = updateData.password;
+    }
+
+    const updatedUser = await this.userRepository.update(id, updateUserDto);
+    this.logger.log(`Profile updated successfully for user with ID: ${id}`);
+    return this.mapToResponseDto(updatedUser);
   }
 
   private mapToResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,
-      fullName: user.fullName,
       username: user.username,
+      // Person data embedded directly (person is a fragment, not a separate entity)
+      full_name: user.person?.full_name || "",
+      contacts: user.person?.contacts || [],
+      documents: user.person?.documents || [],
+      addresses: user.person?.addresses || [],
+      // Note: person_id, user_level, tenant_id, password, and all audit fields are concealed for security reasons
     };
   }
 }

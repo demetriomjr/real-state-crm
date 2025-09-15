@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const handleUserDataClick = () => {
     handleMenuClose();
-    navigate('/my-data');
+    navigate('/me');
   };
 
   const handleLogout = async () => {

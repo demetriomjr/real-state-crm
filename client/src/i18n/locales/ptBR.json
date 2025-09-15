@@ -153,7 +153,8 @@
     "manager": {
       "title": "Gerenciar Contatos",
       "addContact": "Adicionar Contato",
-      "editContact": "Editar Contato"
+      "editContact": "Editar Contato",
+      "noRecords": "Nenhum contato cadastrado"
     },
     "actions": {
       "edit": "Editar contato",
@@ -177,6 +178,7 @@
       "invalidPhone": "Digite um telefone válido",
       "invalidContact": "Digite um valor de contato válido"
     },
+    "maxItemsReached": "Máximo de 10 contatos permitidos",
     "help": {
       "name": "Digite um nome para identificar este contato (opcional)",
       "email": "Digite um e-mail válido",
@@ -188,7 +190,8 @@
     "manager": {
       "title": "Gerenciar Documentos",
       "addDocument": "Adicionar Documento",
-      "editDocument": "Editar Documento"
+      "editDocument": "Editar Documento",
+      "noRecords": "Nenhum documento cadastrado"
     },
     "actions": {
       "edit": "Editar documento",
@@ -215,6 +218,7 @@
       "invalidDriverLicense": "Digite um número de CNH válido (8-15 caracteres alfanuméricos)",
       "invalidDocument": "Digite um número de documento válido"
     },
+    "maxItemsReached": "Máximo de 10 documentos permitidos",
     "help": {
       "number": "Digite o número do documento"
     }
@@ -223,13 +227,15 @@
     "manager": {
       "title": "Gerenciar Endereços",
       "addAddress": "Adicionar Endereço",
-      "editAddress": "Editar Endereço"
+      "editAddress": "Editar Endereço",
+      "noRecords": "Nenhum endereço cadastrado"
     },
     "actions": {
       "edit": "Editar endereço",
       "delete": "Excluir endereço"
     },
     "street": "Rua",
+    "number": "Número",
     "city": "Cidade",
     "state": "Estado",
     "postalCode": "CEP",
@@ -244,7 +250,8 @@
       "postalCodeRequired": "CEP é obrigatório",
       "countryRequired": "País é obrigatório",
       "invalidCEP": "Digite um CEP brasileiro válido (8 dígitos)"
-    }
+    },
+    "maxItemsReached": "Máximo de 10 endereços permitidos"
   },
   "person": {
     "information": "Informações da Pessoa",
@@ -252,6 +259,93 @@
     "fullNameRequired": "Nome completo é obrigatório",
     "createdAt": "Criado em",
     "updatedAt": "Atualizado em"
+  },
+  "password": {
+    "change": {
+      "title": "Alterar Senha",
+      "description": "Digite sua senha atual e a nova senha para alterar",
+      "confirm": "Confirmar",
+      "updating": "Atualizando...",
+      "success": "Senha alterada com sucesso!",
+      "error": "Erro ao alterar senha"
+    },
+    "current": "Senha Atual",
+    "new": "Nova Senha",
+    "confirm": "Confirmar Nova Senha",
+    "requirements": {
+      "title": "Requisitos da senha",
+      "minLength": "Mínimo de 6 caracteres",
+      "letterNumber": "Pelo menos uma letra e um número",
+      "different": "Deve ser diferente da senha atual"
+    },
+    "validation": {
+      "currentRequired": "Senha atual é obrigatória",
+      "newRequired": "Nova senha é obrigatória",
+      "confirmRequired": "Confirmação da senha é obrigatória",
+      "minLength": "Senha deve ter pelo menos 6 caracteres",
+      "complexity": "Senha deve conter pelo menos uma letra e um número",
+      "mismatch": "As senhas não coincidem",
+      "sameAsCurrent": "A nova senha deve ser diferente da atual"
+    }
+  },
+  "user": {
+    "title": "Meu Perfil",
+    "information": "Informações do Usuário",
+    "status": "Status",
+    "username": "Nome de Usuário",
+    "fullName": "Nome Completo",
+    "securityNote": "Informações de segurança como nível de acesso e funções são gerenciadas pelo servidor.",
+    "roles": "Funções",
+    "noRoles": "Nenhuma função atribuída",
+    "editRoles": "Alterar Funções",
+    "levels": {
+      "1": "Usuário Básico",
+      "2": "Usuário",
+      "3": "Usuário Avançado",
+      "4": "Supervisor",
+      "5": "Gerente",
+      "6": "Gerente Sênior",
+      "7": "Diretor",
+      "8": "Diretor Executivo",
+      "9": "Proprietário",
+      "10": "Administrador do Sistema"
+    },
+    "saving": "Salvando...",
+    "success": "Sucesso",
+    "successMessage": "Dados do usuário salvos com sucesso!",
+    "validationError": "Por favor, corrija os erros de validação",
+    "loading": "Carregando dados do usuário...",
+    "tabs": {
+      "contacts": "Contatos",
+      "documents": "Documentos",
+      "addresses": "Endereços"
+    },
+    "loginHistory": {
+      "title": "Histórico de Login",
+      "date": "Data",
+      "time": "Hora",
+      "status": "Status",
+      "ipAddress": "Endereço IP",
+      "browser": "Navegador",
+      "reason": "Motivo",
+      "success": "Sucesso",
+      "failed": "Falhou",
+      "unknown": "Desconhecido",
+      "noData": "Nenhum histórico de login encontrado",
+      "error": "Erro ao carregar histórico de login",
+      "filterStartDate": "Data Inicial",
+      "filterEndDate": "Data Final",
+      "clearFilters": "Limpar Filtros",
+      "results": "resultados"
+    },
+    "validation": {
+      "usernameRequired": "Nome de usuário é obrigatório",
+      "usernameMinLength": "Nome de usuário deve ter pelo menos 3 caracteres"
+    },
+    "error": {
+      "fetchFailed": "Erro ao carregar dados do usuário",
+      "saveFailed": "Erro ao salvar dados do usuário"
+    }
   },
   "tabs": {
     "contacts": "Contatos",

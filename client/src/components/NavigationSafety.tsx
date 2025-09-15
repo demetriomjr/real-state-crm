@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
@@ -47,7 +47,7 @@ const NavigationSafety: React.FC<NavigationSafetyProps> = ({ children }) => {
   }, [isAuthenticated, token, navigate, location.pathname]);
 
   // Safe navigation function
-  const safeNavigate = (path: string, options?: any) => {
+  const safeNavigate = useCallback((path: string, options?: { replace?: boolean; state?: unknown }) => {
     try {
       setIsNavigating(true);
       
@@ -79,7 +79,7 @@ const NavigationSafety: React.FC<NavigationSafetyProps> = ({ children }) => {
     } finally {
       setIsNavigating(false);
     }
-  };
+  }, [navigate, isAuthenticated]);
 
   // Global error handler for unhandled promise rejections
   useEffect(() => {
@@ -101,11 +101,11 @@ const NavigationSafety: React.FC<NavigationSafetyProps> = ({ children }) => {
 
   // Expose safe navigation to window for debugging
   useEffect(() => {
-    (window as any).safeNavigate = safeNavigate;
+    (window as unknown as { safeNavigate?: typeof safeNavigate }).safeNavigate = safeNavigate;
     return () => {
-      delete (window as any).safeNavigate;
+      delete (window as unknown as { safeNavigate?: typeof safeNavigate }).safeNavigate;
     };
-  }, []);
+  }, [safeNavigate]);
 
   return (
     <>
